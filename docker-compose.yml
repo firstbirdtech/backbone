@@ -1,0 +1,8 @@
+version: '2'
+services:
+  sns:
+    image: s12v/sns
+    ports:
+      - 9911:9911
+  sqs:
+    image:
