@@ -1,7 +1,7 @@
 lazy val backbone = project.in(file(".")).aggregate(core)
 
 lazy val core = project
-  .in(file("backbone-core"))
+  .in(file("core"))
   .settings(
     name := "backbone-core",
     libraryDependencies ++= Seq(
