@@ -10,7 +10,6 @@ object Common extends AutoPlugin{
     version := "2.0.0-SNAPSHOT",
     organizationName := "Firstbird GmbH",
     scalaVersion := "2.11.8",
-    crossScalaVersions := Seq("2.11.8, 2.12.1"),
     scalacOptions ++= Seq(
       "-encoding", "UTF-8",
       "-feature",
