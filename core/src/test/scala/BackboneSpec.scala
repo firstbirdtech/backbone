@@ -39,7 +39,7 @@ class BackboneSpec extends WordSpec with Matchers {
 
     }
 
-    "consume a single string " in {
+    "consume a single string " ignore {
 
       implicit val sqs = new AmazonSQSAsyncClient()
         .withEndpoint[AmazonSQSAsyncClient]("http://sqs:9324")
