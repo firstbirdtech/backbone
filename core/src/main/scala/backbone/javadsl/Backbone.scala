@@ -16,7 +16,6 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
   def consume[T](settings: ConsumerSettings, format: Format[T], actorSystem: ActorSystem, f: JFunction1[T,ProcessingResult]) = {
 
 
-    asScala.consume(settings)()
   }
 
 

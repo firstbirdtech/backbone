@@ -1,8 +1,18 @@
 version: '2'
+
 services:
   sns:
     image: s12v/sns
     ports:
       - 9911:9911
+    depends_on:
+      - sqs
+#    network_mode: "host"
   sqs:
-    image:
+    image: s12v/elasticmq
+    ports:
+      - 9324:9324
+    volumes:
+      - ./docker:/etc/elasticmq
+#    network_mode: "host"
+

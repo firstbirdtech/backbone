@@ -2,8 +2,8 @@ package backbone.scaladsl
 
 import akka.Done
 import akka.actor.ActorSystem
-import backbone.QueueConsumer
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
+import backbone.consumer.{Consumer, Limitation}
 import backbone.format.Format
 import backbone.scaladsl.Backbone.{ConsumerSettings, ProcessingResult, QueueInformation}
 import com.amazonaws.auth.policy.actions.SQSActions
@@ -19,7 +19,7 @@ object Backbone {
   case class QueueInformation(url: String, arn: String)
 
   sealed trait ProcessingResult
-  case object Rejected     extends ProcessingResult
+  case object Rejected extends ProcessingResult
   case object Consumed extends ProcessingResult
 
   sealed trait MessageAction
@@ -28,9 +28,16 @@ object Backbone {
 
   case class SnsEnvelope(subject: String, message: String)
   case class Envelope[P](deleteHandle: String, subject: String, payload: P)
-  case class ConsumerSettings(events: List[String], topics: List[String], queue: String)
 
-  def apply()(implicit sqs: AmazonSQSAsyncClient,sns: AmazonSNSAsyncClient): Backbone = new Backbone()
+  case class ConsumerSettings(
+      events: List[String],
+      topics: List[String],
+      queue: String,
+      parallelism: Int = 1,
+      consumeWithin: Option[Limitation] = None
+  )
+
+  def apply()(implicit sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient): Backbone = new Backbone()
 
 }
 
@@ -38,19 +45,19 @@ class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncCl
     extends AmazonSqsOps
     with AmazonSnsOps {
 
-  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem,
-      fo: Format[T]) : Future[Done] = {
-    consume[T](1,settings)(f.andThen(Future.successful))
+  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem, fo: Format[T]): Future[Done] = {
+    consumeAsync[T](settings)(f.andThen(Future.successful))
   }
 
-  def consume[T](parallelism: Int, settings: ConsumerSettings)(f: T => Future[ProcessingResult])(implicit system: ActorSystem,
-      fo: Format[T]): Future[Done] = {
+  def consumeAsync[T](settings: ConsumerSettings)(
+      f: T => Future[ProcessingResult])(implicit system: ActorSystem, fo: Format[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     for {
       queue <- createQueue(settings.queue)
       _     <- subscribe(queue, settings.topics)
-      r     <- new QueueConsumer(queue.url, settings.events).consumeAsync(parallelism)(f)
+      s = Consumer.Settings(queue.url, settings.events, settings.parallelism, settings.consumeWithin)
+      r <- new Consumer(s).consumeAsync(f)
     } yield r
 
   }

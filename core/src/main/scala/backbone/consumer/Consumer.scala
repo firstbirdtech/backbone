@@ -1,11 +1,13 @@
-package backbone
+package backbone.consumer
 
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, Sink}
-import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
+import backbone.aws.AmazonSqsOps
+import backbone.aws.Implicits._
+import backbone.consumer.Consumer.Settings
 import backbone.format.Format
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
@@ -13,10 +15,17 @@ import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Left, Right, Success}
-import backbone.aws.Implicits._
 
-class QueueConsumer(queueUrl: String, events: List[String])(implicit system: ActorSystem,
-                                                            val sqs: AmazonSQSAsyncClient)
+object Consumer {
+  case class Settings(
+      queueUrl: String,
+      events: List[String],
+      parallelism: Int = 1,
+      limitation: Option[Limitation] = None
+  )
+}
+
+class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient)
     extends AmazonSqsOps {
 
   import backbone.scaladsl.Backbone._
@@ -26,10 +35,11 @@ class QueueConsumer(queueUrl: String, events: List[String])(implicit system: Act
     ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.resume)
   )
 
-  def consumeAsync[T](parallelism: Int)(f: T => Future[ProcessingResult])(implicit fo: Format[T]): Future[Done] = {
+  def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: Format[T]): Future[Done] = {
 
-    SqsSource(queueUrl)
-      .mapAsync(parallelism) {implicit message =>
+    SqsSource(settings.queueUrl)
+      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
+      .mapAsync(settings.parallelism) { implicit message =>
         parseMessage[T](message) match {
           case Left(a)  => Future.successful(a)
           case Right(t) => f(t).map(resultToAction)
@@ -39,17 +49,8 @@ class QueueConsumer(queueUrl: String, events: List[String])(implicit system: Act
 
   }
 
-  def consume[T](f: T => ProcessingResult)(implicit fo: Format[T]): Future[Done] = {
-    SqsSource(queueUrl).map {implicit message =>
-      parseMessage[T](message) match {
-        case Left(a)  => a
-        case Right(t) => f.andThen(resultToAction)(t)
-      }
-    }.runWith(ack)
-  }
-
   private def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
-    case Rejected     => KeepMessage
+    case Rejected => KeepMessage
     case Consumed => RemoveMessage(message.getReceiptHandle)
   }
 
@@ -57,15 +58,15 @@ class QueueConsumer(queueUrl: String, events: List[String])(implicit system: Act
     for {
       sns <- parse[SnsEnvelope](message.getBody).right
       _ <- {
-        if (events.contains(sns.subject)) {
+        if (settings.events.contains(sns.subject)) {
           Right(())
         } else {
           Left(RemoveMessage(message.getReceiptHandle))
         }
       }.right
       t <- (fo.read(sns.message) match {
-        case Failure(exception) => Left[MessageAction,T](KeepMessage)
-        case Success(value) => Right[MessageAction,T](value)
+        case Failure(exception) => Left[MessageAction, T](KeepMessage)
+        case Success(value)     => Right[MessageAction, T](value)
       }).right
     } yield t
   }
@@ -74,7 +75,7 @@ class QueueConsumer(queueUrl: String, events: List[String])(implicit system: Act
     Flow[MessageAction]
       .mapAsync(1) {
         case KeepMessage      => Future.successful(())
-        case RemoveMessage(h) => deleteMessage(queueUrl, h)
+        case RemoveMessage(h) => deleteMessage(settings.queueUrl, h)
       }
       .toMat(Sink.ignore)((_, f) => f)
   }
