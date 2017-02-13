@@ -25,8 +25,7 @@ object Consumer {
   )
 }
 
-class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient)
-    extends AmazonSqsOps {
+class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient) extends AmazonSqsOps {
 
   import backbone.scaladsl.Backbone._
   import system._
@@ -36,7 +35,6 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   )
 
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: Format[T]): Future[Done] = {
-
     SqsSource(settings.queueUrl)
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
@@ -46,7 +44,6 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
         }
       }
       .runWith(ack)
-
   }
 
   private def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
@@ -65,8 +62,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
         }
       }.right
       t <- (fo.read(sns.message) match {
-        case Failure(exception) => Left[MessageAction, T](KeepMessage)
-        case Success(value)     => Right[MessageAction, T](value)
+        case Failure(_)     => Left[MessageAction, T](KeepMessage)
+        case Success(value) => Right[MessageAction, T](value)
       }).right
     } yield t
   }

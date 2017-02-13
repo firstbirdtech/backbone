@@ -6,11 +6,11 @@ import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AmazonSnsOps extends AmazonAsync{
+trait AmazonSnsOps extends AmazonAsync {
 
   def sns: AmazonSNSAsyncClient
 
-  def subscribe(queue: QueueInformation, topicArn: String)(implicit ec: ExecutionContext) : Future[Unit] = {
+  def subscribe(queue: QueueInformation, topicArn: String)(implicit ec: ExecutionContext): Future[Unit] = {
     async[SubscribeRequest, SubscribeResult](sns.subscribeAsync(topicArn, "sqs", queue.arn, _)).map(_ => ())
   }
 
