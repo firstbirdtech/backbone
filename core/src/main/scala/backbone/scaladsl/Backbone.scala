@@ -29,6 +29,19 @@ object Backbone {
   case class SnsEnvelope(subject: String, message: String)
   case class Envelope[P](deleteHandle: String, subject: String, payload: P)
 
+  object ConsumerSettings {
+    def apply(events: List[String], topics: List[String], queue: String, cosumeWithin: Limitation): ConsumerSettings =
+      apply(events, topics, queue, 1, Some(cosumeWithin))
+
+    def apply(events: List[String],
+              topics: List[String],
+              queue: String,
+              parallelism: Int,
+              cosumeWithin: Limitation): ConsumerSettings =
+      apply(events, topics, queue, parallelism, Some(cosumeWithin))
+
+  }
+
   case class ConsumerSettings(
       events: List[String],
       topics: List[String],
@@ -45,12 +58,13 @@ class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncCl
     extends AmazonSqsOps
     with AmazonSnsOps {
 
-  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem, fo: Format[T]): Future[Done] = {
+  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem,
+                                                                       fo: Format[T]): Future[Done] = {
     consumeAsync[T](settings)(f.andThen(Future.successful))
   }
 
-  def consumeAsync[T](settings: ConsumerSettings)(
-      f: T => Future[ProcessingResult])(implicit system: ActorSystem, fo: Format[T]): Future[Done] = {
+  def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(implicit system: ActorSystem,
+                                                                                    fo: Format[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     for {

@@ -33,7 +33,7 @@ trait AmazonSqsOps extends AmazonAsync {
 
   def createQueue(name: String)(implicit ec: ExecutionContext): Future[QueueInformation] = {
     for {
-      createResponse <- async[CreateQueueRequest, CreateQueueResult](handler => sqs.createQueueAsync(name, handler))
+      createResponse <- async[CreateQueueRequest, CreateQueueResult](sqs.createQueueAsync(name, _))
       url = createResponse.getQueueUrl
       arn <- getQueueArn(url)
     } yield QueueInformation(url, arn)

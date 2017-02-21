@@ -11,12 +11,11 @@ import backbone.scaladsl.{Backbone => SBackbone}
 
 class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
 
-  val asScala = new SBackbone()(sqs,sns)
+  val asScala = new SBackbone()(sqs, sns)
 
-  def consume[T](settings: ConsumerSettings, format: Format[T], actorSystem: ActorSystem, f: JFunction1[T,ProcessingResult]) = {
-
-
-  }
-
+  def consume[T](settings: ConsumerSettings,
+                 format: Format[T],
+                 actorSystem: ActorSystem,
+                 f: JFunction1[T, ProcessingResult]) = {}
 
 }

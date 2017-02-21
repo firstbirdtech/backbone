@@ -9,16 +9,18 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-trait DefaultTestContext extends BeforeAndAfterAll {
-  this: Suite =>
+trait DefaultTestContext extends BeforeAndAfterAll { this: Suite =>
 
   implicit val system = ActorSystem()
-  implicit val mat = ActorMaterializer()
+  implicit val mat    = ActorMaterializer()
 
   implicit val sqsClient: AmazonSQSAsyncClient =
     new AmazonSQSAsyncClient(new BasicAWSCredentials("x", "x"))
       .withEndpoint[AmazonSQSAsyncClient]("http://localhost:9324")
 
-  override protected def afterAll(): Unit = Await.ready(system.terminate(), 5.seconds)
+  override protected def afterAll(): Unit = {
+    Await.ready(system.terminate(), 5.seconds)
+    sqsClient.shutdown()
+  }
 
 }

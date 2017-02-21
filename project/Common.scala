@@ -1,8 +1,8 @@
 import sbt.Keys._
 import sbt._
 
-object Common extends AutoPlugin{
-  override def trigger = allRequirements
+object Common extends AutoPlugin {
+  override def trigger  = allRequirements
   override def requires = plugins.JvmPlugin
 
   override lazy val projectSettings = Seq(
@@ -11,7 +11,8 @@ object Common extends AutoPlugin{
     organizationName := "Firstbird GmbH",
     scalaVersion := "2.11.8",
     scalacOptions ++= Seq(
-      "-encoding", "UTF-8",
+      "-encoding",
+      "UTF-8",
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -21,7 +22,6 @@ object Common extends AutoPlugin{
       "-Ywarn-dead-code",
       "-Xfuture"
     ),
-
     javacOptions ++= Seq(
       "-Xlint:unchecked"
     ),
