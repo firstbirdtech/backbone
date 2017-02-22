@@ -9,6 +9,7 @@ import backbone.aws.AmazonSqsOps
 import backbone.aws.Implicits._
 import backbone.consumer.Consumer.Settings
 import backbone.format.Format
+import backbone.scaladsl.Backbone._
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
@@ -27,7 +28,6 @@ object Consumer {
 
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient) extends AmazonSqsOps {
 
-  import backbone.scaladsl.Backbone._
   import system._
 
   implicit val mat = ActorMaterializer(

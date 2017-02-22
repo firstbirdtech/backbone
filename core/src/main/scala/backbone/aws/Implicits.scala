@@ -1,7 +1,7 @@
 package backbone.aws
 
 import backbone.scaladsl.Backbone.SnsEnvelope
-import play.api.libs.json.{Format, Reads, __}
+import play.api.libs.json.{__, Format, Reads}
 import play.api.libs.functional.syntax._
 
 object Implicits {
