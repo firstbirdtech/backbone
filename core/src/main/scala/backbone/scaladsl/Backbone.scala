@@ -22,11 +22,8 @@ object Backbone {
   case object Rejected extends ProcessingResult
   case object Consumed extends ProcessingResult
 
-  sealed trait MessageAction
-  case class RemoveMessage(receiptHandle: String) extends MessageAction
-  case object KeepMessage                         extends MessageAction
-
   case class SnsEnvelope(subject: String, message: String)
+
   case class Envelope[P](deleteHandle: String, subject: String, payload: P)
 
   object ConsumerSettings {
@@ -42,6 +39,14 @@ object Backbone {
 
   }
 
+  /**
+   *
+   * @param events        a list of events to listen to
+   * @param topics        a list of topics to subscribe to
+   * @param queue         the name of a queue to consumer from
+   * @param parallelism   number of concurrent messages in process
+   * @param consumeWithin optional limitation when backbone should stop consuming
+   */
   case class ConsumerSettings(
       events: List[String],
       topics: List[String],
@@ -54,15 +59,46 @@ object Backbone {
 
 }
 
+/** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue.
+ *
+ * @param sqs implicit aws sqs async client
+ * @param sns implicit aws sns async client
+ */
 class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient)
     extends AmazonSqsOps
     with AmazonSnsOps {
 
+  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+   *
+   * Creates a queue with the name provided in settings if it does not already exist. Subscribes
+   * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
+   * the queue from the topics.
+   *
+   * @param settings ConsumerSettings configuring Backbone
+   * @param f      function which processes objects of type T and returns a ProcessingResult
+   * @param system implicit actor system
+   * @param fo     Format[T] typeclass instance descirbing how to decode SQS Message to T
+   * @tparam T type of envents to consume
+   * @return a future completing when the stream quits
+   */
   def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem,
                                                                        fo: Format[T]): Future[Done] = {
     consumeAsync[T](settings)(f.andThen(Future.successful))
   }
 
+  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+   *
+   * Creates a queue with the name provided in settings if it does not already exist. Subscribes
+   * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
+   * the queue from the topics.
+   *
+   * @param settings ConsumerSettings configuring Backbone
+   * @param f      function which processes objects of type T and returns a Future[ProcessingResult]
+   * @param system implicit actor system
+   * @param fo     Format[T] typeclass instance descirbing how to decode SQS Message to T
+   * @tparam T type of envents to consume
+   * @return a future completing when the stream quits
+   */
   def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(implicit system: ActorSystem,
                                                                                     fo: Format[T]): Future[Done] = {
     implicit val ec = system.dispatcher

@@ -5,7 +5,7 @@ import com.amazonaws.handlers.AsyncHandler
 
 import scala.concurrent.{Future, Promise}
 
-trait AmazonAsync {
+private[backbone] trait AmazonAsync {
 
   def async[A <: AmazonWebServiceRequest, B](f: AsyncHandler[A, B] => Any): Future[B] = {
 

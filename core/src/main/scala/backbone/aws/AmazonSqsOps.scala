@@ -8,7 +8,7 @@ import com.amazonaws.services.sqs.model._
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AmazonSqsOps extends AmazonAsync {
+private[backbone] trait AmazonSqsOps extends AmazonAsync {
 
   def sqs: AmazonSQSAsyncClient
 
