@@ -24,7 +24,7 @@ class BackboneSpec extends WordSpec with DefaultTestContext with MockitoSugar wi
   private implicit val snsClient = mock[AmazonSNSAsyncClient]
 
   implicit val format = new Format[String] {
-    override def read(s: String): Try[String] = Success(s)
+    override def read(s: String): String = s
   }
 
   "Backbone.consume" should {

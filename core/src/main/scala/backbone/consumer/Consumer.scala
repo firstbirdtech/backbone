@@ -15,7 +15,7 @@ import com.amazonaws.services.sqs.model.Message
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 
 import scala.concurrent.Future
-import scala.util.{Failure, Left, Right, Success}
+import scala.util.{Failure, Left, Right, Success, Try}
 
 object Consumer {
   case class Settings(
@@ -61,7 +61,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
           Left(RemoveMessage(message.getReceiptHandle))
         }
       }.right
-      t <- (fo.read(sns.message) match {
+      t <- (Try(fo.read(sns.message)) match {
         case Failure(_)     => Left[MessageAction, T](KeepMessage)
         case Success(value) => Right[MessageAction, T](value)
       }).right
