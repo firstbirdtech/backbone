@@ -6,6 +6,6 @@ import scala.util.{Success, Try}
 
 object Implicits {
   implicit val stringFormat = new Format[String] {
-    override def read(s: String): Try[String] = Success(s)
+    override def read(s: String): String = s
   }
 }
