@@ -51,11 +51,11 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
 
   /** Consume elements of type T until an optional condition in settings is met.
    *
-   * After sucessfully processing elements of type T they are removed from the queue.
+   * After successfully processing elements of type T they are removed from the queue.
    *
    * @param f  function which processes objects of type T and returns a ProcessingResult
-   * @param fo Format[T] typeclass instance descirbing how to decode SQS Message to T
-   * @tparam T type of envents to consume
+   * @param fo Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T type of events to consume
    * @return a future completing when the stream quits
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: Format[T]): Future[Done] = {

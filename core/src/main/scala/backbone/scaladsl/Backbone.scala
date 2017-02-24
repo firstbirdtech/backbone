@@ -43,7 +43,7 @@ object Backbone {
    *
    * @param events        a list of events to listen to
    * @param topics        a list of topics to subscribe to
-   * @param queue         the name of a queue to consumer from
+   * @param queue         the name of a queue to consume from
    * @param parallelism   number of concurrent messages in process
    * @param consumeWithin optional limitation when backbone should stop consuming
    */
@@ -95,8 +95,8 @@ class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncCl
    * @param settings ConsumerSettings configuring Backbone
    * @param f      function which processes objects of type T and returns a Future[ProcessingResult]
    * @param system implicit actor system
-   * @param fo     Format[T] typeclass instance descirbing how to decode SQS Message to T
-   * @tparam T type of envents to consume
+   * @param fo     Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T type of events to consume
    * @return a future completing when the stream quits
    */
   def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(implicit system: ActorSystem,
