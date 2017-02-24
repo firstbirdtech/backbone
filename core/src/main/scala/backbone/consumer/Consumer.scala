@@ -13,27 +13,51 @@ import backbone.scaladsl.Backbone._
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
-
+import backbone.consumer.Consumer._
 import scala.concurrent.Future
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
+
+  private[consumer] sealed trait MessageAction
+
+  private[consumer] case class RemoveMessage(receiptHandle: String) extends MessageAction
+
+  private[consumer] case object KeepMessage extends MessageAction
+
   case class Settings(
       queueUrl: String,
       events: List[String],
       parallelism: Int = 1,
       limitation: Option[Limitation] = None
-  )
+  ) {
+    assert(parallelism > 0, "Parallelism must be positive")
+  }
+
 }
 
+/** Consumes events from a queue.
+ *
+ * @param settings consumer settings
+ * @param system implicit ActorSystem
+ * @param sqs implicit AmazonSQSAsyncClient
+ */
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient) extends AmazonSqsOps {
 
-  import system._
-
-  implicit val mat = ActorMaterializer(
+  private implicit val ec = system.dispatcher
+  private implicit val mat = ActorMaterializer(
     ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.resume)
   )
 
+  /** Consume elements of type T until an optional condition in settings is met.
+   *
+   * After successfully processing elements of type T they are removed from the queue.
+   *
+   * @param f  function which processes objects of type T and returns a ProcessingResult
+   * @param fo Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T type of events to consume
+   * @return a future completing when the stream quits
+   */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: Format[T]): Future[Done] = {
     SqsSource(settings.queueUrl)
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
@@ -46,12 +70,12 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       .runWith(ack)
   }
 
-  private def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
+  private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
     case Rejected => KeepMessage
     case Consumed => RemoveMessage(message.getReceiptHandle)
   }
 
-  private def parseMessage[T](message: Message)(implicit fo: Format[T]): Either[MessageAction, T] = {
+  private[this] def parseMessage[T](message: Message)(implicit fo: Format[T]): Either[MessageAction, T] = {
     for {
       sns <- parse[SnsEnvelope](message.getBody).right
       _ <- {
@@ -68,7 +92,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     } yield t
   }
 
-  private def ack: Sink[MessageAction, Future[Done]] = {
+  private[this] def ack: Sink[MessageAction, Future[Done]] = {
     Flow[MessageAction]
       .mapAsync(1) {
         case KeepMessage      => Future.successful(())

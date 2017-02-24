@@ -6,7 +6,7 @@ import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AmazonSnsOps extends AmazonAsync {
+private[backbone] trait AmazonSnsOps extends AmazonAsync {
 
   def sns: AmazonSNSAsyncClient
 
