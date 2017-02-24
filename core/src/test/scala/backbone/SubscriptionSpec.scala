@@ -27,7 +27,7 @@ class SubscriptionSpec
     with MockSQSAsyncClient
     with Matchers {
 
-  private implicit val system = ActorSystem()
+  private[this] implicit val system = ActorSystem()
 
   override protected def afterAll(): Unit = {
     Await.ready(system.terminate(), 5.seconds)

@@ -2,8 +2,8 @@ import sbt.Keys._
 import sbt._
 
 object Common extends AutoPlugin {
-  override def trigger  = allRequirements
-  override def requires = plugins.JvmPlugin
+  override def trigger: PluginTrigger = allRequirements
+  override def requires: Plugins      = plugins.JvmPlugin
 
   override lazy val projectSettings = Seq(
     organization := "com.firstbird",
