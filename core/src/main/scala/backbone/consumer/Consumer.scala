@@ -44,8 +44,8 @@ object Consumer {
  */
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient) extends AmazonSqsOps {
 
-  private implicit val ec = system.dispatcher
-  private implicit val mat = ActorMaterializer(
+  private[this] implicit val ec = system.dispatcher
+  private[this] implicit val mat = ActorMaterializer(
     ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.resume)
   )
 
