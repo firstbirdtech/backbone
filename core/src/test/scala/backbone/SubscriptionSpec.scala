@@ -1,10 +1,9 @@
 package backbone
 
 import akka.actor.ActorSystem
+import backbone.Backbone.{Consumed, SnsEnvelope}
 import backbone.aws.Implicits._
 import backbone.consumer.CountLimitation
-import backbone.scaladsl.Backbone
-import backbone.scaladsl.Backbone.{Consumed, ConsumerSettings, SnsEnvelope}
 import backbone.testutil.Implicits._
 import backbone.testutil._
 import com.amazonaws.handlers.AsyncHandler
