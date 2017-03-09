@@ -20,6 +20,7 @@ backbone.consume[String](settings){ str =>
 
 ## Quick Start
 
+### Installation
 To use backbone add the following dependency to your `build.sbt`.
 ```scala
 libraryDependencies += "com.firstbird" %% "backbone-core" % "0.4.1"
@@ -34,9 +35,22 @@ Or add the dependency to your `pom.xml`.
 </dependency>
 ```
 
+### Consuming Events
+
+To consume messages you have to specify the event types you want to consume, the topics from which messages
+should be consumed and a queue name that should be subscribed to the topics. The `parallelism` parameter
+indicates how many messages are getting processed at a single time. To create an instance of `Backbone`
+the only things you need are the according Amazon clients and a running `ActorSystem` which are
+passed as implicit parameters.
+
+When consuming of messages starts, Backbone subscribes the SQS queue automatically to the SNS topics
+and sets the needed permissions on SQS side to give permissions to the SNS topics to send messages
+to the queue.
+
 ```scala
 import backbone.scaladsl.Backbone
 
+implicit val system = ActorSystem()
 implicit val sns = new AmazonSNSAsyncClient()
 implicit val sqs = new AmazonSQSAsyncClient()
 
@@ -49,9 +63,79 @@ val settings = ConsumerSettings(
     parallelism = 5
 )
 
+//You need to define a format which tells Backbone how to decode the message body of the AWS SNS Message
+implicit val stringFormat = new Format[String] {
+    override def read(s: String): String = s
+}
+
+//Synchronous API
 backbone.consume[String](settings){ str =>
     println(str)
     Consumed
+}
+
+//Asynchronous API
+backbone.consumeAsync[String](settings){ _ =>
+  Future.succesful(Consumed)
+}
+```
+
+### Publishing Events
+
+## AWS Policies
+
+To work properly the AWS user used for running Backbone needs special permission which are being set
+by following example policies.
+
+To allow publishing of events via Backbone the AWS user needs the right to publish to the SNS topic.
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1474367067000",
+            "Effect": "Allow",
+            "Action": [
+                "sns:*"
+            ],
+            "Resource": [
+                "{topicArnToPublishTo}"
+            ]
+        }
+    ]
+}
+```
+
+To allow Backbone consuming events from the configured queue the AWS user needs full permissions for the
+queue that should be created for consuming messages as well as permissions to subscribe and unsubscribe
+the queue to the configured SNS topics.
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1474984885000",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:*"
+            ],
+            "Resource": [
+                "arn:aws:sqs:eu-central-1:{awsAccountId}:{queueName}"
+            ]
+        },
+        {
+            "Sid": "Stmt1474985033000",
+            "Effect": "Allow",
+            "Action": [
+                "sns:Subscribe",
+                "sns:Unsubscribe"
+            ],
+            "Resource": [
+                "{topicArn1}",
+                "{topicArn2}"
+            ]
+        }
+    ]
 }
 ```
 
