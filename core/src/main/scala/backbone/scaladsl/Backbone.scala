@@ -3,9 +3,9 @@ package backbone.scaladsl
 import akka.Done
 import akka.actor.ActorSystem
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
-import backbone.consumer.{Consumer, Limitation}
+import backbone.consumer.Consumer
 import backbone.format.Format
-import backbone.scaladsl.Backbone.{ConsumerSettings, ProcessingResult, QueueInformation}
+import backbone.scaladsl.Backbone.{ProcessingResult, QueueInformation}
 import com.amazonaws.auth.policy.actions.SQSActions
 import com.amazonaws.auth.policy.conditions.ConditionFactory
 import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}
@@ -26,34 +26,7 @@ object Backbone {
 
   case class Envelope[P](deleteHandle: String, subject: String, payload: P)
 
-  object ConsumerSettings {
-    def apply(events: List[String], topics: List[String], queue: String, cosumeWithin: Limitation): ConsumerSettings =
-      apply(events, topics, queue, 1, Some(cosumeWithin))
 
-    def apply(events: List[String],
-              topics: List[String],
-              queue: String,
-              parallelism: Int,
-              cosumeWithin: Limitation): ConsumerSettings =
-      apply(events, topics, queue, parallelism, Some(cosumeWithin))
-
-  }
-
-  /**
-   *
-   * @param events        a list of events to listen to
-   * @param topics        a list of topics to subscribe to
-   * @param queue         the name of a queue to consume from
-   * @param parallelism   number of concurrent messages in process
-   * @param consumeWithin optional limitation when backbone should stop consuming
-   */
-  case class ConsumerSettings(
-      events: List[String],
-      topics: List[String],
-      queue: String,
-      parallelism: Int = 1,
-      consumeWithin: Option[Limitation] = None
-  )
 
   def apply()(implicit sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient): Backbone = new Backbone()
 

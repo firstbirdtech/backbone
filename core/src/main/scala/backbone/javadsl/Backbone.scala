@@ -1,18 +1,17 @@
 package backbone.javadsl
 
-import java.util.concurrent.{CompletionStage, Future => JFuture}
+import java.util.concurrent.{CompletableFuture, CompletionStage}
 import java.util.function.{Function => JFunction1}
 
 import akka.Done
 import akka.actor.ActorSystem
 import backbone.format.Format
-import backbone.scaladsl.Backbone.{ProcessingResult, ConsumerSettings => SConsumerSettings}
-import backbone.scaladsl.{Backbone => SBackbone}
+import backbone.scaladsl.Backbone.ProcessingResult
+import backbone.scaladsl.{ConsumerSettings, Backbone => SBackbone}
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 
-import scala.collection.JavaConverters._
-import scala.compat.java8.{FunctionConverters, FutureConverters, OptionConverters}
+import scala.compat.java8.{FunctionConverters, FutureConverters}
 
 /** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue.
  *
@@ -36,21 +35,15 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
    * @tparam T type of envents to consume
    * @return a java future completing when the stream quits
    */
-  def consume[T](settings: ConsumerSettings,
-                 format: Format[T],
-                 actorSystem: ActorSystem,
-                 f: JFunction1[T, ProcessingResult]): JFuture[Done] = {
-
-    val asScalaSettings = new SConsumerSettings(
-      settings.events.asScala.toList,
-      settings.topics.asScala.toList,
-      settings.queue,
-      settings.parallelism,
-      OptionConverters.toScala(settings.consumeWithin)
-    )
+  def consume[T](
+      settings: ConsumerSettings,
+      format: Format[T],
+      actorSystem: ActorSystem,
+      f: JFunction1[T, ProcessingResult]
+  ): CompletableFuture[Done] = {
 
     val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
-    FutureConverters.toJava(asScala.consume(asScalaSettings)(asScalaFunction)(actorSystem, format)).toCompletableFuture
+    FutureConverters.toJava(asScala.consume(settings)(asScalaFunction)(actorSystem, format)).toCompletableFuture
   }
 
   /** Consume elements of type T until an optional condition in ConsumerSettings is met.
@@ -67,11 +60,11 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
    * @return a java future completing when the stream quits
    */
   def consumeAsync[T](
-      settings: SConsumerSettings,
+      settings: ConsumerSettings,
       format: Format[T],
       actorSystem: ActorSystem,
       f: JFunction1[T, CompletionStage[ProcessingResult]]
-  ): JFuture[Done] = {
+  ): CompletableFuture[Done] = {
 
     val asScalaFunction: (T) => CompletionStage[ProcessingResult] = FunctionConverters.asScalaFromFunction(f)
     val asScalaFuture                                             = asScalaFunction.andThen(a => FutureConverters.toScala(a))

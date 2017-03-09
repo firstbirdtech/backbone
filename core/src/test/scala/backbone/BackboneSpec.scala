@@ -1,8 +1,8 @@
 package backbone
 
 import backbone.format.Format
-import backbone.scaladsl.Backbone
-import backbone.scaladsl.Backbone.{Consumed, ConsumerSettings}
+import backbone.scaladsl.{Backbone, ConsumerSettings}
+import backbone.scaladsl.Backbone.Consumed
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
