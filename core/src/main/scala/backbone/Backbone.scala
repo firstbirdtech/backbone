@@ -1,11 +1,11 @@
-package backbone.scaladsl
+package backbone
 
 import akka.Done
 import akka.actor.ActorSystem
+import backbone.Backbone.{ProcessingResult, QueueInformation}
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
 import backbone.consumer.Consumer
 import backbone.format.Format
-import backbone.scaladsl.Backbone.{ProcessingResult, QueueInformation}
 import com.amazonaws.auth.policy.actions.SQSActions
 import com.amazonaws.auth.policy.conditions.ConditionFactory
 import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}

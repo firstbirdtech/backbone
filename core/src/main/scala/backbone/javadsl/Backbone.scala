@@ -5,9 +5,9 @@ import java.util.function.{Function => JFunction1}
 
 import akka.Done
 import akka.actor.ActorSystem
+import backbone.Backbone.ProcessingResult
 import backbone.format.Format
-import backbone.scaladsl.Backbone.ProcessingResult
-import backbone.scaladsl.{ConsumerSettings, Backbone => SBackbone}
+import backbone.{ConsumerSettings, Backbone => SBackbone}
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 

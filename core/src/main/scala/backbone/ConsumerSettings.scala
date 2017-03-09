@@ -1,7 +1,9 @@
-package backbone.scaladsl
+package backbone
+
+import java.util.{List => JList, Optional => JOption}
 
 import backbone.consumer.Limitation
-import java.util.{List => JList, Optional => JOption}
+
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters
 

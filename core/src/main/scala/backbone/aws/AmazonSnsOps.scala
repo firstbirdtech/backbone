@@ -1,6 +1,6 @@
 package backbone.aws
 
-import backbone.scaladsl.Backbone.QueueInformation
+import backbone.Backbone.QueueInformation
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
 

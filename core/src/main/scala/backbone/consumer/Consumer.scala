@@ -9,7 +9,7 @@ import backbone.aws.AmazonSqsOps
 import backbone.aws.Implicits._
 import backbone.consumer.Consumer.{Settings, _}
 import backbone.format.Format
-import backbone.scaladsl.Backbone._
+import backbone.Backbone._
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}

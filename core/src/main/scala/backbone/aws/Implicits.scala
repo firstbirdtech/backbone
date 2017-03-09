@@ -1,6 +1,6 @@
 package backbone.aws
 
-import backbone.scaladsl.Backbone.SnsEnvelope
+import backbone.Backbone.SnsEnvelope
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{__, Format}
 
