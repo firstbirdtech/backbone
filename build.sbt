@@ -19,3 +19,18 @@ lazy val core = project
       "junit"                  % "junit"                    % "4.12" % Test
     )
   )
+
+lazy val genericJson = project
+  .in(file("generic-json"))
+  .settings(
+    name := "backbone-generic-json",
+    libraryDependencies ++= Seq(
+      "io.circe"      %% "circe-core"    % "0.7.0",
+      "io.circe"      %% "circe-generic" % "0.7.0",
+      "io.circe"      %% "circe-parser"  % "0.7.0",
+      "org.mockito"   % "mockito-core"   % "2.6.8" % Test,
+      "org.scalatest" %% "scalatest"     % "3.0.1" % Test,
+      "junit"         % "junit"          % "4.12" % Test
+    )
+  )
+  .dependsOn(core)
