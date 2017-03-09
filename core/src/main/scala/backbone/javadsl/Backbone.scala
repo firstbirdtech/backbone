@@ -14,15 +14,32 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import scala.collection.JavaConverters._
 import scala.compat.java8.{FunctionConverters, FutureConverters, OptionConverters}
 
+/** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue.
+  *
+  * @param sqs AmazonSQSASyncClient
+  * @param sns AmazonSNSAsyncClient
+  */
 class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
 
   val asScala = new SBackbone()(sqs, sns)
 
+  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+    *
+    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
+    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
+    * the queue from the topics.
+    *
+    * @param settings ConsumerSettings configuring Backbone
+    * @param f      function which processes objects of type T and returns a ProcessingResult
+    * @param actorSystem implicit actor system
+    * @param format     Format[T] typeclass instance descirbing how to decode SQS Message to T
+    * @tparam T type of envents to consume
+    * @return a java future completing when the stream quits
+    */
   def consume[T](settings: ConsumerSettings,
                  format: Format[T],
                  actorSystem: ActorSystem,
                  f: JFunction1[T, ProcessingResult]): JFuture[Done] = {
-
 
     val asScalaSettings = new SConsumerSettings(settings.events.asScala.toList,
                                                 settings.topics.asScala.toList,
@@ -33,7 +50,19 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient) {
     val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
     FutureConverters.toJava(asScala.consume(asScalaSettings)(asScalaFunction)(actorSystem, format)).toCompletableFuture
   }
-
+  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+    *
+    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
+    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
+    * the queue from the topics.
+    *
+    * @param settings ConsumerSettings configuring Backbone
+    * @param f      function which processes objects of type T and returns a Future[ProcessingResult]
+    * @param actorSystem implicit actor system
+    * @param format     Format[T] typeclass instance describing how to decode SQS Message to T
+    * @tparam T type of events to consume
+    * @return a java future completing when the stream quits
+    */
   def consumeAsync[T](settings: SConsumerSettings,
                       format: Format[T],
                       actorSystem: ActorSystem,
