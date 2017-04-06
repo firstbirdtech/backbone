@@ -10,7 +10,6 @@ import backbone.testutil._
 import com.amazonaws.services.sqs.model.Message
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import play.api.libs.json.Json
-
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -38,7 +37,8 @@ class GenericFormatSpec
     "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
 
 
-      case class EventA(a: String)
+      case class B(b: String)
+      case class EventA(a: String, b: B)
 
       val settings = ConsumerSettings("subject" :: Nil, Nil, "queue-name", 1, CountLimitation(1))
       val backbone = Backbone()
