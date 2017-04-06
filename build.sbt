@@ -1,5 +1,7 @@
 lazy val backbone = project
   .in(file("."))
+  .disablePlugins(Publish)
+  .enablePlugins(NoPublish)
   .aggregate(core)
 
 lazy val core = project
