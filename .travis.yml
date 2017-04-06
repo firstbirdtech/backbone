@@ -23,3 +23,18 @@ cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
+
+deploy:
+  provider: script
+  script:
+    - sbt publish
+  on:
+    tags: true
+    repo: firstbirdtech/backbone
+
+env:
+  global:
+    # encrypt with: travis encrypt BINTRAY_USER=...
+    - secure: "a/BSI0uRvrEq7BeRzShn6MCj1cJe6rmj7QwJvPJWgnj8dJzzseAzL/JgPU2lQ0SmeZ/une64LgtWnHDRed583wHhTPvfRVoB8Qu781abzORVvu4ibnrGqKEdi6uv7APD2ZEorYBE4hy18vKO5BxqY8F4XBYxTi7Lml3DR+NVSr0bcipS7CkSLYGhayBAxZJsaXQK9u/N0mdi0KKenAc2DxwzFVk7X+12HCcB0FYGBYoi/reqGaovRPNzzSI/9ZuYCHiXoF4e9nMEt1qCpYqxvwSyJQZ4aRKQr9/8AY/Js+vY4afwZnOD4KVR+9LG5zrNaKA7Nkh3DSavYT0LqFLrAYrVZTC2X9PHbD+amxpxXUV+Y12QUb2Wn+MDkAwBfX+beHSmqEnxO2icpoIQu9xAdsSXxjA4hvtaB6nQKvlTQ5qDD1GbIYswFqsi4e4gPGeSYuDxF53ULHSV/+Z1SvuaBbQr5GPUa7TxNJMlum7Hxqmo+YQumInFujY9+wsB8Vo9537V3VZNTzHg2CnYD3uuyJTzA5QVa4GoCjduYHVGg0q5gnqPWL6YG7v/Rw0u5+9kH8njSPK0zKEVWi/JtYL902Zs/qsdeUsr9IkyvOn0ZZOXa0AOS87g1lanEOn06JYhIlRi2KutkQSFLEp14TWsGNr9+hwIxpTXAvmy4MB7X+Q="
+    # encrypt with: travis encrypt BINTRAY_PASS=...
+    - secure: "MCFOjqx9RkrcqBqtO2DcqY0w9tNgoao5uy66bNB7j0zrLJ+Gc5HifPf6e8Mknmu9DJXNwcGoQt9KuE8UEoDp1QMqqHC9ha0DHoPGXklIrv9jTgKoDvzcxFrkE8lbw6K1KNhq2JnrDrsGju9sflw7F0V/uObXGz44OgSne01wainY2uE9alKyEa/DIsuTePyxH1c+E1kH2FbeTJbNaTuqxOmqy7/lrzy7L7I00aUUuIjtiDzqoFOYahUd70gLeMzPuPRgAtgjGci/4AYxdMZOaRKECRD6jp/ZJa4z0yBdkkFhw6R/isegc4BXcbhq18YcGFcFpsXQJaTvlo202wE31Gk1Thj9ONvKdMImlj7rkAT5H31RNqDVeZSzmpFtPmUM9trGY0/QvxlJeYnvhjR29qwy1BJf/yZZ3QByNFdh2VXYYu4wy0Bg99e3HU3JzZqp+9ULni5o034/OjdCtxHD6a667hC4YBXJwag0hu+4rDjMo1v6YizCR6ZIIiN1l0oKzRFA/bz9ko3NatmyQbDKs6ZPgOa2AEvmGi2dNz8Ib5bp9/qWbdXb03bIbP0w8gYzRIZ+RKvbcbtN0imiB60KaFEGB9Cu5ML4iZi5cU54i/5vmdVmnyrFshjZ6X5xZfEOJd/PW4xJitHjcvhc3b9GA74sXn2w/KXNTn/tKKc8kdU="
