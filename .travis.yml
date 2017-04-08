@@ -26,13 +26,13 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
 
-deploy:
-  provider: script
-  script:
-    - sbt publish
-  on:
-    tags: true
-    repo: firstbirdtech/backbone
+#deploy:
+#  provider: script
+#  script:
+#    - sbt publish
+#  on:
+#    tags: true
+#    repo: firstbirdtech/backbone
 
 env:
   global:
