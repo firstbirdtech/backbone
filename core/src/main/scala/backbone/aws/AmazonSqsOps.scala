@@ -1,6 +1,6 @@
 package backbone.aws
 
-import backbone.Backbone.QueueInformation
+import backbone.scaladsl.Backbone.QueueInformation
 import com.amazonaws.auth.policy.Policy
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model._

@@ -1,11 +1,12 @@
-package backbone
+package backbone.scaladsl
 
 import akka.Done
 import akka.actor.ActorSystem
-import backbone.Backbone.{ProcessingResult, QueueInformation}
+import backbone.{MessageReader, ProcessingResult}
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
-import backbone.consumer.Consumer
-import backbone.format.Format
+import backbone.consumer.{Consumer, ConsumerSettings}
+import backbone.json.JsonReader
+import backbone.scaladsl.Backbone.QueueInformation
 import com.amazonaws.auth.policy.actions.SQSActions
 import com.amazonaws.auth.policy.conditions.ConditionFactory
 import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}
@@ -18,28 +19,24 @@ object Backbone {
 
   case class QueueInformation(url: String, arn: String)
 
-  sealed trait ProcessingResult
-  case object Rejected extends ProcessingResult
-  case object Consumed extends ProcessingResult
-
-  case class SnsEnvelope(subject: String, message: String)
-
-  case class Envelope[P](deleteHandle: String, subject: String, payload: P)
-
-
-
-  def apply()(implicit sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient): Backbone = new Backbone()
+  def apply()(implicit sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient, system: ActorSystem): Backbone =
+    new Backbone()
 
 }
 
 /** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue.
  *
- * @param sqs implicit aws sqs async client
- * @param sns implicit aws sns async client
+ * @param sqs    implicit aws sqs async client
+ * @param sns    implicit aws sns async client
+ * @param system implicit actor system
  */
-class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient)
+class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, system: ActorSystem)
     extends AmazonSqsOps
     with AmazonSnsOps {
+
+  private val config                          = system.settings.config
+  private val jsonReaderClass                 = Class.forName(config.getString("backbone.json.reader"))
+  private implicit val jsonReader: JsonReader = jsonReaderClass.newInstance().asInstanceOf[JsonReader]
 
   /** Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
@@ -48,14 +45,12 @@ class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncCl
    * the queue from the topics.
    *
    * @param settings ConsumerSettings configuring Backbone
-   * @param f      function which processes objects of type T and returns a ProcessingResult
-   * @param system implicit actor system
-   * @param fo     Format[T] typeclass instance descirbing how to decode SQS Message to T
+   * @param f        function which processes objects of type T and returns a ProcessingResult
+   * @param fo       Format[T] typeclass instance descirbing how to decode SQS Message to T
    * @tparam T type of envents to consume
    * @return a future completing when the stream quits
    */
-  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit system: ActorSystem,
-                                                                       fo: Format[T]): Future[Done] = {
+  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult)(implicit fo: MessageReader[T]): Future[Done] = {
     consumeAsync[T](settings)(f.andThen(Future.successful))
   }
 
@@ -66,14 +61,13 @@ class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncCl
    * the queue from the topics.
    *
    * @param settings ConsumerSettings configuring Backbone
-   * @param f      function which processes objects of type T and returns a Future[ProcessingResult]
-   * @param system implicit actor system
-   * @param fo     Format[T] typeclass instance describing how to decode SQS Message to T
+   * @param f        function which processes objects of type T and returns a Future[ProcessingResult]
+   * @param fo       Format[T] typeclass instance describing how to decode SQS Message to T
    * @tparam T type of events to consume
    * @return a future completing when the stream quits
    */
-  def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(implicit system: ActorSystem,
-                                                                                    fo: Format[T]): Future[Done] = {
+  def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(
+      implicit fo: MessageReader[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     for {
