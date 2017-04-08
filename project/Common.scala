@@ -10,7 +10,7 @@ object Common extends AutoPlugin {
     organizationName := "Firstbird GmbH",
     homepage := Some(url("https://github.com/firstbirdtech/backbone")),
     scmInfo := Some(ScmInfo(url("https://github.com/firstbirdtech/backbone"), "git@github.com:firstbirdtech/backbone.git")),
-//    developers += Developer("contributors", "Contributors", "https://gitter.im/akka/dev", url("https://github.com/akka/alpakka/graphs/contributors")),
+    developers += Developer("contributors", "Contributors", "hello@firstbird,com", url("https://github.com/firstbirdtech/backbone/graphs/contributors")),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
 
     scalaVersion := "2.11.8",
