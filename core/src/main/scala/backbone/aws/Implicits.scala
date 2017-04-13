@@ -7,8 +7,8 @@ import play.api.libs.json.{__, Format}
 private[backbone] object Implicits {
 
   implicit val snsEnvelopeReads: Format[SnsEnvelope] = (
-    (__ \ 'Message).format[String] and
-      (__ \ 'Subject).format[String]
+    (__ \ 'Subject).format[String] ~
+      (__ \ 'Message).format[String]
   )(SnsEnvelope, unlift(SnsEnvelope.unapply))
 
 }
