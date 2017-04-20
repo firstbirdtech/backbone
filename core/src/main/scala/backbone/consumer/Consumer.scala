@@ -5,11 +5,11 @@ import akka.actor.ActorSystem
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
-import backbone.{MessageReader, _}
 import backbone.aws.AmazonSqsOps
 import backbone.consumer.Consumer.{Settings, _}
 import backbone.json.JsonReader
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import backbone.{MessageReader, _}
+import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 
 import scala.concurrent.Future
@@ -39,7 +39,7 @@ object Consumer {
   * @param jr a Json Reader implementation which
  * @param sqs implicit AmazonSQSAsyncClient
  */
-class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsyncClient, jr: JsonReader) extends AmazonSqsOps {
+class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader) extends AmazonSqsOps {
 
   private[this] implicit val ec = system.dispatcher
   private[this] implicit val mat = ActorMaterializer(
@@ -74,7 +74,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
-      sns <- jr.read(message.getBody).right
+      sns <- jr.readSnsEnvelope(message.getBody).right
       _ <- {
         if (settings.events.contains(sns.subject)) {
           Right(())

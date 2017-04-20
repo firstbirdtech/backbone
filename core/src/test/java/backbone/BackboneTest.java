@@ -2,9 +2,10 @@ package backbone;
 
 import akka.actor.ActorSystem;
 import backbone.consumer.ConsumerSettings;
-import backbone.MessageReader;
-import com.amazonaws.services.sns.AmazonSNSAsyncClient;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+import com.amazonaws.services.sns.AmazonSNSAsync;
+import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSAsync;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -13,8 +14,8 @@ import java.util.Optional;
 public class BackboneTest {
 
     private final ActorSystem system = ActorSystem.create();
-    private final AmazonSQSAsyncClient sqs = new AmazonSQSAsyncClient();
-    private final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient();
+    private final AmazonSQSAsync sqs = AmazonSQSAsyncClientBuilder.defaultClient();
+    private final AmazonSNSAsync sns = AmazonSNSAsyncClientBuilder.defaultClient();
     @Test
     public void name() throws Exception {
 

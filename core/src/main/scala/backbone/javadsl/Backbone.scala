@@ -5,20 +5,20 @@ import java.util.function.{Function => JFunction1}
 
 import akka.Done
 import akka.actor.ActorSystem
-import backbone.{MessageReader, scaladsl, _}
 import backbone.consumer.ConsumerSettings
-import backbone.json.JsonReader
-import com.amazonaws.services.sns.AmazonSNSAsyncClient
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import backbone.{MessageReader, scaladsl, _}
+import com.amazonaws.services.sns.AmazonSNSAsync
+import com.amazonaws.services.sqs.AmazonSQSAsync
 
 import scala.compat.java8.{FunctionConverters, FutureConverters}
 
 /** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue.
  *
- * @param sqs AmazonSQSASyncClient
- * @param sns AmazonSNSAsyncClient
+ * @param sqs AmazonSQSASync
+ * @param sns AmazonSNSAsync
+ * @param system implicit actor system
  */
-class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, val system: ActorSystem) {
+class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: ActorSystem) {
 
   val asScala = new scaladsl.Backbone()(sqs, sns, system)
 
@@ -30,7 +30,6 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, val
    *
    * @param settings ConsumerSettings configuring Backbone
    * @param f      function which processes objects of type T and returns a ProcessingResult
-   * @param actorSystem implicit actor system
    * @param format     Format[T] typeclass instance descirbing how to decode SQS Message to T
    * @tparam T type of envents to consume
    * @return a java future completing when the stream quits
@@ -51,7 +50,6 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, val
    *
    * @param settings ConsumerSettings configuring Backbone
    * @param f      function which processes objects of type T and returns a Future[ProcessingResult]
-   * @param actorSystem implicit actor system
    * @param format     Format[T] typeclass instance describing how to decode SQS Message to T
    * @tparam T type of events to consume
    * @return a java future completing when the stream quits
@@ -68,7 +66,7 @@ class Backbone(val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, val
 }
 
 object Backbone {
-  def create(sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient, system: ActorSystem): Backbone = {
+  def create(sqs: AmazonSQSAsync, sns: AmazonSNSAsync, system: ActorSystem): Backbone = {
     new Backbone(sqs, sns, system)
   }
 }

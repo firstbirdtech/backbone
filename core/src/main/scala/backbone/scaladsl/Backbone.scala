@@ -2,16 +2,16 @@ package backbone.scaladsl
 
 import akka.Done
 import akka.actor.ActorSystem
-import backbone.{MessageReader, ProcessingResult}
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
 import backbone.consumer.{Consumer, ConsumerSettings}
 import backbone.json.JsonReader
 import backbone.scaladsl.Backbone.QueueInformation
+import backbone.{MessageReader, ProcessingResult}
 import com.amazonaws.auth.policy.actions.SQSActions
 import com.amazonaws.auth.policy.conditions.ConditionFactory
 import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}
-import com.amazonaws.services.sns.AmazonSNSAsyncClient
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import com.amazonaws.services.sns.AmazonSNSAsync
+import com.amazonaws.services.sqs.AmazonSQSAsync
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,7 +19,7 @@ object Backbone {
 
   case class QueueInformation(url: String, arn: String)
 
-  def apply()(implicit sqs: AmazonSQSAsyncClient, sns: AmazonSNSAsyncClient, system: ActorSystem): Backbone =
+  def apply()(implicit sqs: AmazonSQSAsync, sns: AmazonSNSAsync, system: ActorSystem): Backbone =
     new Backbone()
 
 }
@@ -30,7 +30,7 @@ object Backbone {
  * @param sns    implicit aws sns async client
  * @param system implicit actor system
  */
-class Backbone(implicit val sqs: AmazonSQSAsyncClient, val sns: AmazonSNSAsyncClient, system: ActorSystem)
+class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system: ActorSystem)
     extends AmazonSqsOps
     with AmazonSnsOps {
 
