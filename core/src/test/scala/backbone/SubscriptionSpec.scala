@@ -1,19 +1,19 @@
 package backbone
 
 import akka.actor.ActorSystem
-import backbone.Backbone.{Consumed, SnsEnvelope}
-import backbone.aws.Implicits._
-import backbone.consumer.CountLimitation
+import backbone.consumer.{ConsumerSettings, CountLimitation}
+import backbone.json.SnsEnvelope
+import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
 import backbone.testutil._
 import com.amazonaws.handlers.AsyncHandler
 import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
 import com.amazonaws.services.sqs.model.{Message, ReceiveMessageRequest}
+import io.circe.syntax._
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import play.api.libs.json.Json
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -63,7 +63,7 @@ class SubscriptionSpec
     val envelope = SnsEnvelope("subject", "message")
 
     val message = new Message()
-      .withBody(Json.toJson(envelope).toString())
+      .withBody(envelope.asJson.toString())
 
     "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
 

@@ -1,10 +1,10 @@
-package backbone.format
+package backbone
 
 /**
  * Typeclass to allow reading elements of type T from Amazon SQS Messages
  * @tparam T
  */
-trait Format[T] {
+trait MessageReader[T] {
 
   /**
    *
