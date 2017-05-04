@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory
 import scala.util.Try
 
 /**
-  * JsonReader using gson
-  */
+ * JsonReader using gson
+ */
 class GsonJsonReader extends JsonReader {
 
-  private val logger = LoggerFactory.getLogger(getClass)
-  private val parser = new JsonParser()
+  private[this] val logger = LoggerFactory.getLogger(getClass)
+  private[this] val parser = new JsonParser()
 
   override def readSnsEnvelope(s: String): Either[Consumer.MessageAction, SnsEnvelope] = {
 
@@ -26,7 +26,7 @@ class GsonJsonReader extends JsonReader {
 
     optionalSnsEnvelope match {
       case Some(envelope) => envelope.asRight
-      case None           =>
+      case None =>
         logger.error(s"Json can not be parsed to SnsEnvelope. json=$s")
         KeepMessage.asLeft
     }

@@ -15,10 +15,10 @@ trait DefaultTestContext extends BeforeAndAfterAll { this: Suite =>
   implicit val system = ActorSystem()
   implicit val mat    = ActorMaterializer()
 
-
-  implicit val sqsClient: AmazonSQSAsync = AmazonSQSAsyncClientBuilder.standard()
+  implicit val sqsClient: AmazonSQSAsync = AmazonSQSAsyncClientBuilder
+    .standard()
     .withEndpointConfiguration(new EndpointConfiguration("http://localhost:9324", "eu-central-1"))
-    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("x","x")))
+    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x")))
     .build()
 
   override protected def afterAll(): Unit = {

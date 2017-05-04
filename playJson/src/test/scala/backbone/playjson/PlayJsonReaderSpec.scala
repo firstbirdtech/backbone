@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, MustMatchers}
 import cats.syntax.either._
 
 class PlayJsonReaderSpec extends FlatSpec with MustMatchers {
-  private val reader = new PlayJsonReader()
+  private[this] val reader = new PlayJsonReader()
 
   "PlayJsonReader " should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
     val json =

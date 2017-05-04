@@ -19,7 +19,7 @@ object Consumer {
 
   sealed trait MessageAction
   case class RemoveMessage(receiptHandle: String) extends MessageAction
-  case object KeepMessage extends MessageAction
+  case object KeepMessage                         extends MessageAction
 
   case class Settings(
       queueUrl: String,
@@ -36,10 +36,11 @@ object Consumer {
  *
  * @param settings consumer settings
  * @param system implicit ActorSystem
-  * @param jr a Json Reader implementation which
+ * @param jr a Json Reader implementation which
  * @param sqs implicit AmazonSQSAsyncClient
  */
-class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader) extends AmazonSqsOps {
+class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader)
+    extends AmazonSqsOps {
 
   private[this] implicit val ec = system.dispatcher
   private[this] implicit val mat = ActorMaterializer(

@@ -41,6 +41,6 @@ class DefaultMessageReadsSpec extends FlatSpec with Matchers with DefaultMessage
     testMessageReader[Array[Char]]("message") shouldBe "message".toCharArray
   }
 
-  private def testMessageReader[T](message: String)(implicit fo: MessageReader[T]): T = fo.read(message)
+  private[this] def testMessageReader[T](message: String)(implicit fo: MessageReader[T]): T = fo.read(message)
 
 }

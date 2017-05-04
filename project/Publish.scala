@@ -14,7 +14,7 @@ object Publish extends AutoPlugin {
   import bintray.BintrayPlugin
   import bintray.BintrayPlugin.autoImport._
 
-  override def trigger = allRequirements
+  override def trigger  = allRequirements
   override def requires = BintrayPlugin
 
   override def projectSettings = Seq(

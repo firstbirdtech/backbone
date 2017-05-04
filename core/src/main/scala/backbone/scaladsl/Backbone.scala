@@ -34,9 +34,9 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     extends AmazonSqsOps
     with AmazonSnsOps {
 
-  private val config                          = system.settings.config
-  private val jsonReaderClass                 = Class.forName(config.getString("backbone.json.reader"))
-  private implicit val jsonReader: JsonReader = jsonReaderClass.newInstance().asInstanceOf[JsonReader]
+  private[this] val config                          = system.settings.config
+  private[this] val jsonReaderClass                 = Class.forName(config.getString("backbone.json.reader"))
+  private[this] implicit val jsonReader: JsonReader = jsonReaderClass.newInstance().asInstanceOf[JsonReader]
 
   /** Consume elements of type T until an optional condition in ConsumerSettings is met.
    *

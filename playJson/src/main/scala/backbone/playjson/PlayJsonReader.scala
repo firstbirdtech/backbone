@@ -11,7 +11,7 @@ import scala.util.{Left, Right}
 
 class PlayJsonReader extends JsonReader {
 
-  private implicit val snsEnvelopeReads: json.Format[SnsEnvelope] = (
+  private[this] implicit val snsEnvelopeReads: json.Format[SnsEnvelope] = (
     (__ \ 'Subject).format[String] and
       (__ \ 'Message).format[String]
   )(SnsEnvelope, unlift(SnsEnvelope.unapply))

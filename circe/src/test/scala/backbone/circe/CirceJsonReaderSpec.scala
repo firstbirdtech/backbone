@@ -7,7 +7,7 @@ import cats.syntax.either._
 
 class CirceJsonReaderSpec extends FlatSpec with MustMatchers {
 
-  private val reader = new CirceJsonReader()
+  private[this] val reader = new CirceJsonReader()
 
   "CirceJsonReader" should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
     val json = """

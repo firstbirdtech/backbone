@@ -9,10 +9,16 @@ object Common extends AutoPlugin {
     organization := "com.firstbird",
     organizationName := "Firstbird GmbH",
     homepage := Some(url("https://github.com/firstbirdtech/backbone")),
-    scmInfo := Some(ScmInfo(url("https://github.com/firstbirdtech/backbone"), "git@github.com:firstbirdtech/backbone.git")),
-    developers += Developer("contributors", "Contributors", "hello@firstbird,com", url("https://github.com/firstbirdtech/backbone/graphs/contributors")),
+    scmInfo := Some(
+      ScmInfo(url("https://github.com/firstbirdtech/backbone"), "git@github.com:firstbirdtech/backbone.git")
+    ),
+    developers += Developer(
+      "contributors",
+      "Contributors",
+      "hello@firstbird,com",
+      url("https://github.com/firstbirdtech/backbone/graphs/contributors")
+    ),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-
     scalaVersion := "2.11.11",
     scalacOptions ++= Seq(
       "-encoding",
@@ -37,14 +43,14 @@ object Common extends AutoPlugin {
   )
 }
 
-object NoCrossBuild extends AutoPlugin{
-  override def requires: Plugins      = plugins.JvmPlugin
+object NoCrossBuild extends AutoPlugin {
+  override def requires: Plugins = plugins.JvmPlugin
   override lazy val projectSettings = Seq(
     scalaVersion := "2.11.11"
   )
 }
 
-object CrossBuild extends AutoPlugin{
+object CrossBuild extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
   override def requires: Plugins      = plugins.JvmPlugin
   override lazy val projectSettings = Seq(

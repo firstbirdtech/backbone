@@ -7,7 +7,7 @@ import cats.syntax.either._
 
 class GsonJsonReaderSpec extends FlatSpec with MustMatchers {
 
-  private val reader = new GsonJsonReader
+  private[this] val reader = new GsonJsonReader
 
   "GsonJsonReader " should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
     val json =
