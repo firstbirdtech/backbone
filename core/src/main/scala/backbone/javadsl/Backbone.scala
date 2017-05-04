@@ -58,8 +58,9 @@ class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: Act
                       format: MessageReader[T],
                       f: JFunction1[T, CompletionStage[ProcessingResult]]): CompletableFuture[Done] = {
 
-    val asScalaFunction: (T) => CompletionStage[ProcessingResult] = FunctionConverters.asScalaFromFunction(f)
-    val asScalaFuture                                             = asScalaFunction.andThen(a => FutureConverters.toScala(a))
+    val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
+    val asScalaFuture   = asScalaFunction.andThen(a => FutureConverters.toScala(a))
+
     FutureConverters.toJava(asScala.consumeAsync[T](settings)(asScalaFuture)(format)).toCompletableFuture
 
   }

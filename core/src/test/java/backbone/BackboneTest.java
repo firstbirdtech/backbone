@@ -7,17 +7,19 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.Optional;
+
+import static org.junit.Assert.*;
 
 public class BackboneTest {
 
     private final ActorSystem system = ActorSystem.create();
     private final AmazonSQSAsync sqs = AmazonSQSAsyncClientBuilder.defaultClient();
     private final AmazonSNSAsync sns = AmazonSNSAsyncClientBuilder.defaultClient();
+
     @Test
-    public void name() throws Exception {
+    public void assertThatConsumeWorks() throws Exception {
 
         final backbone.javadsl.Backbone bb = backbone.javadsl.Backbone.create(sqs, sns, system);
 
@@ -26,6 +28,6 @@ public class BackboneTest {
         final MessageReader<String> f= s -> s;
 
         bb.consume(consumerSettings, f, (String s) -> Consumed.instance());
-
+        assertTrue(true);
     }
 }

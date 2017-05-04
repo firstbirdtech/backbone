@@ -1,7 +1,9 @@
-import sbt._, Keys._
+import sbt.Keys._
+import sbt._
+import sbt.plugins._
 
 object NoPublish extends AutoPlugin {
-  override def requires = plugins.JvmPlugin
+  override def requires: Plugins = JvmPlugin
 
   override def projectSettings = Seq(
     publishArtifact := false,
@@ -14,10 +16,10 @@ object Publish extends AutoPlugin {
   import bintray.BintrayPlugin
   import bintray.BintrayPlugin.autoImport._
 
-  override def trigger  = allRequirements
-  override def requires = BintrayPlugin
+  override def trigger: PluginTrigger = allRequirements
+  override def requires: Plugins      = BintrayPlugin
 
-  override def projectSettings = Seq(
+  override def projectSettings: Seq[sbt.Def.Setting[_]] = Seq(
     bintrayOrganization := Some("firstbird"),
     bintrayPackage := "backbone"
   )
