@@ -16,8 +16,9 @@ public class BackboneTest {
     private final ActorSystem system = ActorSystem.create();
     private final AmazonSQSAsync sqs = AmazonSQSAsyncClientBuilder.defaultClient();
     private final AmazonSNSAsync sns = AmazonSNSAsyncClientBuilder.defaultClient();
+
     @Test
-    public void name() throws Exception {
+    public void assertThatConsumeWorks() throws Exception {
 
         final backbone.javadsl.Backbone bb = backbone.javadsl.Backbone.create(sqs, sns, system);
 
