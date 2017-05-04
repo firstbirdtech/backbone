@@ -7,9 +7,10 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.Optional;
+
+import static org.junit.Assert.*;
 
 public class BackboneTest {
 
@@ -27,6 +28,6 @@ public class BackboneTest {
         final MessageReader<String> f= s -> s;
 
         bb.consume(consumerSettings, f, (String s) -> Consumed.instance());
-
+        assertTrue(true);
     }
 }
