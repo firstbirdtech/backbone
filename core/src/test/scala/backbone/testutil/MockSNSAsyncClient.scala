@@ -3,7 +3,7 @@ package backbone.testutil
 import java.util.concurrent.CompletableFuture
 
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
-import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
+import com.amazonaws.services.sns.model.{PublishRequest, PublishResult, SubscribeRequest, SubscribeResult}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.when
@@ -11,7 +11,7 @@ import org.scalatest.{Outcome, TestSuite, TestSuiteMixin}
 
 trait MockSNSAsyncClient extends TestSuiteMixin with MockitoUtils { this: TestSuite =>
 
-  implicit val snsClient = mock[AmazonSNSAsyncClient]
+  implicit val snsClient: AmazonSNSAsyncClient = mock[AmazonSNSAsyncClient]
 
   abstract override protected def withFixture(test: NoArgTest): Outcome = {
 
@@ -21,6 +21,15 @@ trait MockSNSAsyncClient extends TestSuiteMixin with MockitoUtils { this: TestSu
 
         val handler = invocation.getArgument[SubscribeHandler](3)
         handler.onSuccess(new SubscribeRequest(), result)
+        CompletableFuture.completedFuture(result)
+      })
+
+    when(snsClient.publishAsync(any[PublishRequest], any[PublishHandler]))
+      .thenAnswer(answer { invocation =>
+        val result = new PublishResult()
+
+        val handler = invocation.getArgument[PublishHandler](1)
+        handler.onSuccess(new PublishRequest(), result)
         CompletableFuture.completedFuture(result)
       })
 
