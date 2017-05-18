@@ -2,6 +2,7 @@ package backbone.consumer
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
@@ -25,7 +26,8 @@ object Consumer {
       queueUrl: String,
       events: List[String],
       parallelism: Int = 1,
-      limitation: Option[Limitation] = None
+      limitation: Option[Limitation] = None,
+      sqsSourceSettings: SqsSourceSettings
   ) {
     assert(parallelism > 0, "Parallelism must be positive")
   }
@@ -57,7 +59,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
    * @return a future completing when the stream quits
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
-    SqsSource(settings.queueUrl)
+    SqsSource(settings.queueUrl, settings.sqsSourceSettings)
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
         parseMessage[T](message) match {

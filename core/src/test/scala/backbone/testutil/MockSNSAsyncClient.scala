@@ -2,7 +2,7 @@ package backbone.testutil
 
 import java.util.concurrent.CompletableFuture
 
-import com.amazonaws.services.sns.AmazonSNSAsyncClient
+import com.amazonaws.services.sns.AmazonSNSAsync
 import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -11,7 +11,7 @@ import org.scalatest.{Outcome, TestSuite, TestSuiteMixin}
 
 trait MockSNSAsyncClient extends TestSuiteMixin with MockitoUtils { this: TestSuite =>
 
-  implicit val snsClient = mock[AmazonSNSAsyncClient]
+  implicit val snsClient = mock[AmazonSNSAsync]
 
   abstract override protected def withFixture(test: NoArgTest): Outcome = {
 

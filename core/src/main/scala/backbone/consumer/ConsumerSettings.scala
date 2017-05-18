@@ -2,26 +2,30 @@ package backbone.consumer
 
 import java.util.{List => JList, Optional => JOption}
 
+import akka.stream.alpakka.sqs.SqsSourceSettings
+
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters
 
 object ConsumerSettings {
-  def apply(events: List[String], topics: List[String], queue: String, consumeWithin: Limitation): ConsumerSettings =
-    apply(events, topics, queue, 1, Some(consumeWithin))
+  def apply(events: List[String], topics: List[String], queue: String, consumeWithin: Limitation,sqsSourceSettings: SqsSourceSettings): ConsumerSettings =
+    apply(events, topics, queue, 1, Some(consumeWithin),sqsSourceSettings)
 
   def apply(events: List[String],
             topics: List[String],
             queue: String,
             parallelism: Int,
-            consumeWithin: Limitation): ConsumerSettings =
-    apply(events, topics, queue, parallelism, Some(consumeWithin))
+            consumeWithin: Limitation,
+            sqsSourceSettings: SqsSourceSettings): ConsumerSettings =
+    apply(events, topics, queue, parallelism, Some(consumeWithin),sqsSourceSettings)
 
   def create(events: JList[String],
              topics: JList[String],
              queue: String,
              parallelism: Integer,
-             consumeWithin: JOption[Limitation]): ConsumerSettings = {
-    apply(events.asScala.toList, topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
+             consumeWithin: JOption[Limitation],
+             sqsSourceSettings: SqsSourceSettings): ConsumerSettings = {
+    apply(events.asScala.toList, topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin),sqsSourceSettings)
   }
 
 }
@@ -39,5 +43,6 @@ case class ConsumerSettings(
     topics: List[String],
     queue: String,
     parallelism: Int = 1,
-    consumeWithin: Option[Limitation] = None
+    consumeWithin: Option[Limitation] = None,
+    sqsSourceSettings: SqsSourceSettings
 )

@@ -1,6 +1,0 @@
-version: '2'
-services:
-  elasticmq:
-    image: s12v/elasticmq:0.12.0
-    ports:
-      - "9324:9324"
