@@ -122,7 +122,7 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       settings: PublisherSettings,
       bufferSize: Int = Int.MaxValue,
       overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead)(implicit mw: MessageWriter[T]): ActorRef = {
-    new Publisher(Publisher.Settings(settings.topicArn)).actorPublisher(bufferSize, overflowStrategy)
+    new Publisher(Publisher.Settings(settings.topicArn)).actor(bufferSize, overflowStrategy)
   }
 
   /**

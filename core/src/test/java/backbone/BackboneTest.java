@@ -66,14 +66,14 @@ public class BackboneTest extends IntegrationTest {
         final ActorRef actorRef = backbone.<String>actorPublisher(publisherSettings, Int.MaxValue(), OverflowStrategy.dropHead(), msg -> msg);
 
         new JavaTestKit(system) {{
-            new Within(duration("1 seconds")) {
+            actorRef.tell("message-1", getRef());
+            expectNoMsg();
+            actorRef.tell("message-2", getRef());
+            expectNoMsg();
+
+            new Within(duration("100 millis")) {
                 @Override
                 protected void run() {
-                    actorRef.tell("message-1", getRef());
-                    expectNoMsg();
-                    actorRef.tell("message-2", getRef());
-                    expectNoMsg();
-
                     verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
                     verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
                 }

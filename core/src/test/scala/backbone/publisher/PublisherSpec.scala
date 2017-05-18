@@ -37,14 +37,14 @@ class PublisherSpec
 
     "publish messages from an ActorRef" in {
       val settings = Publisher.Settings("topic-arn")
-      val actorRef = new Publisher(settings).actorPublisher[String](Int.MaxValue, OverflowStrategy.dropHead)
+      val actorRef = new Publisher(settings).actor[String](Int.MaxValue, OverflowStrategy.dropHead)
 
-      System.out.println(now)
-      within(1.seconds) {
-        actorRef ! "message-1"
-        expectNoMsg
-        actorRef ! "message-2"
-        expectNoMsg
+      actorRef ! "message-1"
+      expectNoMsg
+      actorRef ! "message-2"
+      expectNoMsg
+
+      within(100.millis) {
 
         verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-1")), any[PublishHandler])
         verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])

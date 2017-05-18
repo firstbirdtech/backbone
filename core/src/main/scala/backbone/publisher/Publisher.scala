@@ -35,7 +35,7 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
       .toMat(SnsPublisher.sink(settings.topicArn))(Keep.right)
   }
 
-  def actorPublisher[T](bufferSize: Int, overflowStrategy: OverflowStrategy)(implicit mw: MessageWriter[T]): ActorRef = {
+  def actor[T](bufferSize: Int, overflowStrategy: OverflowStrategy)(implicit mw: MessageWriter[T]): ActorRef = {
     Source
       .actorRef(bufferSize, overflowStrategy)
       .to(sink)

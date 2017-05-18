@@ -86,14 +86,14 @@ class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: Act
   /**
    * Publish a list of elements of type T to an AWS SNS topic.
    *
-   * @param messages the messages to publish
+   * @param msgs the messages to publish
    * @param settings PublisherSettings configuring Backbone
    * @param mw       typeclass instance describing how to write a single message to a String
    * @tparam T type of messages to publish
    * @return a future completing when the stream quits
    */
-  def publishAsync[T](messages: JList[T], settings: PublisherSettings, mw: MessageWriter[T]): CompletableFuture[Done] = {
-    val asScalaList = messages.asScala.toList
+  def publishAsync[T](msgs: JList[T], settings: PublisherSettings, mw: MessageWriter[T]): CompletableFuture[Done] = {
+    val asScalaList = msgs.asScala.toList
     FutureConverters.toJava(asScala.publishAsync(asScalaList, settings)(mw)).toCompletableFuture
   }
 
