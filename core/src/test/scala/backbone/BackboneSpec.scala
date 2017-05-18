@@ -36,7 +36,7 @@ class BackboneSpec
     "doe something" in { ctx =>
       import ctx._
 
-      val settings = ConsumerSettings(List.empty, List.empty, "Queue-name")
+      val settings = ConsumerSettings(List.empty, "Queue-name")
 
       backbone.consume[String](settings) { s =>
         Consumed

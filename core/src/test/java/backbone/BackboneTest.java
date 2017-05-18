@@ -35,7 +35,7 @@ public class BackboneTest extends IntegrationTest {
     public void assertThatConsumeWorks() throws Exception {
         // TODO: provide consuming tests
 
-        final ConsumerSettings consumerSettings = ConsumerSettings.create(Arrays.asList(), Arrays.asList(), "", 1, Optional.empty());
+        final ConsumerSettings consumerSettings = ConsumerSettings.create(Arrays.asList(), "", 1, Optional.empty());
 
         final MessageReader<String> f = s -> s;
 
@@ -88,7 +88,7 @@ public class BackboneTest extends IntegrationTest {
         final List<String> messages = Arrays.asList("message-1", "message-2");
 
         final Done result = Source.from(messages)
-            .runWith(sink, mat())
+            .runWith(sink, mat)
             .get();
 
         assertThat(result, is(Done.getInstance()));

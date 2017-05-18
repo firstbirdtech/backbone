@@ -26,6 +26,9 @@ import static org.mockito.Mockito.when;
 public abstract class IntegrationTest {
 
     protected static ActorSystem system;
+    protected final ActorMaterializer mat = ActorMaterializer.create(ActorMaterializerSettings.create(system)
+        .withSupervisionStrategy(Supervision.resumingDecider()), system);
+
     protected final AmazonSQSAsync sqs = AmazonSQSAsyncClientBuilder.defaultClient();
     protected final AmazonSNSAsync sns = mock(AmazonSNSAsyncClient.class);
 
@@ -53,11 +56,4 @@ public abstract class IntegrationTest {
         TestKit.shutdownActorSystem$default$2();
         system = null;
     }
-
-    protected ActorMaterializer mat() {
-        final ActorMaterializerSettings settings = ActorMaterializerSettings.create(system)
-            .withSupervisionStrategy(Supervision.resumingDecider());
-        return ActorMaterializer.create(settings, system);
-    }
-
 }

@@ -77,8 +77,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     for {
       queue <- createQueue(settings.queue)
       _     <- subscribe(queue, settings.topics)
-      s = Consumer.Settings(queue.url, settings.events, settings.parallelism, settings.consumeWithin)
-      r <- new Consumer(s).consumeAsync(f)
+      s = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin)
+      r <- new Consumer(s).consumeAsync(f)l
     } yield r
   }
 
@@ -126,13 +126,13 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
   }
 
   /**
-    * Returns a sink that publishes received messages of type T to an AWS SNS topic.
-    *
-    * @param settings PublisherSettings configuring Backbone
-    * @param mw typeclass instance describing how to write a single message to a String
-    * @tparam T type of messages to publish
-    * @return a Sink that publishes received messages
-    */
+   * Returns a sink that publishes received messages of type T to an AWS SNS topic.
+   *
+   * @param settings PublisherSettings configuring Backbone
+   * @param mw typeclass instance describing how to write a single message to a String
+   * @tparam T type of messages to publish
+   * @return a Sink that publishes received messages
+   */
   def publisherSink[T](settings: PublisherSettings)(implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
     new Publisher(Publisher.Settings(settings.topicArn)).sink
   }
