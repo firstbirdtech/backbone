@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public abstract class IntegrationTest {
+public abstract class TestContext {
 
     protected static ActorSystem system;
     protected final ActorMaterializer mat = ActorMaterializer.create(ActorMaterializerSettings.create(system)

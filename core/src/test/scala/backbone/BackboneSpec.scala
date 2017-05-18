@@ -16,7 +16,7 @@ import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.verify
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{fixture, MustMatchers, Outcome}
+import org.scalatest.{MustMatchers, Outcome, fixture}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

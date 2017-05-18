@@ -9,7 +9,7 @@ import akka.testkit.JavaTestKit;
 import backbone.consumer.ConsumerSettings;
 import backbone.javadsl.Backbone;
 import backbone.publisher.PublisherSettings;
-import backbone.testutil.IntegrationTest;
+import backbone.testutil.TestContext;
 import com.amazonaws.services.sns.model.PublishRequest;
 import org.junit.Test;
 import scala.Int;
@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-public class BackboneTest extends IntegrationTest {
+public class BackboneTest extends TestContext {
 
     private final Backbone backbone = Backbone.create(sqs, sns, system);
     private final PublisherSettings publisherSettings = PublisherSettings.create("topic-arn");
