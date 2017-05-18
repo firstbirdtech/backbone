@@ -1,5 +1,7 @@
 language: scala
 
+sudo: required
+
 scala:
    - 2.11.8
 
@@ -8,6 +10,10 @@ jdk:
 
 services:
   - docker
+
+branches:
+  only:
+  - master
 
 before_install:
   - docker-compose up -d
@@ -23,3 +29,18 @@ cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
+
+#deploy:
+#  provider: script
+#  script:
+#    - sbt publish
+#  on:
+#    tags: true
+#    repo: firstbirdtech/backbone
+
+env:
+  global:
+    # encrypt with: travis encrypt BINTRAY_USER=...
+    - secure: "WXITvMAQmjJHQijqCkS+cZ9BLEH+B9n3IiGtP3bV8U+9UsR4kU7+mZyDAQDdI6l36rHDgPPWqy/PCxnXETKY0do2RqI70lk3bgqmPUy7V6BP+pweX103fBuztEuPBm124nnUrJj7enRGDe+kwSoXCCwkidw3RjrJy2yNJBLgOSu7HPDfOFqnzsHiA/C1aithTCG0V7e0l6Lvb8HzXRg91pTAJGJQIm3Mff4mACpThyL90hfde+Jb2Is1KnpXTMCoGWC65wxbh8rjCmPSFs+98XeceAFDJqXiVKx/AWJDVMv11NYxOGqBDjC2w6LgBSvI140xm5Y7LhgeM5nZNiUaximoxAbmHFrddVOyxZ9jlNe+OLxo3FQXaa6+6MtXifZDbL3ikz/Ztyt0AE79o1Ui/GFLs2pKc2g1WlkelMH5qLmXt00lKzn1f/NN3k18WaBhQlKPosrEH0mKWlfyrkPETHi7e2fCh9UrKhDZw3/SjdFGMLMZfQr3JJCSBxusfngBMVQZ1ZJ3Fpzn2HteL1XLrssPUk+S9s+fNALW0UuaUu7rnEyjFCSnDoraTpjQboZXbpWz5qI/pIa5xcSv53jblYlwvRJbgsjc2LO1k/mHrZfJ8jVoo9vL04V0ch8kCCATeqaocdg2Wlb3fj0j5/hVwrDYJffoVlaHo2lB99yO+ds="
+    # encrypt with: travis encrypt BINTRAY_PASS=...
+    - secure: "aeNhC4nBKc59aDRkjFrqlsQOJRCZvNHdYNOyd5gphPzS3w5Syi0zHq/AwnyZDRM1qCalbwMzc23shqLWheh/T+pIE1oKB9tabFf8aK86irT8rMGhbGaGoRyhAG4q0K2I5cu7CZBNrAhWCNqdCM6fOKYwDzILCIGdXUM8pXZZcJyVkva9YrNMGKUit46PfQfOcNr2hRc4+SKV8wNiI5fAMGLJedf89XXXe0BtzxK+aOUGeutmTF9ZYV/srrhOb04HGKMyvQeCRQcV7OmtmMQh9LrA46sQkPP4N7AiSryhigce7WeIcnW+5puaVI5YlGdbeEa6uOP5KqAzuQnrZidK/qfsZaEy6zf/Zjj3o5cqGKcMtfX7Uzby3EHzGJOtzo5U3kDNun7FEr4tibAWk5YEL7Z+Ve938eGINeLTsfGCwzEIDpJadXRbDgApFH+968b3qGhvpmv+YjQNgMZi9axYma66iTn8MRkcqnNFD+EIv8UE7sZYl5rTj4zkCunkE14D+7jFSEt7V/sQN7OtBufvyGt1hQrbLFHQ+6TWayTPAooCSZSFFKdo//OdHgQ4wkUNm1TwJnYtuHNw1YLMJjppwXlaZyLK/Ec9aE1IBNHRXRqIw+jmY443VkcfKBRUiL0PeNULkgO7imwlPlSItFiy82DB+jkoWAGZbVtkOhA2gZo="

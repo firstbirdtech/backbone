@@ -1,8 +1,8 @@
 package backbone.aws
 
-import backbone.Backbone.QueueInformation
+import backbone.scaladsl.Backbone.QueueInformation
 import com.amazonaws.auth.policy.Policy
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model._
 
 import scala.collection.JavaConverters._
@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private[backbone] trait AmazonSqsOps extends AmazonAsync {
 
-  def sqs: AmazonSQSAsyncClient
+  def sqs: AmazonSQSAsync
 
   def getQueueArn(queueUrl: String)(implicit ec: ExecutionContext): Future[String] = {
     val attributeNames = List(QueueAttributeName.QueueArn.toString)

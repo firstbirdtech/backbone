@@ -1,0 +1,35 @@
+package backbone.gson
+import backbone.consumer.Consumer
+import backbone.consumer.Consumer.KeepMessage
+import backbone.json.{JsonReader, SnsEnvelope}
+import cats.syntax.either._
+import com.google.gson.JsonParser
+import org.slf4j.LoggerFactory
+
+import scala.util.Try
+
+/**
+ * JsonReader using gson
+ */
+class GsonJsonReader extends JsonReader {
+
+  private[this] val logger = LoggerFactory.getLogger(getClass)
+  private[this] val parser = new JsonParser()
+
+  override def readSnsEnvelope(s: String): Either[Consumer.MessageAction, SnsEnvelope] = {
+
+    val optionalSnsEnvelope = for {
+      json    <- Try(parser.parse(s)).map(_.getAsJsonObject).toOption
+      subject <- Option(json.get("Subject")).map(_.getAsString)
+      message <- Option(json.get("Message")).map(_.getAsString)
+    } yield SnsEnvelope(subject, message)
+
+    optionalSnsEnvelope match {
+      case Some(envelope) => envelope.asRight
+      case None =>
+        logger.error(s"Json can not be parsed to SnsEnvelope. json=$s")
+        KeepMessage.asLeft
+    }
+  }
+
+}
