@@ -5,7 +5,7 @@ import sbt.plugins._
 object NoPublish extends AutoPlugin {
   override def requires: Plugins = JvmPlugin
 
-  override def projectSettings = Seq(
+  override def projectSettings: Seq[sbt.Def.Setting[_]] = Seq(
     publishArtifact := false,
     publish := {},
     publishLocal := {}

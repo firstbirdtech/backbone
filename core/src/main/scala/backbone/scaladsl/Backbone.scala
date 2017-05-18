@@ -78,7 +78,7 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       queue <- createQueue(settings.queue)
       _     <- subscribe(queue, settings.topics)
       s = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin)
-      r <- new Consumer(s).consumeAsync(f)l
+      r <- new Consumer(s).consumeAsync(f)
     } yield r
   }
 
