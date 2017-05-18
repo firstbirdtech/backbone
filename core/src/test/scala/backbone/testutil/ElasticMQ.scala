@@ -12,7 +12,7 @@ import scala.collection.immutable.HashMap
 
 trait ElasticMQ extends TestSuiteMixin with BeforeAndAfterEach with BeforeAndAfterAll { this: TestSuite =>
 
-  var elasticMqPort: Int            = 9324
+  val elasticMqPort: Int            = 9324
   private var server: SQSRestServer = _
 
   implicit lazy val sqsClient: AmazonSQSAsync = AmazonSQSAsyncClient
