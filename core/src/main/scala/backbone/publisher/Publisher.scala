@@ -1,9 +1,9 @@
 package backbone.publisher
 
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.alpakka.sns.scaladsl.SnsPublisher
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, Supervision}
 import backbone.MessageWriter
 import backbone.publisher.Publisher.Settings
@@ -26,15 +26,19 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
 
   def publishAsync[T](messages: List[T])(implicit mw: MessageWriter[T]): Future[Done] = {
     Source(messages)
-      .map[String](mw.write)
-      .runWith(SnsPublisher.sink(settings.topicArn))
+      .runWith(sink)
+  }
+
+  def sink[T](implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
+    Flow[T]
+      .map(mw.write)
+      .toMat(SnsPublisher.sink(settings.topicArn))(Keep.right)
   }
 
   def actorPublisher[T](bufferSize: Int, overflowStrategy: OverflowStrategy)(implicit mw: MessageWriter[T]): ActorRef = {
     Source
       .actorRef(bufferSize, overflowStrategy)
-      .map[String](mw.write)
-      .to(SnsPublisher.sink(settings.topicArn))
+      .to(sink)
       .run()
   }
 
