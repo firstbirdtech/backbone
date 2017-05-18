@@ -7,7 +7,8 @@
 **ATTENTION: WORK IN PROGRESS, UNPUBLISHED, NOT PRODUCTION READY**
 
 Backbone is a durable publish-subscribe platform built on top of Amazon AWS SQS and Amazon AWS SNS utilizing
-Akka to stream events.
+Akka to stream events. This library currently is under active development, changes to the public API are still subject
+to change.
 
 Backbone provides nice high-level API for consuming events.
 
