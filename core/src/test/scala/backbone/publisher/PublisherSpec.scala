@@ -2,7 +2,6 @@ package backbone.publisher
 
 import akka.Done
 import akka.stream.OverflowStrategy
-import akka.testkit.TestActorRef
 import backbone.format.DefaultMessageWrites
 import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
 import com.amazonaws.services.sns.model.PublishRequest
