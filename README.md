@@ -23,7 +23,8 @@ backbone.consume[String](settings){ str =>
 ### Installation
 To use backbone add the following dependency to your `build.sbt`.
 ```scala
-libraryDependencies += "com.firstbird" %% "backbone-core" % "0.4.1"
+libraryDependencies += "com.firstbird" %% "backbone-core"   % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-circe"  % "X.Y.Z" //or any other JSON library
 ```
 
 Or add the dependency to your `pom.xml`.
@@ -37,7 +38,7 @@ Or add the dependency to your `pom.xml`.
 
 ### Consuming Events
 
-To consume messages you have to specify the event types you want to consume, the topics from which messages
+To consume messages you have to specify the topics from which messages
 should be consumed and a queue name that should be subscribed to the topics. The `parallelism` parameter
 indicates how many messages are getting processed at a single time. To create an instance of `Backbone`
 the only things you need are the according Amazon clients and a running `ActorSystem` which are
@@ -48,8 +49,6 @@ and sets the needed permissions on SQS side to give permissions to the SNS topic
 to the queue.
 
 ```scala
-import backbone.scaladsl.Backbone
-
 implicit val system = ActorSystem()
 implicit val sns = new AmazonSNSAsyncClient()
 implicit val sqs = new AmazonSQSAsyncClient()
@@ -57,20 +56,19 @@ implicit val sqs = new AmazonSQSAsyncClient()
 val backbone = Backbone()
 
 val settings = ConsumerSettings(
-    events = "event-type" :: Nil,
     topics = "arn:aws:sns:eu-central-1:AWS_ACCOUNT_ID:topic-name" :: Nil,
     queue = "queue-name",
     parallelism = 5
 )
 
-//You need to define a format which tells Backbone how to decode the message body of the AWS SNS Message
-implicit val stringFormat = new Format[String] {
+//You need to define a MessageReader that tells Backbone how to decode the message body of the AWS SNS Message
+implicit val stringFormat = new MessageReader[String] {
     override def read(s: String): String = s
 }
 
 //Synchronous API
 backbone.consume[String](settings){ str =>
-    println(str)
+    //process the event
     Consumed
 }
 
@@ -139,12 +137,26 @@ the queue to the configured SNS topics.
 }
 ```
 
+### JSON Modules
+
+The core module of backbone is completely independent of a JSON library (because there are many around in the JVM ecosystem).
+You can configure which library you want to use by adding one of the following to the classpath. 
+
+```scala
+libraryDependencies += "com.firstbird" %% "backbone-circe"      % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-play-json"  % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-gson"       % "X.Y.Z"
+```
+
 ## Running the Tests
 
 Run the tests from sbt with:
 ```
 test
 ```
+
+## Feedback
+We very much appreciate feedback, please open an issue and/or create a PR.
 
 ## Contributors
 
