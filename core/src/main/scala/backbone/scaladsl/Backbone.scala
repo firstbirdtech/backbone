@@ -3,6 +3,7 @@ package backbone.scaladsl
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.Sink
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
 import backbone.consumer.{Consumer, ConsumerSettings}
 import backbone.json.JsonReader
@@ -122,6 +123,18 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       bufferSize: Int = Int.MaxValue,
       overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead)(implicit mw: MessageWriter[T]): ActorRef = {
     new Publisher(Publisher.Settings(settings.topicArn)).actorPublisher(bufferSize, overflowStrategy)
+  }
+
+  /**
+    * Returns a sink that publishes received messages of type T to an AWS SNS topic.
+    *
+    * @param settings PublisherSettings configuring Backbone
+    * @param mw typeclass instance describing how to write a single message to a String
+    * @tparam T type of messages to publish
+    * @return a Sink that publishes received messages
+    */
+  def publisherSink[T](settings: PublisherSettings)(implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
+    new Publisher(Publisher.Settings(settings.topicArn)).sink
   }
 
   private[this] def subscribe(queue: QueueInformation, topics: List[String])(

@@ -3,6 +3,8 @@ package backbone;
 import akka.Done;
 import akka.actor.ActorRef;
 import akka.stream.OverflowStrategy;
+import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
 import akka.testkit.JavaTestKit;
 import backbone.consumer.ConsumerSettings;
 import backbone.javadsl.Backbone;
@@ -10,13 +12,12 @@ import backbone.publisher.PublisherSettings;
 import backbone.testutil.IntegrationTest;
 import com.amazonaws.services.sns.model.PublishRequest;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 import scala.Int;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -25,7 +26,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
 public class BackboneTest extends IntegrationTest {
 
     private final Backbone backbone = Backbone.create(sqs, sns, system);
@@ -79,6 +79,21 @@ public class BackboneTest extends IntegrationTest {
                 }
             };
         }};
+    }
+
+    @Test
+    public void publisherSink_collectionOfMessages_messagesSuccessfullyPublished() throws Exception {
+        final Sink<String, CompletableFuture<Done>> sink = backbone.publisherSink(publisherSettings, msg -> msg);
+
+        final List<String> messages = Arrays.asList("message-1", "message-2");
+
+        final Done result = Source.from(messages)
+            .runWith(sink, mat())
+            .get();
+
+        assertThat(result, is(Done.getInstance()));
+        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
+        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
     }
 
 }

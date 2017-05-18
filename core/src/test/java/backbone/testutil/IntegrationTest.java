@@ -1,6 +1,9 @@
 package backbone.testutil;
 
 import akka.actor.ActorSystem;
+import akka.stream.ActorMaterializer;
+import akka.stream.ActorMaterializerSettings;
+import akka.stream.Supervision;
 import akka.testkit.TestKit;
 import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.sns.AmazonSNSAsync;
@@ -49,6 +52,12 @@ public abstract class IntegrationTest {
     public static void afterAll() {
         TestKit.shutdownActorSystem$default$2();
         system = null;
+    }
+
+    protected ActorMaterializer mat() {
+        final ActorMaterializerSettings settings = ActorMaterializerSettings.create(system)
+            .withSupervisionStrategy(Supervision.resumingDecider());
+        return ActorMaterializer.create(settings, system);
     }
 
 }

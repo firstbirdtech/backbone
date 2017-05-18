@@ -1,6 +1,7 @@
 package backbone
 
 import akka.Done
+import akka.stream.scaladsl.Source
 import backbone.consumer.ConsumerSettings
 import backbone.format.DefaultMessageWrites
 import backbone.publisher.PublisherSettings
@@ -17,6 +18,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{fixture, MustMatchers, Outcome}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class BackboneSpec
@@ -89,6 +91,25 @@ class BackboneSpec
                                        any[PublishHandler])
       }
     }
+
+    "publish messages from a Sink" in { ctx =>
+      import ctx._
+
+      val sink = backbone.publisherSink[String](publisherSettings)
+
+      val result: Future[Done] = Source("message-1" :: "message-2" :: Nil)
+        .runWith(sink)
+
+      whenReady(result) { res =>
+        res mustBe Done
+
+        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-1")),
+                                       any[PublishHandler])
+        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-2")),
+                                       any[PublishHandler])
+      }
+    }
+
   }
 
   case class FixtureParam(backbone: Backbone, publisherSettings: PublisherSettings)

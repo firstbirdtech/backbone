@@ -1,6 +1,6 @@
 package backbone.publisher
 
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.alpakka.sns.scaladsl.SnsPublisher
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
