@@ -21,7 +21,7 @@ import org.scalatest.{MustMatchers, Outcome, fixture}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class BackboneSpec
+class BackbonePublishSpec
     extends fixture.WordSpec
     with MockitoSugar
     with ScalaFutures
@@ -29,21 +29,6 @@ class BackboneSpec
     with TestActorSystem
     with MockSNSAsyncClient
     with DefaultMessageWrites {
-
-  "Backbone.consume" should {
-    // TODO: consume tests
-
-    "doe something" in { ctx =>
-      import ctx._
-
-      val settings = ConsumerSettings(List.empty, "Queue-name")
-
-      backbone.consume[String](settings) { s =>
-        Consumed
-      }
-    }
-
-  }
 
   "Backbone.publishAsync" should {
 

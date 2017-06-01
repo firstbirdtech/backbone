@@ -32,18 +32,6 @@ public class BackboneTest extends TestContext {
     private final PublisherSettings publisherSettings = PublisherSettings.create("topic-arn");
 
     @Test
-    public void assertThatConsumeWorks() throws Exception {
-        // TODO: provide consuming tests
-
-        final ConsumerSettings consumerSettings = ConsumerSettings.create(Arrays.asList(), "", 1, Optional.empty());
-
-        final MessageReader<String> f = s -> s;
-
-        backbone.consume(consumerSettings, f, (String s) -> Consumed.instance());
-        assertTrue(true);
-    }
-
-    @Test
     public void publishAsync_oneMessage_messageSuccessfullyPublished() throws Exception {
         final Done result = backbone.publishAsync("message", publisherSettings, msg -> msg).get();
 
