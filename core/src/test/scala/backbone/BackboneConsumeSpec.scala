@@ -72,12 +72,12 @@ class BackboneConsumeSpec
     }
   }
 
-  private def consume(settings: ConsumerSettings): Future[Done] = {
+  private[this] def consume(settings: ConsumerSettings): Future[Done] = {
     val f = backbone.consume[String](settings)(s => Consumed)
     f
   }
 
-  private def sendMessage(subject: String, message: String, queue: String): Unit = {
+  private[this] def sendMessage(subject: String, message: String, queue: String): Unit = {
     val envelope = SnsEnvelope(subject, message)
 
     val sqsMessage = new Message()
