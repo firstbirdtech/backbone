@@ -36,10 +36,7 @@ object Common extends AutoPlugin {
       "-Xlint:unchecked"
     ),
     // show full stack traces and test case durations
-    testOptions in Test += Tests.Argument("-oDF"),
-    resolvers ++= Seq(
-      Resolver.mavenLocal
-    )
+    testOptions in Test += Tests.Argument("-oDF")
   )
 }
 
