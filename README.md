@@ -81,6 +81,38 @@ backbone.consumeAsync[String](settings){ _ =>
 
 ### Publishing Events
 
+Backbone provides a couple of different methods which can be used to send messages to a Amazon AWS SNS Topic.
+Basically they behave the same but provide an interface for various technologies as: `Future`s, Akka Streams,
+Akka Actors.
+
+```scala
+implicit val system = ActorSystem()
+implicit val sns = new AmazonSNSAsyncClient()
+implicit val sqs = new AmazonSQSAsyncClient()
+
+val backbone = Backbone()
+
+val publishSettings = PublisherSettings("aws-sns-topic-arn")
+
+//You need to define a MessageReader that tells Backbone how to decode the message body of the AWS SNS Message
+implicit val writer = new MessageWriter[String] {
+    override def write(s: String): String = s
+}
+
+//Actor Publisher
+val actor: ActorRef = backbone.actorPublisher[String](publishSettings)
+actor ! "send this to sns"
+
+//Akka Streams Sink
+implicit val mat = ActorMaterializer()
+
+val sink = backbone.publisherSink[String](publishSettings)
+Source.single("send this to sns").to(sink)
+
+//Async Publish
+val f: Future[PublishResult] = backbone.publishAsync[String]("send this to sns" :: "and this" :: Nil, publishSettings)
+```
+
 ## AWS Policies
 
 To work properly the AWS user used for running Backbone needs special permission which are being set
