@@ -17,6 +17,7 @@ lazy val core = project
       "org.typelevel"          %% "cats"                    % Versions.cats,
       "org.scala-lang.modules" %% "scala-java8-compat"      % Versions.java8Compat,
       "org.slf4j"              % "slf4j-api"                % Versions.slf4j,
+      "org.elasticmq"          %% "elasticmq-rest-sqs"      % Versions.elasticMq % Test,
       "io.circe"               %% "circe-parser"            % Versions.circe % Test,
       "io.circe"               %% "circe-core"              % Versions.circe % Test,
       "com.typesafe.akka"      %% "akka-testkit"            % Versions.akka % Test,

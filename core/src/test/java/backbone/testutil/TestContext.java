@@ -4,18 +4,24 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import akka.stream.ActorMaterializerSettings;
 import akka.stream.Supervision;
-import akka.testkit.TestKit;
+import backbone.javadsl.Backbone;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.AsyncHandler;
 import com.amazonaws.services.sns.AmazonSNSAsync;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
-import org.junit.AfterClass;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+import org.elasticmq.rest.sqs.SQSRestServer;
+import org.elasticmq.rest.sqs.SQSRestServerBuilder;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.mockito.Mockito;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -25,15 +31,24 @@ import static org.mockito.Mockito.when;
 
 public abstract class TestContext {
 
-    protected static ActorSystem system;
-    protected final ActorMaterializer mat = ActorMaterializer.create(ActorMaterializerSettings.create(system)
-        .withSupervisionStrategy(Supervision.resumingDecider()), system);
-
-    protected final AmazonSQSAsync sqs = AmazonSQSAsyncClientBuilder.defaultClient();
+    protected final Integer elasticMqPort = 9324;
+    protected final AmazonSQSAsync sqs = AmazonSQSAsyncClient.asyncBuilder()
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x")))
+        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:" + elasticMqPort, "eu-central-1"))
+        .build();
     protected final AmazonSNSAsync sns = mock(AmazonSNSAsyncClient.class);
+    protected ActorSystem system;
+    protected ActorMaterializer mat;
+    protected SQSRestServer server = null;
+    protected Backbone backbone;
 
     @Before
     public void beforeEach() {
+        system = ActorSystem.create();
+        mat = ActorMaterializer.create(ActorMaterializerSettings.create(system)
+            .withSupervisionStrategy(Supervision.resumingDecider()), system);
+        server = SQSRestServerBuilder.withPort(elasticMqPort).start();
+        backbone = Backbone.create(sqs, sns, system);
         Mockito.reset(sns);
 
         when(sns.publishAsync(any(PublishRequest.class), any()))
@@ -46,14 +61,10 @@ public abstract class TestContext {
             });
     }
 
-    @BeforeClass
-    public static void beforeAll() {
-        system = ActorSystem.create();
+    @After
+    public void afterEach() throws Exception {
+        Await.ready(system.terminate(), Duration.create("1 second"));
+        server.stopAndWait();
     }
 
-    @AfterClass
-    public static void afterAll() {
-        TestKit.shutdownActorSystem$default$2();
-        system = null;
-    }
 }

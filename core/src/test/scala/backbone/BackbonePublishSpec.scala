@@ -2,11 +2,9 @@ package backbone
 
 import akka.Done
 import akka.stream.scaladsl.Source
-import backbone.consumer.ConsumerSettings
 import backbone.format.DefaultMessageWrites
 import backbone.publisher.PublisherSettings
 import backbone.scaladsl.Backbone
-import backbone.testutil.Implicits._
 import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
@@ -21,7 +19,7 @@ import org.scalatest.{MustMatchers, Outcome, fixture}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class BackboneSpec
+class BackbonePublishSpec
     extends fixture.WordSpec
     with MockitoSugar
     with ScalaFutures
@@ -29,21 +27,6 @@ class BackboneSpec
     with TestActorSystem
     with MockSNSAsyncClient
     with DefaultMessageWrites {
-
-  "Backbone.consume" should {
-    // TODO: consume tests
-
-    "doe something" in { ctx =>
-      import ctx._
-
-      val settings = ConsumerSettings(List.empty, "Queue-name")
-
-      backbone.consume[String](settings) { s =>
-        Consumed
-      }
-    }
-
-  }
 
   "Backbone.publishAsync" should {
 

@@ -2,21 +2,18 @@ language: scala
 
 sudo: required
 
+services:
+  - docker
+
 scala:
    - 2.11.8
 
 jdk:
    - oraclejdk8
 
-services:
-  - docker
-
 branches:
   only:
   - master
-
-before_install:
-  - docker-compose up -d
 
 script:
   - sbt clean coverage test coverageReport coverageAggregate codacyCoverage

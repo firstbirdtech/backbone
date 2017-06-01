@@ -18,7 +18,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class SubscriptionSpec
+class BackboneSubscriptionSpec
     extends WordSpec
     with MockitoUtils
     with BeforeAndAfterAll
