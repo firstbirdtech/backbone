@@ -27,7 +27,9 @@ object Consumer {
       events: List[String],
       parallelism: Int = 1,
       limitation: Option[Limitation] = None,
-      sqsSourceSettings: SqsSourceSettings
+      waitTime: Int = 20,
+      maxBufferSize: Int = 100,
+      maxBatchSize: Int = 10
   ) {
     assert(parallelism > 0, "Parallelism must be positive")
   }
@@ -59,7 +61,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
    * @return a future completing when the stream quits
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
-    SqsSource(settings.queueUrl, settings.sqsSourceSettings)
+
+    SqsSource(settings.queueUrl, SqsSourceSettings(settings.waitTime, settings.maxBufferSize, settings.maxBatchSize))
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
         parseMessage[T](message) match {

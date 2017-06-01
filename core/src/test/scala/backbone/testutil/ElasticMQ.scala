@@ -12,8 +12,8 @@ import scala.collection.immutable.HashMap
 
 trait ElasticMQ extends TestSuiteMixin with BeforeAndAfterEach with BeforeAndAfterAll { this: TestSuite =>
 
-  val elasticMqPort: Int            = 9324
-  private var server: SQSRestServer = _
+  val elasticMqPort: Int    = 9324
+  val server: SQSRestServer = SQSRestServerBuilder.withPort(elasticMqPort).start()
 
   implicit lazy val sqsClient: AmazonSQSAsync = AmazonSQSAsyncClient
     .asyncBuilder()
@@ -23,8 +23,8 @@ trait ElasticMQ extends TestSuiteMixin with BeforeAndAfterEach with BeforeAndAft
     .asInstanceOf[AmazonSQSAsyncClient]
 
   abstract override protected def beforeAll(): Unit = {
-    server = SQSRestServerBuilder.withPort(elasticMqPort).start()
-    sqsClient.createQueue(new CreateQueueRequest("queue-name").withAttributes(HashMap("VisibilityTimeout"->"1").asJava))
+    sqsClient.createQueue(
+      new CreateQueueRequest("queue-name").withAttributes(HashMap("VisibilityTimeout" -> "1").asJava))
     super.beforeAll()
   }
 
