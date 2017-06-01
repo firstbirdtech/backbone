@@ -19,14 +19,16 @@ import scala.util.{Failure, Left, Right, Success, Try}
 object Consumer {
 
   sealed trait MessageAction
+
   case class RemoveMessage(receiptHandle: String) extends MessageAction
-  case object KeepMessage                         extends MessageAction
+
+  case object KeepMessage extends MessageAction
 
   case class Settings(
       queueUrl: String,
       parallelism: Int = 1,
       limitation: Option[Limitation] = None,
-      sourceSettingsSqs: SourceSettingsSqs = SourceSettingsSqs.Defaults
+      receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
   ) {
     assert(parallelism > 0, "Parallelism must be positive")
   }
@@ -36,9 +38,9 @@ object Consumer {
 /** Consumes events from a queue.
  *
  * @param settings consumer settings
- * @param system implicit ActorSystem
- * @param jr a Json Reader implementation which
- * @param sqs implicit AmazonSQSAsyncClient
+ * @param system   implicit ActorSystem
+ * @param jr       a Json Reader implementation which
+ * @param sqs      implicit AmazonSQSAsyncClient
  */
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader)
     extends AmazonSqsOps {
@@ -59,12 +61,13 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
 
-    SqsSource(
-      settings.queueUrl,
-      SqsSourceSettings(settings.sourceSettingsSqs.waitTimeSeconds,
-                        settings.sourceSettingsSqs.maxBufferSize,
-                        settings.sourceSettingsSqs.maxBatchSize)
-    ).via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
+    val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
+      settings.receiveSettings.waitTimeSeconds,
+      settings.receiveSettings.maxBufferSize,
+      settings.receiveSettings.maxBatchSize
+    )
+    SqsSource(settings.queueUrl, sqsSourceSettings)
+      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
         parseMessage[T](message) match {
           case Left(a)  => Future.successful(a)

@@ -1,7 +1,7 @@
 package backbone
 
 import akka.Done
-import backbone.consumer.{ConsumerSettings, CountLimitation, SourceSettingsSqs}
+import backbone.consumer.{ConsumerSettings, CountLimitation, ReceiveSettings}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
@@ -33,7 +33,9 @@ class BackboneConsumeSpec
 
       val settings = ConsumerSettings(Nil, "queue-name-1", 1, CountLimitation(0))
 
-      whenReady(consume(settings)) { res =>
+      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
+
+      whenReady(f) { res =>
         sqsClient.getQueueUrl("queue-name-1").getQueueUrl must be("http://localhost:9324/queue/queue-name-1")
       }
 
@@ -48,9 +50,10 @@ class BackboneConsumeSpec
       sqsClient.createQueue(createQueueRequest)
       sqsClient.sendMessage(new SendMessageRequest("http://localhost:9324/queue/no-visibility", message.getBody))
 
-      val settings = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
+      val settings        = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
+      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
 
-      whenReady(consume(settings)) { _ =>
+      whenReady(f) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
       }
 
@@ -59,9 +62,10 @@ class BackboneConsumeSpec
     "consume messages from the queue url" in {
       sendMessage("subject", "message", "queue-name")
 
-      val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val settings        = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
 
-      whenReady(consume(settings)) { _ =>
+      whenReady(f) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
       }
 
@@ -69,22 +73,14 @@ class BackboneConsumeSpec
     "reject messages from the queue" in {
       sendMessage("subject", "message", "no-visibility")
 
-      val settings = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(0), SourceSettingsSqs(0, 100, 10))
+      val settings        = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(0), ReceiveSettings(0, 100, 10))
+      val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)
 
-      whenReady(reject(settings)) { _ =>
+      whenReady(f) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
 
       }
     }
-  }
-
-  private[this] def consume(settings: ConsumerSettings): Future[Done] = {
-    val f = backbone.consume[String](settings)(s => Consumed)
-    f
-  }
-  private[this] def reject(settings: ConsumerSettings): Future[Done] = {
-    val f = backbone.consume[String](settings)(s => Rejected)
-    f
   }
 
   private[this] def sendMessage(subject: String, message: String, queue: String): Unit = {

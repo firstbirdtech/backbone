@@ -1,14 +1,14 @@
 package backbone.consumer
 
-object SourceSettingsSqs {
-  val Defaults = SourceSettingsSqs(20, 100, 10)
+object ReceiveSettings {
+  val Defaults = ReceiveSettings(20, 100, 10)
 
-  def create(waitTimeSeconds: Int, maxBufferSize: Int, maxBatchSize: Int): SourceSettingsSqs =
-    SourceSettingsSqs(waitTimeSeconds, maxBufferSize, maxBatchSize)
+  def create(waitTimeSeconds: Int, maxBufferSize: Int, maxBatchSize: Int): ReceiveSettings =
+    ReceiveSettings(waitTimeSeconds, maxBufferSize, maxBatchSize)
 
 }
 
-case class SourceSettingsSqs(
+case class ReceiveSettings(
   waitTimeSeconds: Int,
   maxBufferSize: Int,
   maxBatchSize: Int

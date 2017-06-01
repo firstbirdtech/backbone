@@ -18,7 +18,7 @@ object ConsumerSettings {
             queue: String,
             parallelism: Int,
             consumeWithin: Limitation,
-            sourceSettingsSqs: SourceSettingsSqs): ConsumerSettings =
+            sourceSettingsSqs: ReceiveSettings): ConsumerSettings =
     apply(topics, queue, parallelism, Some(consumeWithin), sourceSettingsSqs)
 
   def create(topics: JList[String],
@@ -32,18 +32,18 @@ object ConsumerSettings {
              queue: String,
              parallelism: Integer,
              consumeWithin: JOption[Limitation],
-             sourceSettingsSqs: SourceSettingsSqs): ConsumerSettings =
-    apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin), sourceSettingsSqs)
+             receiveSettings: ReceiveSettings): ConsumerSettings =
+    apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin), receiveSettings)
 
 }
 
 /**
  *
- * @param topics        a list of topics to subscribe to
- * @param queue         the name of a queue to consume from
- * @param parallelism   number of concurrent messages in process
- * @param consumeWithin optional limitation when backbone should stop consuming
- * @param sqsSourceSettings settings for the SQS Source from alpakka
+ * @param topics          a list of topics to subscribe to
+ * @param queue           the name of a queue to consume from
+ * @param parallelism     number of concurrent messages in process
+ * @param consumeWithin   optional limitation when backbone should stop consuming
+ * @param receiveSettings settings for the SQS Source from alpakka
  *
  */
 case class ConsumerSettings(
@@ -51,5 +51,5 @@ case class ConsumerSettings(
     queue: String,
     parallelism: Int = 1,
     consumeWithin: Option[Limitation] = None,
-    sqsSourceSettings: SourceSettingsSqs = SourceSettingsSqs.Defaults
+    receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
 )
