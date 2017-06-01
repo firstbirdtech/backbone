@@ -14,43 +14,30 @@ object ConsumerSettings {
   def apply(topics: List[String], queue: String, parallelism: Int, consumeWithin: Limitation): ConsumerSettings =
     apply(topics, queue, parallelism, Some(consumeWithin))
 
-  def create(topics: JList[String],
-  def apply(events: List[String],
-            topics: List[String],
-            queue: String,
-            parallelism: Int,
-            consumeWithin: Limitation): ConsumerSettings =
-    apply(events, topics, queue, parallelism, Some(consumeWithin))
-
-  def apply(events: List[String],
-            topics: List[String],
+  def apply(topics: List[String],
             queue: String,
             parallelism: Int,
             consumeWithin: Limitation,
             sqsSourceWaitTime: Int,
             maxBufferSize: Int,
             maxBatchSize: Int): ConsumerSettings =
-    apply(events, topics, queue, parallelism, Some(consumeWithin), sqsSourceWaitTime, maxBufferSize, maxBatchSize)
+    apply(topics, queue, parallelism, Some(consumeWithin), sqsSourceWaitTime, maxBufferSize, maxBatchSize)
 
-  def create(events: JList[String],
-             topics: JList[String],
+  def create(topics: JList[String],
              queue: String,
              parallelism: Integer,
              consumeWithin: JOption[Limitation]): ConsumerSettings = {
     apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
-    apply(events.asScala.toList, topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
 
   }
-  def create(events: JList[String],
-             topics: JList[String],
+  def create(topics: JList[String],
              queue: String,
              parallelism: Integer,
              consumeWithin: JOption[Limitation],
              sqsSourceWaitTime: Integer,
              maxBufferSize: Integer,
              maxBatchSize: Integer): ConsumerSettings =
-    apply(events.asScala.toList,
-          topics.asScala.toList,
+    apply(topics.asScala.toList,
           queue,
           parallelism,
           OptionConverters.toScala(consumeWithin),
@@ -66,11 +53,6 @@ object ConsumerSettings {
  * @param queue         the name of a queue to consume from
  * @param parallelism   number of concurrent messages in process
  * @param consumeWithin optional limitation when backbone should stop consuming
- * @param events            a list of events to listen to
- * @param topics            a list of topics to subscribe to
- * @param queue             the name of a queue to consume from
- * @param parallelism       number of concurrent messages in process
- * @param consumeWithin     optional limitation when backbone should stop consuming
  * @param sqsSourceWaitTime how long should the long polling request wait
  * @param maxBufferSize     maximum buffer of the SQS source
  * @param maxBatchSize      maximum messages received at one time from SQS

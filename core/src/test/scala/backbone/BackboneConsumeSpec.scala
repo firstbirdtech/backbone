@@ -37,7 +37,7 @@ class BackboneConsumeSpec
     "subscribe the queue with it's arn to the provided topics" in {
 
       val settings =
-        ConsumerSettings(Nil, "topic-arn" :: Nil, "queue-name", 1, CountLimitation(0))
+        ConsumerSettings("topic-arn" :: Nil, "queue-name", 1, CountLimitation(0))
 
       val f = backbone.consume[String](settings)(_ => Consumed)
       Await.ready(f, 5.seconds)
@@ -51,7 +51,7 @@ class BackboneConsumeSpec
     }
 
     "create a queue with the configured name" in {
-      val settings = ConsumerSettings(Nil, Nil, "queue-name-1", 1, CountLimitation(0))
+      val settings = ConsumerSettings(Nil, "queue-name-1", 1, CountLimitation(0))
 
       whenReady(consume(settings)) { res =>
         res mustBe Done
@@ -69,7 +69,7 @@ class BackboneConsumeSpec
       sqsClient.sendMessage(new SendMessageRequest("http://localhost:9324/queue/no-visibility", message.getBody))
 
       val settings =
-        ConsumerSettings("subject" :: Nil, Nil, "no-visibility", 1, CountLimitation(1))
+        ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
       whenReady(consume(settings)) { res =>
         res mustBe Done
         sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
@@ -81,7 +81,7 @@ class BackboneConsumeSpec
       sendMessage("subject", "message", "queue-name")
 
       val settings =
-        ConsumerSettings("subject" :: Nil, Nil, "queue-name", 1, CountLimitation(1))
+        ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
 
       whenReady(consume(settings)) { res =>
         res mustBe Done
@@ -95,7 +95,7 @@ class BackboneConsumeSpec
       sendMessage("notSubject", "message", "queue-name")
 
       val settings =
-        ConsumerSettings("subject" :: Nil, Nil, "queue-name", 1, CountLimitation(0), 0, 100, 10)
+        ConsumerSettings(Nil, "queue-name", 1, CountLimitation(0), 0, 100, 10)
 
       whenReady(consume(settings)) { res =>
         res mustBe Done
