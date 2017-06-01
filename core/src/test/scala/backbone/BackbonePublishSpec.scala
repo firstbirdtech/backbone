@@ -2,11 +2,9 @@ package backbone
 
 import akka.Done
 import akka.stream.scaladsl.Source
-import backbone.consumer.ConsumerSettings
 import backbone.format.DefaultMessageWrites
 import backbone.publisher.PublisherSettings
 import backbone.scaladsl.Backbone
-import backbone.testutil.Implicits._
 import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration

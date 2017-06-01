@@ -34,7 +34,6 @@ class BackboneConsumeSpec
       val settings = ConsumerSettings(Nil, "queue-name-1", 1, CountLimitation(0))
 
       whenReady(consume(settings)) { res =>
-        res mustBe Done
         sqsClient.getQueueUrl("queue-name-1").getQueueUrl must be("http://localhost:9324/queue/queue-name-1")
       }
 
@@ -42,17 +41,16 @@ class BackboneConsumeSpec
 
     "fail parsing a wrongly formatted message and keep in on the queue" in {
 
-      val message = new Message()
-        .withBody("blabla")
-      sqsClient.createQueue(
-        new CreateQueueRequest("no-visibility").withAttributes(HashMap("VisibilityTimeout" -> "0").asJava))
+      val message            = new Message().withBody("blabla")
+      val attributes         = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest("no-visibility").withAttributes(attributes.asJava)
+
+      sqsClient.createQueue(createQueueRequest)
       sqsClient.sendMessage(new SendMessageRequest("http://localhost:9324/queue/no-visibility", message.getBody))
 
-      val settings =
-        ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
+      val settings = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
 
-      whenReady(consume(settings)) { res =>
-        res mustBe Done
+      whenReady(consume(settings)) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
       }
 
@@ -61,11 +59,9 @@ class BackboneConsumeSpec
     "consume messages from the queue url" in {
       sendMessage("subject", "message", "queue-name")
 
-      val settings =
-        ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
 
-      whenReady(consume(settings)) { res =>
-        res mustBe Done
+      whenReady(consume(settings)) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
       }
 
