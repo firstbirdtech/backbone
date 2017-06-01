@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DefaultMessageReadsSpec extends FlatSpec with Matchers with DefaultMessageReads {
 
-  it should "read a String to a Short value" in {
+  "DefaultMessageReads" should "read a String to a Short value" in {
     testMessageReader[Short]("1") shouldBe 1
   }
 

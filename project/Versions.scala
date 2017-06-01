@@ -1,5 +1,5 @@
 object Versions {
-  val alpakka     = "0.7"
+  val alpakka     = "0.9"
   val akka        = "2.4.17"
   val aws         = "1.11.121"
   val cats        = "0.9.0"

@@ -3,7 +3,7 @@ package backbone
 import java.util.{Map => JMap}
 
 import com.amazonaws.handlers.AsyncHandler
-import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
+import com.amazonaws.services.sns.model.{PublishRequest, PublishResult, SubscribeRequest, SubscribeResult}
 import com.amazonaws.services.sqs.model._
 
 package object testutil {
@@ -13,5 +13,6 @@ package object testutil {
   type SetQueueAttributesHandler = AsyncHandler[SetQueueAttributesRequest, SetQueueAttributesResult]
   type ReceiveMessagesHandler    = AsyncHandler[ReceiveMessageRequest, ReceiveMessageResult]
   type DeleteMessageHandler      = AsyncHandler[DeleteMessageRequest, DeleteMessageResult]
+  type PublishHandler            = AsyncHandler[PublishRequest, PublishResult]
   type QueueAttributes           = JMap[String, String]
 }

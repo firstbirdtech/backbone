@@ -24,7 +24,6 @@ object Consumer {
 
   case class Settings(
       queueUrl: String,
-      events: List[String],
       parallelism: Int = 1,
       limitation: Option[Limitation] = None,
       waitTime: Int = 20,
@@ -81,13 +80,6 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
       sns <- jr.readSnsEnvelope(message.getBody).right
-      _ <- {
-        if (settings.events.contains(sns.subject)) {
-          Right(())
-        } else {
-          Left(RemoveMessage(message.getReceiptHandle))
-        }
-      }.right
       t <- (Try(fo.read(sns.message)) match {
         case Failure(_)     => Left[MessageAction, T](KeepMessage)
         case Success(value) => Right[MessageAction, T](value)

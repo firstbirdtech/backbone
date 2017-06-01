@@ -8,9 +8,13 @@ import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters
 
 object ConsumerSettings {
-  def apply(events: List[String], topics: List[String], queue: String, consumeWithin: Limitation): ConsumerSettings =
-    apply(events, topics, queue, 1, Some(consumeWithin))
+  def apply(topics: List[String], queue: String, consumeWithin: Limitation): ConsumerSettings =
+    apply(topics, queue, 1, Some(consumeWithin))
 
+  def apply(topics: List[String], queue: String, parallelism: Int, consumeWithin: Limitation): ConsumerSettings =
+    apply(topics, queue, parallelism, Some(consumeWithin))
+
+  def create(topics: JList[String],
   def apply(events: List[String],
             topics: List[String],
             queue: String,
@@ -33,6 +37,7 @@ object ConsumerSettings {
              queue: String,
              parallelism: Integer,
              consumeWithin: JOption[Limitation]): ConsumerSettings = {
+    apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
     apply(events.asScala.toList, topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
 
   }
@@ -57,6 +62,10 @@ object ConsumerSettings {
 
 /**
  *
+ * @param topics        a list of topics to subscribe to
+ * @param queue         the name of a queue to consume from
+ * @param parallelism   number of concurrent messages in process
+ * @param consumeWithin optional limitation when backbone should stop consuming
  * @param events            a list of events to listen to
  * @param topics            a list of topics to subscribe to
  * @param queue             the name of a queue to consume from
@@ -68,7 +77,6 @@ object ConsumerSettings {
  *
  */
 case class ConsumerSettings(
-    events: List[String],
     topics: List[String],
     queue: String,
     parallelism: Int = 1,
