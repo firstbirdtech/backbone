@@ -2,8 +2,6 @@ package backbone.consumer
 
 import java.util.{List => JList, Optional => JOption}
 
-import akka.stream.alpakka.sqs.SqsSourceSettings
-
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters
 

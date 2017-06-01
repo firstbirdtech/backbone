@@ -12,7 +12,7 @@ trait JsonReader {
    * Reads
    * @param s JSON String representation of an SnsEnvelope
    * @return Right(SnsEnvelope) if the String s could be parsed successfully
-   * @return Left(KeepMessage) if the String s could not be parsed into a SnsEnvelope
+    *        Left(KeepMessage) if the String s could not be parsed into a SnsEnvelope
    */
   def readSnsEnvelope(s: String): Either[MessageAction, SnsEnvelope]
 }
