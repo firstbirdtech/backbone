@@ -15,7 +15,6 @@ import org.scalatest.{MustMatchers, WordSpec}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 class BackboneConsumeSpec
     extends WordSpec
