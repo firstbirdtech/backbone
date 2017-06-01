@@ -94,7 +94,7 @@ val backbone = Backbone()
 
 val publishSettings = PublisherSettings("aws-sns-topic-arn")
 
-//You need to define a MessageReader that tells Backbone how to decode the message body of the AWS SNS Message
+//You need to define a MessageWriter that tells Backbone how to encode the message body of the AWS SNS Message
 implicit val writer = new MessageWriter[String] {
     override def write(s: String): String = s
 }
@@ -110,7 +110,8 @@ val sink = backbone.publisherSink[String](publishSettings)
 Source.single("send this to sns").to(sink)
 
 //Async Publish
-val f: Future[PublishResult] = backbone.publishAsync[String]("send this to sns" :: "and this" :: Nil, publishSettings)
+val f: Future[PublishResult] = backbone.publishAsync[String]("send this to sns", publishSettings)
+val f1: Future[PublishResult] = backbone.publishAsync[String]("send this to sns" :: "and this" :: Nil, publishSettings)
 ```
 
 ## AWS Policies
