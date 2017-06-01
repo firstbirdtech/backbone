@@ -18,10 +18,8 @@ object ConsumerSettings {
             queue: String,
             parallelism: Int,
             consumeWithin: Limitation,
-            sqsSourceWaitTime: Int,
-            maxBufferSize: Int,
-            maxBatchSize: Int): ConsumerSettings =
-    apply(topics, queue, parallelism, Some(consumeWithin), sqsSourceWaitTime, maxBufferSize, maxBatchSize)
+            sourceSettingsSqs: SourceSettingsSqs): ConsumerSettings =
+    apply(topics, queue, parallelism, Some(consumeWithin), sourceSettingsSqs)
 
   def create(topics: JList[String],
              queue: String,
@@ -34,16 +32,8 @@ object ConsumerSettings {
              queue: String,
              parallelism: Integer,
              consumeWithin: JOption[Limitation],
-             sqsSourceWaitTime: Integer,
-             maxBufferSize: Integer,
-             maxBatchSize: Integer): ConsumerSettings =
-    apply(topics.asScala.toList,
-          queue,
-          parallelism,
-          OptionConverters.toScala(consumeWithin),
-          sqsSourceWaitTime,
-          maxBufferSize,
-          maxBatchSize)
+             sourceSettingsSqs: SourceSettingsSqs): ConsumerSettings =
+    apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin), sourceSettingsSqs)
 
 }
 
@@ -53,9 +43,7 @@ object ConsumerSettings {
  * @param queue         the name of a queue to consume from
  * @param parallelism   number of concurrent messages in process
  * @param consumeWithin optional limitation when backbone should stop consuming
- * @param sqsSourceWaitTime how long should the long polling request wait
- * @param maxBufferSize     maximum buffer of the SQS source
- * @param maxBatchSize      maximum messages received at one time from SQS
+ * @param sqsSourceSettings settings for the SQS Source from alpakka
  *
  */
 case class ConsumerSettings(
@@ -63,7 +51,5 @@ case class ConsumerSettings(
     queue: String,
     parallelism: Int = 1,
     consumeWithin: Option[Limitation] = None,
-    sqsSourceWaitTime: Int = 20,
-    maxBufferSize: Int = 100,
-    maxBatchSize: Int = 10
+    sqsSourceSettings: SourceSettingsSqs = SourceSettingsSqs.Defaults
 )

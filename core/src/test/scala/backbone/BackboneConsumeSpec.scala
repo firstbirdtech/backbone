@@ -1,7 +1,7 @@
 package backbone
 
 import akka.Done
-import backbone.consumer.{ConsumerSettings, CountLimitation}
+import backbone.consumer.{ConsumerSettings, CountLimitation, SourceSettingsSqs}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
@@ -15,6 +15,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class BackboneConsumeSpec
     extends WordSpec
@@ -66,10 +67,24 @@ class BackboneConsumeSpec
       }
 
     }
+    "reject messages from the queue" in {
+      sendMessage("subject", "message", "no-visibility")
+
+      val settings = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(0), SourceSettingsSqs(0, 100, 10))
+
+      whenReady(reject(settings)) { _ =>
+        sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
+
+      }
+    }
   }
 
   private[this] def consume(settings: ConsumerSettings): Future[Done] = {
     val f = backbone.consume[String](settings)(s => Consumed)
+    f
+  }
+  private[this] def reject(settings: ConsumerSettings): Future[Done] = {
+    val f = backbone.consume[String](settings)(s => Rejected)
     f
   }
 
