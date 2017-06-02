@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/firstbirdtech/backbone.svg?branch=master)](https://travis-ci.org/firstbirdtech/backbone)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/805331624b64414ab4bebae67557d5f7)](https://www.codacy.com/app/daniel-pfeiffer/backbone?utm_source=github.com&utm_medium=referral&utm_content=firstbirdtech/backbone&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/805331624b64414ab4bebae67557d5f7)](https://www.codacy.com/app/daniel-pfeiffer/backbone?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=firstbirdtech/backbone&amp;utm_campaign=Badge_Grade)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.firstbird/backbone-core_2.11/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccom.firstbird)  
 
 **ATTENTION: WORK IN PROGRESS, UNPUBLISHED, NOT PRODUCTION READY**
 
