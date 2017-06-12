@@ -77,7 +77,7 @@ class BackboneConsumeSpec
     }
 
     "consume messages from the queue url if the MessageReader returns no event" in {
-      sendMessage("subject", "message", "queue-name")
+      sendMessage("message", "queue-name")
 
       val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
       val reader   = MessageReader(_ => Success(Option.empty[String]))
