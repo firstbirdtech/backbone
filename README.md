@@ -64,9 +64,7 @@ val settings = ConsumerSettings(
 )
 
 //You need to define a MessageReader that tells Backbone how to decode the message body of the AWS SNS Message
-implicit val stringFormat = new MessageReader[String] {
-    override def read(s: String): String = s
-}
+implicit val messageReader = MessageReader(s => Success(Some(s)))
 
 //Synchronous API
 backbone.consume[String](settings){ str =>
@@ -96,9 +94,7 @@ val backbone = Backbone()
 val publishSettings = PublisherSettings("aws-sns-topic-arn")
 
 //You need to define a MessageWriter that tells Backbone how to encode the message body of the AWS SNS Message
-implicit val writer = new MessageWriter[String] {
-    override def write(s: String): String = s
-}
+implicit val writer = MessageWriter(s => s)
 
 //Actor Publisher
 val actor: ActorRef = backbone.actorPublisher[String](publishSettings)
