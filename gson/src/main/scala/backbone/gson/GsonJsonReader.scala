@@ -26,7 +26,7 @@ class GsonJsonReader extends JsonReader {
     optionalSnsEnvelope match {
       case Some(envelope) => envelope.asRight
       case None =>
-        logger.error(s"Json can not be parsed to SnsEnvelope. json=$s")
+        logger.error(s"Unable to decode to SnsEnvelope. message=$s")
         KeepMessage.asLeft
     }
   }

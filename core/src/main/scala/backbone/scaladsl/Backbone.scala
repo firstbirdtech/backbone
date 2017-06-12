@@ -15,8 +15,10 @@ import com.amazonaws.auth.policy.conditions.ConditionFactory
 import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}
 import com.amazonaws.services.sns.AmazonSNSAsync
 import com.amazonaws.services.sqs.AmazonSQSAsync
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object Backbone {
 
@@ -38,6 +40,7 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     extends AmazonSqsOps
     with AmazonSnsOps {
 
+  private[this] val logger                          = LoggerFactory.getLogger(getClass)
   private[this] val config                          = system.settings.config
   private[this] val jsonReaderClass                 = Class.forName(config.getString("backbone.json.reader"))
   private[this] implicit val jsonReader: JsonReader = jsonReaderClass.newInstance().asInstanceOf[JsonReader]
@@ -74,11 +77,22 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       implicit fo: MessageReader[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
-    for {
+    logger.debug(s"Preparing to consume messages. config=$settings")
+
+    val subscription = for {
       queue <- createQueue(settings.queue)
       _     <- subscribe(queue, settings.topics)
-      s = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
-      r <- new Consumer(s).consumeAsync(f)
+    } yield queue
+
+    subscription.onComplete {
+      case Success(q) => logger.debug(s"Successfully created and subscribed queue. $q")
+      case Failure(t) => logger.error(s"Subscribing to the topics failed.", t)
+    }
+
+    for {
+      queue <- subscription
+      set = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
+      r <- new Consumer(set).consumeAsync(f)
     } yield r
   }
 
