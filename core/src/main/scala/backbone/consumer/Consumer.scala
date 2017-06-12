@@ -12,6 +12,7 @@ import backbone.json.JsonReader
 import backbone.{MessageReader, _}
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.util.{Failure, Left, Right, Success, Try}
@@ -45,6 +46,8 @@ object Consumer {
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader)
     extends AmazonSqsOps {
 
+  private[this] val logger = LoggerFactory.getLogger(getClass)
+
   private[this] implicit val ec = system.dispatcher
   private[this] implicit val mat = ActorMaterializer(
     ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.resume)
@@ -69,6 +72,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     SqsSource(settings.queueUrl, sqsSourceSettings)
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
+        logger.debug(s"Received message from SQS. message=$message ")
         parseMessage[T](message) match {
           case Left(a)  => Future.successful(a)
           case Right(t) => f(t).map(resultToAction)
@@ -86,9 +90,14 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     for {
       sns <- jr.readSnsEnvelope(message.getBody).right
       t <- (fo.read(sns.message) match {
-        case Failure(_)           => Left[MessageAction, T](KeepMessage)
-        case Success(None)        => Left[MessageAction, T](RemoveMessage(message.getReceiptHandle))
-        case Success(Some(value)) => Right[MessageAction, T](value)
+        case Failure(t) =>
+          logger.error(s"Unable to read message. message=${message.getBody}", t)
+          Left[MessageAction, T](KeepMessage)
+        case Success(None) =>
+          logger.info(s"MessageReader returned empty when parsing message. message=${message.getBody}")
+          Left[MessageAction, T](RemoveMessage(message.getReceiptHandle))
+        case Success(Some(value)) =>
+          Right[MessageAction, T](value)
       }).right
     } yield t
   }
@@ -96,8 +105,10 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   private[this] def ack: Sink[MessageAction, Future[Done]] = {
     Flow[MessageAction]
       .mapAsync(1) {
-        case KeepMessage      => Future.successful(())
-        case RemoveMessage(h) => deleteMessage(settings.queueUrl, h)
+        case KeepMessage => Future.successful(())
+        case RemoveMessage(h) =>
+          logger.debug(s"Removing message from queue. deleteHandle=$h")
+          deleteMessage(settings.queueUrl, h)
       }
       .toMat(Sink.ignore)((_, f) => f)
   }

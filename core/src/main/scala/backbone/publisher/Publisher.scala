@@ -32,6 +32,7 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
   def sink[T](implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
     Flow[T]
       .map(mw.write)
+      .log(getClass.getName, t => s"Publishing message to SNS. $t")
       .toMat(SnsPublisher.sink(settings.topicArn))(Keep.right)
   }
 
