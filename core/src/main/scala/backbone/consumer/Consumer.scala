@@ -85,9 +85,10 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
       sns <- jr.readSnsEnvelope(message.getBody).right
-      t <- (Try(fo.read(sns.message)) match {
-        case Failure(_)     => Left[MessageAction, T](KeepMessage)
-        case Success(value) => Right[MessageAction, T](value)
+      t <- (fo.read(sns.message) match {
+        case Failure(_)           => Left[MessageAction, T](KeepMessage)
+        case Success(None)        => Left[MessageAction, T](RemoveMessage(message.getReceiptHandle))
+        case Success(Some(value)) => Right[MessageAction, T](value)
       }).right
     } yield t
   }

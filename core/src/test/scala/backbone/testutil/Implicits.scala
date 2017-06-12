@@ -1,14 +1,14 @@
 package backbone.testutil
 
-import backbone.MessageReader
+import backbone.MandatoryMessageReader
 import backbone.json.{JsonReader, SnsEnvelope}
 import io.circe.{Decoder, Encoder}
 
+import scala.util.Try
+
 object Implicits {
 
-  implicit val stringFormat = new MessageReader[String] {
-    override def read(s: String): String = s
-  }
+  implicit val stringFormat = MandatoryMessageReader(Try(_))
 
   implicit val snsEnvelopeDecoder: Decoder[SnsEnvelope] =
     Decoder.forProduct1("Message")(SnsEnvelope)
