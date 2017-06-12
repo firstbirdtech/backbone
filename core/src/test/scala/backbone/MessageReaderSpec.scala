@@ -1,8 +1,5 @@
 package backbone
 
-import java.util.function.{Function => JFunction}
-import java.util.{Optional => JOptional}
-
 import org.scalatest.TryValues._
 import org.scalatest.{FlatSpec, MustMatchers}
 

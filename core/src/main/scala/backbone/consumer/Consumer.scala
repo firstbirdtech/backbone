@@ -15,7 +15,7 @@ import com.amazonaws.services.sqs.model.Message
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
-import scala.util.{Failure, Left, Right, Success, Try}
+import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
 
