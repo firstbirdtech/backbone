@@ -15,9 +15,15 @@ class MessageReaderSpec extends FlatSpec with MustMatchers {
     readValue.success.value must contain("message")
   }
 
+  "OptionalMessageReader" should "behave like the normalMessageReader" in {
+    val reader                         = OptionalMessageReader(s => Try(Option(s)))
+    val readValue: Try[Option[String]] = reader.read("message")
+    readValue.success.value must contain("message")
+  }
+
   it should "return a Failure if Java code throws an exception" in {
     val f : (String => Option[String]) = _ => throw new Exception
-    val reader = MessageReader.create(f.andThen(_.asJava).asJava)
+    val reader = OptionalMessageReader.create(f.andThen(_.asJava).asJava)
     reader.read("message") mustBe a[Failure[_]]
   }
 
