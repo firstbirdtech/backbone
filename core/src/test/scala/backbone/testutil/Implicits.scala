@@ -11,10 +11,10 @@ object Implicits {
   }
 
   implicit val snsEnvelopeDecoder: Decoder[SnsEnvelope] =
-    Decoder.forProduct2("Subject", "Message")(SnsEnvelope)
+    Decoder.forProduct1("Message")(SnsEnvelope)
 
   implicit val snsEnvelopeEncode: Encoder[SnsEnvelope] =
-    Encoder.forProduct2("Subject", "Message")(e => (e.subject, e.message))
+    Encoder.forProduct1("Message")(e => e.message)
 
   implicit val jsonSnsEnvelopReader: JsonReader = new TestJsonReader
 }

@@ -60,7 +60,7 @@ class BackboneSubscriptionSpec
       verify(sqsClient).createQueueAsync(meq("queue-name"), any[CreateQueueHandler])
     }
 
-    val envelope = SnsEnvelope("subject", "message")
+    val envelope = SnsEnvelope("message")
 
     val message = new Message()
       .withBody(envelope.asJson.toString())
