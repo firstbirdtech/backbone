@@ -13,20 +13,18 @@ class GsonJsonReaderSpec extends FlatSpec with MustMatchers {
     val json =
       """
         |{
-        | "Subject": "test-subject",
         | "Message": "test-message"
         |}
       """.stripMargin
 
-    reader.readSnsEnvelope(json) mustBe Right(SnsEnvelope("test-subject", "test-message"))
+    reader.readSnsEnvelope(json) mustBe Right(SnsEnvelope("test-message"))
   }
 
   it should "return Left(KeepMessage) if it can not parse a sns envelope json string" in {
     val json =
       """
         |{
-        | "xxx": "test-subject",
-        | "Message": "test-message"
+        | "NotAMessage": "test-message"
         |}
       """.stripMargin
 

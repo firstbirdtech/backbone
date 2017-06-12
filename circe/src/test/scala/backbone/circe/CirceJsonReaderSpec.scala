@@ -12,19 +12,17 @@ class CirceJsonReaderSpec extends FlatSpec with MustMatchers {
   "CirceJsonReader" should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
     val json = """
       |{
-      | "Subject": "test-subject",
       | "Message": "test-message"
       |}
     """.stripMargin
 
-    reader.readSnsEnvelope(json) mustBe SnsEnvelope("test-subject", "test-message").asRight
+    reader.readSnsEnvelope(json) mustBe SnsEnvelope("test-message").asRight
   }
 
   it should "return Left(KeepMessage) if it can not parse a sns envelope json string" in {
     val json = """
        |{
-       | "xxx": "test-subject",
-       | "Message": "test-message"
+       | "NotAMessage": "test-message"
        |}
      """.stripMargin
 

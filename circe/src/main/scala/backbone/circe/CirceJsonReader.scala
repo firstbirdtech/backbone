@@ -9,7 +9,7 @@ import io.circe.parser._
 import org.slf4j.LoggerFactory
 
 object CirceJsonReader {
-  implicit val decodeSnsEnvelope: Decoder[SnsEnvelope] = Decoder.forProduct2("Subject", "Message")(SnsEnvelope)
+  implicit val decodeSnsEnvelope: Decoder[SnsEnvelope] = Decoder.forProduct1("Message")(SnsEnvelope)
 }
 
 class CirceJsonReader extends JsonReader {

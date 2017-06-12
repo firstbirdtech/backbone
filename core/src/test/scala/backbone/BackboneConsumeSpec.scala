@@ -60,7 +60,7 @@ class BackboneConsumeSpec
     }
 
     "consume messages from the queue url" in {
-      sendMessage("subject", "message", "queue-name")
+      sendMessage("message", "queue-name")
 
       val settings        = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
       val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
@@ -71,7 +71,7 @@ class BackboneConsumeSpec
 
     }
     "reject messages from the queue" in {
-      sendMessage("subject", "message", "no-visibility")
+      sendMessage("message", "no-visibility")
 
       val settings        = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(0), ReceiveSettings(0, 100, 10))
       val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)
@@ -83,8 +83,8 @@ class BackboneConsumeSpec
     }
   }
 
-  private[this] def sendMessage(subject: String, message: String, queue: String): Unit = {
-    val envelope = SnsEnvelope(subject, message)
+  private[this] def sendMessage(message: String, queue: String): Unit = {
+    val envelope = SnsEnvelope(message)
 
     val sqsMessage = new Message()
       .withBody(envelope.asJson.toString())

@@ -20,9 +20,8 @@ class GsonJsonReader extends JsonReader {
 
     val optionalSnsEnvelope = for {
       json    <- Try(parser.parse(s)).map(_.getAsJsonObject).toOption
-      subject <- Option(json.get("Subject")).map(_.getAsString)
       message <- Option(json.get("Message")).map(_.getAsString)
-    } yield SnsEnvelope(subject, message)
+    } yield SnsEnvelope(message)
 
     optionalSnsEnvelope match {
       case Some(envelope) => envelope.asRight
