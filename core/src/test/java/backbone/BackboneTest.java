@@ -38,7 +38,8 @@ public class BackboneTest extends TestContext {
         final ConsumerSettings consumerSettings = ConsumerSettings.create(new ArrayList<String>(), "queue-name", 1, Optional.of(new CountLimitation(1)));
         sqs.createQueue("queue-name");
         sqs.sendMessage(new SendMessageRequest("http://localhost:9324/queue/queue-name", "\"message\":\"body\""));
-        backbone.consume(consumerSettings, msg -> msg, f -> Consumed.instance()).get();
+        final MessageReader<String> messageReader = MandatoryMessageReader.create(s -> s);
+        backbone.consume(consumerSettings, messageReader, f -> Consumed.instance()).get();
 
         assertThat(sqs.receiveMessage("http://localhost:9324/queue/queue-name").getMessages().size(), is(0));
     }

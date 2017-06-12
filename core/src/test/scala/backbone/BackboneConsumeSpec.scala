@@ -10,11 +10,13 @@ import com.amazonaws.services.sqs.model.{CreateQueueRequest, Message, SendMessag
 import io.circe.syntax._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{MustMatchers, WordSpec}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.concurrent.Future
+import scala.util.Success
 
 class BackboneConsumeSpec
     extends WordSpec
@@ -25,7 +27,11 @@ class BackboneConsumeSpec
     with MustMatchers
     with TestActorSystem {
 
+
+  override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(3, Seconds))
+
   val backbone = Backbone()
+
 
   "Backbone.consume" should {
 
@@ -68,8 +74,21 @@ class BackboneConsumeSpec
       whenReady(f) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
       }
-
     }
+
+    "consume messages from the queue url if the MessageReader returns no event" in {
+      sendMessage("message", "queue-name")
+
+      val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val reader   = MessageReader(_ => Success(Option.empty[String]))
+
+      val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)(reader)
+
+      whenReady(f) { _ =>
+        sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
+      }
+    }
+
     "reject messages from the queue" in {
       sendMessage("message", "no-visibility")
 
@@ -78,7 +97,6 @@ class BackboneConsumeSpec
 
       whenReady(f) { _ =>
         sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
-
       }
     }
   }
