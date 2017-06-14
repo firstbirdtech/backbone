@@ -2,8 +2,8 @@ package backbone.gson
 
 import backbone.consumer.Consumer.KeepMessage
 import backbone.json.SnsEnvelope
-import org.scalatest.{FlatSpec, MustMatchers}
 import cats.syntax.either._
+import org.scalatest.{FlatSpec, MustMatchers}
 
 class GsonJsonReaderSpec extends FlatSpec with MustMatchers {
 

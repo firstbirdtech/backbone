@@ -6,7 +6,8 @@ services:
   - docker
 
 scala:
-   - 2.11.8
+   - 2.11.11
+   - 2.12.2
 
 jdk:
    - oraclejdk8
@@ -16,7 +17,7 @@ branches:
   - master
 
 script:
-  - sbt clean coverage test coverageReport coverageAggregate codacyCoverage
+  - sbt clean coverage +test coverageReport coverageAggregate codacyCoverage
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -print -delete
@@ -30,7 +31,7 @@ cache:
 #deploy:
 #  provider: script
 #  script:
-#    - sbt publish
+#    - sbt +publish
 #  on:
 #    tags: true
 #    repo: firstbirdtech/backbone
