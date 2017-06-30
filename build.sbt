@@ -29,12 +29,10 @@ lazy val core = project
 
 lazy val playJson = project
   .in(file("playJson"))
-  .disablePlugins(CrossBuild)
-  .enablePlugins(NoCrossBuild)
   .settings(
     name := "backbone-play-json",
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play-json" % Versions.play,
+      "com.typesafe.play" %% "play-json" % Versions.playJson,
       "org.scalatest"     %% "scalatest" % Versions.scalaTest % Test
     )
   )
