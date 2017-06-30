@@ -1,8 +1,8 @@
 package backbone.format
 
 import backbone.MessageReader
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.TryValues._
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.{Success, Try}
 
