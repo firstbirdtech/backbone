@@ -36,7 +36,7 @@ class BackboneSubscriptionSpec
 
     "subscribe the queue with it's arn to the provided topics" in {
 
-      val settings = ConsumerSettings("topic-arn" :: Nil, "Queue-name", 1, CountLimitation(0))
+      val settings = ConsumerSettings("topic-arn" :: Nil, "Queue-name", 1, Some(CountLimitation(0)))
       val backbone = Backbone()
 
       val f = backbone.consume[String](settings)(_ => Consumed)
@@ -51,7 +51,7 @@ class BackboneSubscriptionSpec
     }
 
     "create a queue with the configured name" in {
-      val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(0))
+      val settings = ConsumerSettings(Nil, "queue-name", 1, Some(CountLimitation(0)))
       val backbone = Backbone()
 
       val f = backbone.consume[String](settings)(_ => Consumed)
@@ -67,7 +67,7 @@ class BackboneSubscriptionSpec
 
     "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
 
-      val settings = ConsumerSettings("subject" :: Nil, "queue-name", 1, CountLimitation(1))
+      val settings = ConsumerSettings("subject" :: Nil, "queue-name", 1, Some(CountLimitation(1)))
       val backbone = Backbone()
 
       val f = backbone.consume[String](settings)(s => Consumed)

@@ -6,31 +6,23 @@ import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters
 
 object ConsumerSettings {
-  def apply(topics: List[String], queue: String, consumeWithin: Limitation): ConsumerSettings =
-    apply(topics, queue, 1, Some(consumeWithin))
 
-  def apply(topics: List[String], queue: String, parallelism: Int, consumeWithin: Limitation): ConsumerSettings =
-    apply(topics, queue, parallelism, Some(consumeWithin))
-
-  def apply(topics: List[String],
-            queue: String,
-            parallelism: Int,
-            consumeWithin: Limitation,
-            sourceSettingsSqs: ReceiveSettings): ConsumerSettings =
-    apply(topics, queue, parallelism, Some(consumeWithin), sourceSettingsSqs)
-
-  def create(topics: JList[String],
-             queue: String,
-             parallelism: Integer,
-             consumeWithin: JOption[Limitation]): ConsumerSettings = {
+  def create(
+      topics: JList[String],
+      queue: String,
+      parallelism: Integer,
+      consumeWithin: JOption[Limitation]
+  ): ConsumerSettings = {
     apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin))
 
   }
-  def create(topics: JList[String],
-             queue: String,
-             parallelism: Integer,
-             consumeWithin: JOption[Limitation],
-             receiveSettings: ReceiveSettings): ConsumerSettings =
+  def create(
+      topics: JList[String],
+      queue: String,
+      parallelism: Integer,
+      consumeWithin: JOption[Limitation],
+      receiveSettings: ReceiveSettings
+  ): ConsumerSettings =
     apply(topics.asScala.toList, queue, parallelism, OptionConverters.toScala(consumeWithin), receiveSettings)
 
 }

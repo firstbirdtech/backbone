@@ -37,7 +37,7 @@ class BackboneConsumeSpec
 
     "create a queue with the configured name" in {
 
-      val settings = ConsumerSettings(Nil, "queue-name-1", 1, CountLimitation(0))
+      val settings = ConsumerSettings(Nil, "queue-name-1", 1, Some(CountLimitation(0)))
 
       val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
 
@@ -56,7 +56,7 @@ class BackboneConsumeSpec
       sqsClient.createQueue(createQueueRequest)
       sqsClient.sendMessage(new SendMessageRequest("http://localhost:9324/queue/no-visibility", message.getBody))
 
-      val settings        = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(1))
+      val settings        = ConsumerSettings(Nil, "no-visibility", 1, Some(CountLimitation(1)))
       val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
 
       whenReady(f) { _ =>
@@ -68,7 +68,7 @@ class BackboneConsumeSpec
     "consume messages from the queue url" in {
       sendMessage("message", "queue-name")
 
-      val settings        = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val settings        = ConsumerSettings(Nil, "queue-name", 1, Some(CountLimitation(1)))
       val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
 
       whenReady(f) { _ =>
@@ -79,7 +79,7 @@ class BackboneConsumeSpec
     "consume messages from the queue url if the MessageReader returns no event" in {
       sendMessage("message", "queue-name")
 
-      val settings = ConsumerSettings(Nil, "queue-name", 1, CountLimitation(1))
+      val settings = ConsumerSettings(Nil, "queue-name", 1, Some(CountLimitation(1)))
       val reader   = MessageReader(_ => Success(Option.empty[String]))
 
       val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)(reader)
@@ -92,7 +92,7 @@ class BackboneConsumeSpec
     "reject messages from the queue" in {
       sendMessage("message", "no-visibility")
 
-      val settings        = ConsumerSettings(Nil, "no-visibility", 1, CountLimitation(0), ReceiveSettings(0, 100, 10))
+      val settings        = ConsumerSettings(Nil, "no-visibility", 1, Some(CountLimitation(0)), ReceiveSettings(0, 100, 10))
       val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)
 
       whenReady(f) { _ =>
