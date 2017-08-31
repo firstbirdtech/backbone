@@ -51,7 +51,7 @@ object CrossBuild extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
   override def requires: Plugins      = plugins.JvmPlugin
   override lazy val projectSettings = Seq(
-    crossScalaVersions := Seq("2.11.11", "2.12.2"),
+    crossScalaVersions := Seq("2.11.11", "2.12.3"),
     scalaVersion := "2.11.11"
   )
 }

@@ -22,8 +22,8 @@ class MessageReaderSpec extends FlatSpec with MustMatchers {
   }
 
   it should "return a Failure if Java code throws an exception" in {
-    val f : (String => Option[String]) = _ => throw new Exception
-    val reader = OptionalMessageReader.create(f.andThen(_.asJava).asJava)
+    val f: (String => Option[String]) = _ => throw new Exception
+    val reader                        = OptionalMessageReader.create(f.andThen(_.asJava).asJava)
     reader.read("message") mustBe a[Failure[_]]
   }
 
@@ -41,8 +41,8 @@ class MessageReaderSpec extends FlatSpec with MustMatchers {
   }
 
   it should "return a Failure if Java code throws an exception" in {
-    val f : (String => String) = _ => throw new Exception
-    val reader = MandatoryMessageReader.create(f.asJava)
+    val f: (String => String) = _ => throw new Exception
+    val reader                = MandatoryMessageReader.create(f.asJava)
     reader.read("message") mustBe a[Failure[_]]
   }
 

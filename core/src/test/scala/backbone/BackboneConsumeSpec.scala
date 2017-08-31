@@ -27,11 +27,9 @@ class BackboneConsumeSpec
     with MustMatchers
     with TestActorSystem {
 
-
   override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(3, Seconds))
 
   val backbone = Backbone()
-
 
   "Backbone.consume" should {
 
