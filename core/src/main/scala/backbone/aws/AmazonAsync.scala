@@ -8,7 +8,7 @@ import scala.concurrent.{Future, Promise}
 
 private[backbone] trait AmazonAsync {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  private[this] val logger = LoggerFactory.getLogger(getClass)
 
   def async[A <: AmazonWebServiceRequest, B](f: AsyncHandler[A, B] => Any): Future[B] = {
 

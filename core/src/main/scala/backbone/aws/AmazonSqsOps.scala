@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private[backbone] trait AmazonSqsOps extends AmazonAsync {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  private[this] val logger = LoggerFactory.getLogger(getClass)
 
   def sqs: AmazonSQSAsync
 
