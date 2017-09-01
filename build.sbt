@@ -22,7 +22,6 @@ lazy val core = project
       "io.circe"               %% "circe-core"              % Versions.circe % Test,
       "com.typesafe.akka"      %% "akka-testkit"            % Versions.akka % Test,
       "org.mockito"            % "mockito-core"             % Versions.mockito % Test,
-      "org.scalatest"          %% "scalatest"               % Versions.scalaTest % Test,
       "junit"                  % "junit"                    % Versions.junit % Test
     )
   )
@@ -32,8 +31,7 @@ lazy val playJson = project
   .settings(
     name := "backbone-play-json",
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play-json" % Versions.playJson,
-      "org.scalatest"     %% "scalatest" % Versions.scalaTest % Test
+      "com.typesafe.play" %% "play-json" % Versions.playJson
     )
   )
   .dependsOn(core)
@@ -43,9 +41,8 @@ lazy val circe = project
   .settings(
     name := "backbone-circe",
     libraryDependencies ++= Seq(
-      "io.circe"      %% "circe-parser" % Versions.circe,
-      "io.circe"      %% "circe-core"   % Versions.circe,
-      "org.scalatest" %% "scalatest"    % Versions.scalaTest % Test
+      "io.circe" %% "circe-parser" % Versions.circe,
+      "io.circe" %% "circe-core"   % Versions.circe
     )
   )
   .dependsOn(core)
@@ -55,8 +52,7 @@ lazy val gson = project
   .settings(
     name := "backbone-gson",
     libraryDependencies ++= Seq(
-      "com.google.code.gson" % "gson"       % Versions.gson,
-      "org.scalatest"        %% "scalatest" % Versions.scalaTest % Test
+      "com.google.code.gson" % "gson" % Versions.gson
     )
   )
   .dependsOn(core)

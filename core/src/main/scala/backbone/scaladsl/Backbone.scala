@@ -89,11 +89,18 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       case Failure(t) => logger.error(s"Subscribing to the topics failed.", t)
     }
 
-    for {
+    val result = for {
       queue <- subscription
       set = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
       r <- new Consumer(set).consumeAsync(f)
     } yield r
+
+    result.onComplete {
+      case Success(_) => logger.info("Backbone consumer stream finished successfully.")
+      case Failure(t) => logger.error("Backbone consumer stream finished with an error.", t)
+    }
+
+    result
   }
 
   /**
@@ -153,6 +160,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
 
   private[this] def subscribe(queue: QueueInformation, topics: List[String])(
       implicit ec: ExecutionContext): Future[Unit] = {
+
+    logger.info(s"Subscribing queue to topics. queueArn=${queue.arn}, topicArns=$topics")
     for {
       _ <- updatePolicy(queue, topics)
       _ <- Future.sequence(topics.map(t => subscribe(queue, t)))
@@ -163,7 +172,10 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
       implicit ec: ExecutionContext): Future[Unit] = {
     topics match {
       case Nil => Future.successful(())
-      case ts  => savePolicy(queue.url, createPolicy(queue.arn, ts))
+      case ts =>
+        val policy = createPolicy(queue.arn, ts)
+        logger.debug(s"Saving new policy for queue. queueArn=${queue.arn}, policy=$policy")
+        savePolicy(queue.url, policy)
     }
   }
 

@@ -13,7 +13,8 @@ class PlayJsonReader extends JsonReader {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  private[this] implicit val snsEnvelopeReads: json.Reads[SnsEnvelope] = (__ \ 'Message).read[String]
+  private[this] implicit val snsEnvelopeReads: json.Reads[SnsEnvelope] = (__ \ 'Message)
+    .read[String]
     .map(SnsEnvelope)
 
   override def readSnsEnvelope(s: String): Either[Consumer.MessageAction, SnsEnvelope] = {

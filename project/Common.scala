@@ -35,6 +35,10 @@ object Common extends AutoPlugin {
     javacOptions ++= Seq(
       "-Xlint:unchecked"
     ),
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % Versions.logback   % Test,
+      "org.scalatest"  %% "scalatest"      % Versions.scalaTest % Test
+    ),
     // show full stack traces and test case durations
     testOptions in Test += Tests.Argument("-oDF")
   )
@@ -51,7 +55,7 @@ object CrossBuild extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
   override def requires: Plugins      = plugins.JvmPlugin
   override lazy val projectSettings = Seq(
-    crossScalaVersions := Seq("2.11.11", "2.12.2"),
+    crossScalaVersions := Seq("2.11.11", "2.12.3"),
     scalaVersion := "2.11.11"
   )
 }
