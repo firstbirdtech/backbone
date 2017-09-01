@@ -2,6 +2,7 @@ package backbone.consumer
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, Sink}
@@ -49,11 +50,12 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
   private[this] implicit val ec: ExecutionContextExecutor = system.dispatcher
+  private[this] val restartingDecider: Supervision.Decider = { t =>
+    logger.error("Error on Consumer stream.", t)
+    Supervision.Restart
+  }
   private[this] implicit val mat: ActorMaterializer = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy { t =>
-      logger.error("Error on Consumer stream.", t)
-      Supervision.resume
-    }
+    ActorMaterializerSettings(system).withSupervisionStrategy(restartingDecider)
   )
 
   /** Consume elements of type T until an optional condition in settings is met.
@@ -67,7 +69,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
 
-    logger.info(s"Strating to consume messages off SQS queue. settings=$settings")
+    logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
     val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
       settings.receiveSettings.waitTimeSeconds,
@@ -90,6 +92,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
             future
         }
       }
+      .withAttributes(supervisionStrategy(restartingDecider))
       .runWith(ack)
   }
 
@@ -122,6 +125,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
           logger.debug(s"Removing message from queue. deleteHandle=$h")
           deleteMessage(settings.queueUrl, h)
       }
+      .withAttributes(supervisionStrategy(restartingDecider))
       .toMat(Sink.ignore)((_, f) => f)
   }
 }
