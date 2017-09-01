@@ -4,11 +4,14 @@ import backbone.scaladsl.Backbone.QueueInformation
 import com.amazonaws.auth.policy.Policy
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model._
-
+import org.slf4j.LoggerFactory
+import cats.implicits._
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 private[backbone] trait AmazonSqsOps extends AmazonAsync {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def sqs: AmazonSQSAsync
 
@@ -32,10 +35,13 @@ private[backbone] trait AmazonSqsOps extends AmazonAsync {
   }
 
   def createQueue(name: String)(implicit ec: ExecutionContext): Future[QueueInformation] = {
+    logger.info(s"Creating queue. queueName=$name")
     for {
       createResponse <- async[CreateQueueRequest, CreateQueueResult](sqs.createQueueAsync(name, _))
       url = createResponse.getQueueUrl
+      _   <- logger.debug(s"Created queue. queueName=$name, url=$url").pure[Future]
       arn <- getQueueArn(url)
+      _   <- logger.debug(s"Requested queueArn. queueName=$name, queueArn=$arn").pure[Future]
     } yield QueueInformation(url, arn)
   }
 

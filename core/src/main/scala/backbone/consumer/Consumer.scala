@@ -14,7 +14,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
@@ -48,9 +48,12 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  private[this] implicit val ec = system.dispatcher
-  private[this] implicit val mat = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.resume)
+  private[this] implicit val ec: ExecutionContextExecutor = system.dispatcher
+  private[this] implicit val mat: ActorMaterializer = ActorMaterializer(
+    ActorMaterializerSettings(system).withSupervisionStrategy { t =>
+      logger.error("Error on Consumer stream.", t)
+      Supervision.resume
+    }
   )
 
   /** Consume elements of type T until an optional condition in settings is met.
@@ -64,6 +67,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
 
+    logger.info(s"Strating to consume messages off SQS queue. settings=$settings")
+
     val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
       settings.receiveSettings.waitTimeSeconds,
       settings.receiveSettings.maxBufferSize,
@@ -74,8 +79,15 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       .mapAsync(settings.parallelism) { implicit message =>
         logger.debug(s"Received message from SQS. message=$message ")
         parseMessage[T](message) match {
-          case Left(a)  => Future.successful(a)
-          case Right(t) => f(t).map(resultToAction)
+          case Left(a) =>
+            Future.successful(a)
+          case Right(t) =>
+            val future = f(t).map(resultToAction)
+            future.onComplete {
+              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.getMessageId}")
+              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.getMessageId}", t)
+            }
+            future
         }
       }
       .runWith(ack)

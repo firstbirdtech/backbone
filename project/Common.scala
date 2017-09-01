@@ -35,6 +35,10 @@ object Common extends AutoPlugin {
     javacOptions ++= Seq(
       "-Xlint:unchecked"
     ),
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % Versions.logback   % Test,
+      "org.scalatest"  %% "scalatest"      % Versions.scalaTest % Test
+    ),
     // show full stack traces and test case durations
     testOptions in Test += Tests.Argument("-oDF")
   )

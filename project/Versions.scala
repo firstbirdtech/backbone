@@ -12,4 +12,5 @@ object Versions {
   val slf4j       = "1.7.25"
   val java8Compat = "0.8.0"
   val elasticMq   = "0.13.8"
+  val logback     = "1.2.3"
 }
