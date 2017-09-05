@@ -1,8 +1,8 @@
 object Versions {
   val alpakka     = "0.11"
   val akka        = "2.5.4"
-  val aws         = "1.11.186"
-  val cats        = "0.9.0"
+  val aws         = "1.11.188"
+  val cats        = "1.0.0-MF"
   val playJson    = "2.6.3"
   val circe       = "0.8.0"
   val scalaTest   = "3.0.4"

@@ -14,7 +14,7 @@ lazy val core = project
       "com.typesafe.akka"      %% "akka-stream"             % Versions.akka,
       "com.lightbend.akka"     %% "akka-stream-alpakka-sqs" % Versions.alpakka,
       "com.lightbend.akka"     %% "akka-stream-alpakka-sns" % Versions.alpakka,
-      "org.typelevel"          %% "cats"                    % Versions.cats,
+      "org.typelevel"          %% "cats-core"               % Versions.cats,
       "org.scala-lang.modules" %% "scala-java8-compat"      % Versions.java8Compat,
       "org.slf4j"              % "slf4j-api"                % Versions.slf4j,
       "org.elasticmq"          %% "elasticmq-rest-sqs"      % Versions.elasticMq % Test,
