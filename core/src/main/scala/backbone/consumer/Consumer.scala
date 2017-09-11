@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.{Flow, Sink, RestartSource}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import backbone.aws.AmazonSqsOps
 import backbone.consumer.Consumer.{Settings, _}
@@ -15,7 +15,9 @@ import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import org.slf4j.LoggerFactory
 
+
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.duration._
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
@@ -76,7 +78,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       settings.receiveSettings.maxBufferSize,
       settings.receiveSettings.maxBatchSize
     )
-    SqsSource(settings.queueUrl, sqsSourceSettings)
+
+    RestartSource.withBackoff(3.second, 30.seconds, 0.2) (() => SqsSource(settings.queueUrl, sqsSourceSettings))
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
         logger.debug(s"Received message from SQS. message=$message ")
