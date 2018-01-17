@@ -63,9 +63,9 @@ class BackbonePublishSpec
       val actorRef = backbone.actorPublisher[String](publisherSettings)
 
       actorRef ! "message-1"
-      expectNoMsg
+      expectNoMessage(100.millis)
       actorRef ! "message-2"
-      expectNoMsg
+      expectNoMessage(100.millis)
 
       within(100.millis) {
         verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-1")),

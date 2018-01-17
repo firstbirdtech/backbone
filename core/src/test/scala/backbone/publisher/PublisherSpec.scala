@@ -40,9 +40,9 @@ class PublisherSpec
       val actorRef = new Publisher(settings).actor[String](Int.MaxValue, OverflowStrategy.dropHead)
 
       actorRef ! "message-1"
-      expectNoMsg
+      expectNoMessage(100.millis)
       actorRef ! "message-2"
-      expectNoMsg
+      expectNoMessage(100.millis)
 
       within(100.millis) {
 

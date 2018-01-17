@@ -1,7 +1,7 @@
 lazy val backbone = project
   .in(file("."))
   .disablePlugins(Publish)
-  .enablePlugins(NoPublish, CrossPerProjectPlugin)
+  .enablePlugins(NoPublish)
   .aggregate(core, playJson, circe, gson)
 
 lazy val core = project
