@@ -35,7 +35,7 @@ public class BackboneTest extends TestContext {
     @Test
     public void consume_oneMessage_messageConsumed() throws ExecutionException, InterruptedException {
 
-        final ConsumerSettings consumerSettings = ConsumerSettings.create(new ArrayList<String>(), "queue-name", 1, Optional.of(new CountLimitation(1)));
+        final ConsumerSettings consumerSettings = ConsumerSettings.create(new ArrayList<String>(), "queue-name", Optional.empty(), 1, Optional.of(new CountLimitation(1)));
         sqs.createQueue("queue-name");
         sqs.sendMessage(new SendMessageRequest("http://localhost:9324/queue/queue-name", "\"message\":\"body\""));
         final MessageReader<String> messageReader = MandatoryMessageReader.create(s -> s);
