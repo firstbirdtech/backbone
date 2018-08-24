@@ -52,7 +52,7 @@ object ConsumerSettings {
 case class ConsumerSettings(
     topics: List[String],
     queue: String,
-    kmsKeyAlias: Option[String],
+    kmsKeyAlias: Option[String] = None,
     parallelism: Int = 1,
     consumeWithin: Option[Limitation] = None,
     receiveSettings: ReceiveSettings = ReceiveSettings.Defaults

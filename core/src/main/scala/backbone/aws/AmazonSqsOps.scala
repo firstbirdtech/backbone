@@ -37,15 +37,15 @@ private[backbone] trait AmazonSqsOps extends AmazonAsync {
   def createQueue(params: CreateQueueParams)(implicit ec: ExecutionContext): Future[QueueInformation] = {
 
     val createRequest = new CreateQueueRequest(params.name)
-    params.kmsKeyAlias.map(key => createRequest.addAttributesEntry("KmsMasterKeyId", key))
+    params.kmsKeyId.map(key => createRequest.addAttributesEntry("KmsMasterKeyId", key))
 
     logger.info(s"Creating queue. queueName=$params.name")
     for {
       createResponse <- async[CreateQueueRequest, CreateQueueResult](sqs.createQueueAsync(createRequest, _))
       url = createResponse.getQueueUrl
-      _   <- logger.debug(s"Created queue. queueName=$params.name, url=$url").pure[Future]
+      _   <- logger.debug(s"Created queue. queueParams=$params, url=$url").pure[Future]
       arn <- getQueueArn(url)
-      _   <- logger.debug(s"Requested queueArn. queueName=$params.name, queueArn=$arn").pure[Future]
+      _   <- logger.debug(s"Requested queueArn. queueParams=$params, queueArn=$arn").pure[Future]
     } yield QueueInformation(url, arn)
   }
 
