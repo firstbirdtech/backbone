@@ -5,7 +5,7 @@ import akka.actor.ActorRef;
 import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
-import akka.testkit.JavaTestKit;
+import akka.testkit.javadsl.TestKit;
 import backbone.consumer.ConsumerSettings;
 import backbone.consumer.CountLimitation;
 import backbone.publisher.PublisherSettings;
@@ -64,17 +64,14 @@ public class BackboneTest extends TestContext {
     public void actorPublisher_sendMultipleMessages_messagesSuccessfullyPublished() throws Exception {
         final ActorRef actorRef = backbone.<String>actorPublisher(publisherSettings, Int.MaxValue(), OverflowStrategy.dropHead(), msg -> msg);
 
-        new JavaTestKit(system) {{
+        new TestKit(system) {{
             actorRef.tell("message-1", getRef());
             actorRef.tell("message-2", getRef());
 
-            new AwaitAssert(duration("500 millis")) {
-                @Override
-                protected void check() {
-                    verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
-                    verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
-                }
-            };
+            awaitAssert(duration("500 millis"), () -> {
+                verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
+                return verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
+            });
         }};
     }
 

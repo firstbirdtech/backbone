@@ -15,11 +15,12 @@ object Common extends AutoPlugin {
     developers += Developer(
       "contributors",
       "Contributors",
-      "hello@firstbird,com",
+      "hello@firstbird.com",
       url("https://github.com/firstbirdtech/backbone/graphs/contributors")
     ),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-    scalaVersion := "2.11.11",
+    scalaVersion := "2.11.12",
+    crossScalaVersions := Seq("2.11.12", "2.12.6"),
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
@@ -33,7 +34,8 @@ object Common extends AutoPlugin {
       "-Xfuture"
     ),
     javacOptions ++= Seq(
-      "-Xlint:unchecked"
+      "-Xlint:unchecked",
+      "-Xlint:deprecation"
     ),
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % Versions.logback   % Test,
@@ -41,21 +43,5 @@ object Common extends AutoPlugin {
     ),
     // show full stack traces and test case durations
     testOptions in Test += Tests.Argument("-oDF")
-  )
-}
-
-object NoCrossBuild extends AutoPlugin {
-  override def requires: Plugins = plugins.JvmPlugin
-  override lazy val projectSettings = Seq(
-    scalaVersion := "2.11.11"
-  )
-}
-
-object CrossBuild extends AutoPlugin {
-  override def trigger: PluginTrigger = allRequirements
-  override def requires: Plugins      = plugins.JvmPlugin
-  override lazy val projectSettings = Seq(
-    crossScalaVersions := Seq("2.11.11", "2.12.3"),
-    scalaVersion := "2.11.11"
   )
 }
