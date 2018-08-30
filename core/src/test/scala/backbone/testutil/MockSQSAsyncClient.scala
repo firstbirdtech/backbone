@@ -18,7 +18,7 @@ trait MockSQSAsyncClient extends TestSuiteMixin with MockitoUtils { this: TestSu
 
   abstract override protected def withFixture(test: NoArgTest): Outcome = {
 
-    when(sqsClient.createQueueAsync(any[String], any[CreateQueueHandler])).thenAnswer(answer { i =>
+    when(sqsClient.createQueueAsync(any[CreateQueueRequest], any[CreateQueueHandler])).thenAnswer(answer { i =>
       val result = new CreateQueueResult()
         .withQueueUrl("queue-url")
 

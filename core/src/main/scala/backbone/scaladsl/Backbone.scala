@@ -4,7 +4,7 @@ import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Sink
-import backbone.aws.{AmazonSnsOps, AmazonSqsOps}
+import backbone.aws.{AmazonSnsOps, AmazonSqsOps, CreateQueueParams}
 import backbone.consumer.{Consumer, ConsumerSettings}
 import backbone.json.JsonReader
 import backbone.publisher.{Publisher, PublisherSettings}
@@ -80,7 +80,7 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     logger.debug(s"Preparing to consume messages. config=$settings")
 
     val subscription = for {
-      queue <- createQueue(settings.queue)
+      queue <- createQueue(CreateQueueParams(settings.queue, settings.kmsKeyAlias))
       _     <- subscribe(queue, settings.topics)
     } yield queue
 
