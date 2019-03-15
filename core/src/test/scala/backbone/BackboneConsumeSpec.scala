@@ -9,7 +9,7 @@ import backbone.testutil.{ElasticMQ, MockSNSAsyncClient, TestActorSystem}
 import com.amazonaws.services.sqs.model.{CreateQueueRequest, Message, SendMessageRequest}
 import io.circe.syntax._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{MustMatchers, WordSpec}
 
