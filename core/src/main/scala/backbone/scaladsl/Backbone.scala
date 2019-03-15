@@ -57,8 +57,10 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     * @tparam T type of events to consume
     * @return a future completing when the stream quits
     */
-  def consume[T](settings: ConsumerSettings)(f: T => ProcessingResult,
-                                             preprocess: Preprocessor[T] = defaultPreprocessor[T])(implicit fo: MessageReader[T]): Future[Done] = {
+  def consume[T](settings: ConsumerSettings)(
+    f: T => ProcessingResult,
+    preprocess: Preprocessor[T] = defaultPreprocessor[T]
+  )(implicit fo: MessageReader[T]): Future[Done] = {
     consumeAsync[T](settings)(f.andThen(Future.successful), preprocess)
   }
 
@@ -75,10 +77,13 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     * @return a future completing when the stream quits
     */
 
-  private[backbone] def defaultPreprocessor[T]: Preprocessor[T] = Flow[(MessageContext, T)].map(x => (x._1, Some(x._2)))
+  private[backbone] def defaultPreprocessor[T]: Preprocessor[T] = Flow[(MessageContext, T)]
+    .map { case (ctx, value) => (ctx, Some(value)) }
 
-  def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult],
-                                                  preprocess: Preprocessor[T] = defaultPreprocessor[T])(implicit fo: MessageReader[T]): Future[Done] = {
+  def consumeAsync[T](settings: ConsumerSettings)(
+    f: T => Future[ProcessingResult],
+    preprocess: Preprocessor[T] = defaultPreprocessor[T]
+  )(implicit fo: MessageReader[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     logger.debug(s"Preparing to consume messages. config=$settings")
@@ -146,7 +151,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
   def actorPublisher[T](
                          settings: PublisherSettings,
                          bufferSize: Int = Int.MaxValue,
-                         overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead)(implicit mw: MessageWriter[T]): ActorRef = {
+                         overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead
+                       )(implicit mw: MessageWriter[T]): ActorRef = {
     new Publisher(Publisher.Settings(settings.topicArn)).actor(bufferSize, overflowStrategy)
   }
 

@@ -68,7 +68,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     * @tparam T type of events to consume
     * @return a future completing when the stream quits
     */
-  def consumeAsync[T](f: T => Future[ProcessingResult], preprocess: Flow[(MessageContext, T), (MessageContext, Option[T]), NotUsed])(implicit fo: MessageReader[T]): Future[Done] = {
+  def consumeAsync[T](f: T => Future[ProcessingResult],
+                      preprocess: Preprocessor[T])(implicit fo: MessageReader[T]): Future[Done] = {
 
     logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
@@ -79,9 +80,9 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     )
 
     val handleFailuresSink: Sink[(MessageContext, Either[MessageAction, T]), NotUsed] =
-      Flow[(MessageContext, Either[MessageAction, T])].filter(_._2.isLeft)
-        .map { case (msg, either) => either.left.get }.to(ack)
-
+      Flow[(MessageContext, Either[MessageAction, T])]
+      .collect{ case (_, Left(messageAction)) => messageAction}
+      .to(ack)
 
 
     RestartSource
@@ -90,39 +91,27 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .map(msg => {
         logger.debug(s"Received message from SQS. message=$msg ")
-        (MessageContext(msg.getReceiptHandle), parseMessage[T](msg))
+        (MessageContext(msg.getReceiptHandle, msg.getMessageId), parseMessage[T](msg))
       })
-      .divertTo(handleFailuresSink, x => x._2.isLeft)
+      .divertTo(handleFailuresSink, { case (ctx, either) => either.isLeft })
       .collect{ case (msg, Right(value))  => (msg, value)}
       .via(preprocess)
       .mapAsync(settings.parallelism) {
-        case (ctx, Some(v)) => f(v).map(resultToAction(_)(ctx))
-        case (ctx, None) => Future.successful(RemoveMessage(ctx.id))
+        case (ctx, Some(v)) =>
+          val future = f(v).map(resultToAction(_)(ctx))
+          future.onComplete {
+            case Success(_) => logger.debug(s"Successfully processed message. messageId=${ctx.messageId}")
+            case Failure(t) => logger.warn(s"Failed processing message. messageId=${ctx.messageId}", t)
+          }
+          future
+        case (ctx, None) => Future.successful(RemoveMessage(ctx.receiptHandle))
       }
       .runWith(ack)
-
-
-    //      .mapAsync(settings.parallelism) { implicit message =>
-    //        logger.debug(s"Received message from SQS. message=$message ")
-    //        parseMessage[T](message) match {
-    //          case Left(a) =>
-    //            Future.successful(a)
-    //          case Right(t) =>
-    //            val future = f(t).map(resultToAction)
-    //            future.onComplete {
-    //              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.getMessageId}")
-    //              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.getMessageId}", t)
-    //            }
-    //            future
-    //        }
-    //      }
-    //      .withAttributes(supervisionStrategy(restartingDecider))
-    //      .runWith(ack)
   }
 
   private[this] def resultToAction(r: ProcessingResult)(implicit message: MessageContext): MessageAction = r match {
     case Rejected => KeepMessage
-    case Consumed => RemoveMessage(message.id)
+    case Consumed => RemoveMessage(message.receiptHandle)
   }
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
