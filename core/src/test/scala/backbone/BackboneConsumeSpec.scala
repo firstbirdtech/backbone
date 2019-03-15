@@ -188,7 +188,9 @@ class BackboneConsumeSpec
     val envelope = SnsEnvelope(message)
 
     val sqsMessage = new Message().withBody(envelope.asJson.toString())
-    val result = sqsClient.sendMessage(new SendMessageRequest(s"http://localhost:9324/queue/$queue", sqsMessage.getBody))
+    val result = sqsClient.sendMessage(
+      new SendMessageRequest(s"http://localhost:9324/queue/$queue", sqsMessage.getBody)
+    )
     result.getMessageId
   }
 }
