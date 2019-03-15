@@ -1,17 +1,27 @@
 package backbone.consumer
 
-object ReceiveSettings {
-  val Defaults = ReceiveSettings(20, 100, 10)
+import akka.stream.alpakka.sqs.{AttributeName, MessageAttributeName}
 
-  def create(waitTimeSeconds: Int, maxBufferSize: Int, maxBatchSize: Int): ReceiveSettings =
-    ReceiveSettings(waitTimeSeconds, maxBufferSize, maxBatchSize)
+object ReceiveSettings {
+  val Defaults = ReceiveSettings(20, 100, 10, Nil, Nil)
+
+  def create(
+              waitTimeSeconds: Int,
+              maxBufferSize: Int,
+              maxBatchSize: Int,
+              attributeNames: Seq[AttributeName] = Nil,
+              messageAttributes: Seq[MessageAttributeName] = Nil
+            ): ReceiveSettings =
+    ReceiveSettings(waitTimeSeconds, maxBufferSize, maxBatchSize, attributeNames, messageAttributes)
 
 }
 
 case class ReceiveSettings(
-    waitTimeSeconds: Int,
-    maxBufferSize: Int,
-    maxBatchSize: Int
+                            waitTimeSeconds: Int,
+                            maxBufferSize: Int,
+                            maxBatchSize: Int,
+                            attributeNames: Seq[AttributeName] = Nil,
+                            messageAttributeNames: Seq[MessageAttributeName] = Nil
 ) {
   require(maxBatchSize <= maxBufferSize, "maxBatchSize must be lower or equal than maxBufferSize")
   // SQS requirements

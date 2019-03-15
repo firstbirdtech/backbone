@@ -76,7 +76,9 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
       settings.receiveSettings.waitTimeSeconds,
       settings.receiveSettings.maxBufferSize,
-      settings.receiveSettings.maxBatchSize
+      settings.receiveSettings.maxBatchSize,
+      settings.receiveSettings.attributeNames.distinct,
+      settings.receiveSettings.messageAttributeNames.distinct
     )
 
     val handleFailuresSink: Sink[(MessageContext, Either[MessageAction, T]), NotUsed] =

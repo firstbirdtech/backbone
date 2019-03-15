@@ -3,9 +3,11 @@ package backbone
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-import akka.Done
+import akka.{Done, NotUsed}
+import akka.stream.{FlowShape, Graph}
+import akka.stream.alpakka.sqs.SentTimestamp
 import akka.stream.scaladsl.Flow
-import backbone.consumer.{ConsumerSettings, CountLimitation, MessageContext, ReceiveSettings}
+import backbone.consumer._
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
@@ -181,6 +183,43 @@ class BackboneConsumeSpec
         concurrentHashMap.get("MESSAGE3") mustBe "MESSAGE3"
       }
     }
+
+    "request additional message attributes and handle them" in {
+      val queueName = "queue-name-" + UUID.randomUUID.toString
+
+      val attributes = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes.asJava)
+      sqsClient.createQueue(createQueueRequest)
+
+      val id1 = sendMessage("message1", queueName)
+      val id2 = sendMessage("message2", queueName)
+      val id3 = sendMessage("message3", queueName)
+
+      val concurrentHashMap = new ConcurrentHashMap[String, String]()
+
+      val trackingLimitation = new Limitation {
+        override def limit[T]: Graph[FlowShape[T, T], NotUsed] = Flow[T]
+          .collect{ case x: Message => x }
+          .map(x => {
+            concurrentHashMap.put(x.getMessageId, x.getAttributes.get("SentTimestamp"))
+            x
+          })
+          .map(_.asInstanceOf[T])
+          .take(3)
+      }
+
+      val settings = ConsumerSettings(Nil, queueName, None, 3, Some(trackingLimitation), ReceiveSettings(5, 10, 10, Seq(SentTimestamp)))
+      val f: Future[Done] = backbone.consumeAsync[String](settings)(s => Future.successful(Consumed))
+
+      whenReady(f) { _ =>
+        // check if the values are there
+        Option(concurrentHashMap.get(id1)) mustBe defined
+        Option(concurrentHashMap.get(id2)) mustBe defined
+        Option(concurrentHashMap.get(id3)) mustBe defined
+      }
+
+    }
+
 
   }
 
