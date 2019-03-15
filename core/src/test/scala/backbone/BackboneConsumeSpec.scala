@@ -208,7 +208,14 @@ class BackboneConsumeSpec
           .take(3)
       }
 
-      val settings = ConsumerSettings(Nil, queueName, None, 3, Some(trackingLimitation), ReceiveSettings(5, 10, 10, Seq(SentTimestamp)))
+      val settings = ConsumerSettings(
+        Nil,
+        queueName,
+        None,
+        3,
+        Some(trackingLimitation),
+        ReceiveSettings(5, 10, 10, Seq(SentTimestamp))
+      )
       val f: Future[Done] = backbone.consumeAsync[String](settings)(s => Future.successful(Consumed))
 
       whenReady(f) { _ =>
