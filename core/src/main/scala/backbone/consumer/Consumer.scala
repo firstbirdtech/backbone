@@ -2,10 +2,10 @@ package backbone.consumer
 
 import akka.actor.ActorSystem
 import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream._
 import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
-import akka.stream.scaladsl.{Flow, RestartSource, Sink, Source}
-import akka.stream._
+import akka.stream.scaladsl.{Flow, RestartSource, Sink}
 import akka.{Done, NotUsed}
 import backbone.aws.AmazonSqsOps
 import backbone.consumer.Consumer.{Settings, _}
@@ -105,7 +105,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
             case Success(_) => logger.debug(s"Successfully processed message. messageId=${ctx.messageId}")
             case Failure(t) => logger.warn(s"Failed processing message. messageId=${ctx.messageId}", t)
           }
-          future
+          // keep messages that resulted in an exception, preventing stream restart
+          future.recover { case x: Exception => KeepMessage }
         case (ctx, None) => Future.successful(RemoveMessage(ctx.receiptHandle))
       }
       .runWith(ack)

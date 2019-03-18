@@ -6,15 +6,20 @@ import java.util.concurrent.ConcurrentHashMap
 import akka.{Done, NotUsed}
 import akka.stream.{FlowShape, Graph}
 import akka.stream.alpakka.sqs.SentTimestamp
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Flow, Source}
 import backbone.consumer._
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
 import backbone.testutil.{ElasticMQ, MockSNSAsyncClient, TestActorSystem}
 import cats.implicits._
-import com.amazonaws.services.sqs.model.{CreateQueueRequest, Message, SendMessageRequest}
+import com.amazonaws.handlers.AsyncHandler
+import com.amazonaws.services.sqs.model._
 import io.circe.syntax._
+import org.mockito.Mockito.{spy, verify}
+import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{eq => eqTo}
+import org.mockito.internal.verification.VerificationModeFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{MustMatchers, WordSpec}
@@ -23,7 +28,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
 import scala.concurrent.Future
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 class BackboneConsumeSpec
   extends WordSpec
@@ -227,6 +232,264 @@ class BackboneConsumeSpec
 
     }
 
+    "should delete a consumed message " in {
+
+      val queueName = "queue-name-" + UUID.randomUUID.toString
+
+      val attributes = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes.asJava)
+      sqsClient.createQueue(createQueueRequest)
+
+      val id1 = sendMessage("message1", queueName)
+      val id2 = sendMessage("message2", queueName)
+      val id3 = sendMessage("message3", queueName)
+
+      val concurrentHashMap = new ConcurrentHashMap[String, String]()
+
+
+
+      val trackingLimitation = new Limitation {
+        override def limit[T]: Graph[FlowShape[T, T], NotUsed] = Flow[T]
+          .collect{ case x: Message => x }
+          .map(x => {
+            concurrentHashMap.put(x.getMessageId, x.getReceiptHandle)
+            x
+          })
+          .take(3)
+          .grouped(3)
+          .map(grp => grp.sortBy(msg => msg.getAttributes.get("SentTimestamp").toLong))
+          .map(grp => {
+            grp
+          })
+          .flatMapConcat(grp => Source(grp))
+          .map(_.asInstanceOf[T])
+      }
+
+      val settings = ConsumerSettings(
+        Nil,
+        queueName,
+        None,
+        1,
+        Some(trackingLimitation),
+        ReceiveSettings(5, 10, 10, Seq(SentTimestamp))
+      )
+      val sqsClientSpy = spy(sqsClient)
+      val bb = Backbone.apply()(sqsClientSpy, snsClient, system)
+
+      val f: Future[Done] = bb.consumeAsync[String](settings)(s => s match {
+        case "message1" => Future.successful[ProcessingResult](Consumed)
+        case "message2" => Future.successful[ProcessingResult](Rejected)
+        case "message3" => Future.successful[ProcessingResult](Consumed)
+        case _ => Future.successful[ProcessingResult](Consumed)
+      })
+
+      whenReady(f) { _ =>
+        // check if the values are there
+        Option(concurrentHashMap.get(id1)) mustBe defined
+        Option(concurrentHashMap.get(id2)) mustBe defined
+        Option(concurrentHashMap.get(id3)) mustBe defined
+      }
+
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMap.get(id1)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy, VerificationModeFactory.times(0)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMap.get(id2)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMap.get(id3)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+    }
+
+    "should reject message with parse error " in {
+
+      // this makes sure parsing fails on msg 2
+      implicit val customStringFormat: MessageReader[String] = MandatoryMessageReader({
+        case x@"message1" => Try(x)
+        case x@"message2" => Failure(new IllegalArgumentException())
+        case x@"message3" => Try(x)
+      })
+
+      val queueName = "queue-name-" + UUID.randomUUID.toString
+
+      val attributes = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes.asJava)
+      sqsClient.createQueue(createQueueRequest)
+
+      val id1 = sendMessage("message1", queueName)
+      val id2 = sendMessage("message2", queueName)
+      val id3 = sendMessage("message3", queueName)
+
+      val concurrentHashMapPassedTrough = new ConcurrentHashMap[String, String]()
+      val concurrentHashMapEventHandler  = new ConcurrentHashMap[String, String]()
+
+      val trackingLimitation = new Limitation {
+        override def limit[T]: Graph[FlowShape[T, T], NotUsed] = Flow[T]
+          .collect{ case x: Message => x }
+          .map(x => {
+            concurrentHashMapPassedTrough.put(x.getMessageId, x.getReceiptHandle)
+            x
+          })
+          .take(3)
+          .grouped(3)
+          .map(grp => grp.sortBy(msg => msg.getAttributes.get("SentTimestamp").toLong))
+          .map(grp => {
+            grp
+          })
+          .flatMapConcat(grp => Source(grp))
+          .map(_.asInstanceOf[T])
+      }
+
+      val settings = ConsumerSettings(
+        Nil,
+        queueName,
+        None,
+        1,
+        Some(trackingLimitation),
+        ReceiveSettings(5, 10, 10, Seq(SentTimestamp))
+      )
+      val sqsClientSpy = spy(sqsClient)
+      val bb = Backbone.apply()(sqsClientSpy, snsClient, system)
+
+      val f: Future[Done] = bb.consumeAsync[String](settings) {
+        case s: String => concurrentHashMapEventHandler.put(s, s); Future.successful(Consumed)
+        case _ => Future.successful[ProcessingResult](Consumed)
+      }(customStringFormat)
+
+
+      whenReady(f) { _ =>
+        // check if the values are there
+        Option(concurrentHashMapPassedTrough.get(id1)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id2)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id3)) mustBe defined
+
+        Option(concurrentHashMapEventHandler.get("message1")) mustBe defined
+        Option(concurrentHashMapEventHandler.get("message2")) must not be defined
+        Option(concurrentHashMapEventHandler.get("message3")) mustBe defined
+      }
+
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id1)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy, VerificationModeFactory.times(0)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id2)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id3)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+    }
+
+    "should reject message that failed in consume " in {
+
+      val queueName = "queue-name-" + UUID.randomUUID.toString
+
+      val attributes = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes.asJava)
+      sqsClient.createQueue(createQueueRequest)
+
+      val id1 = sendMessage("message1", queueName)
+      val id2 = sendMessage("message2", queueName)
+      val id3 = sendMessage("message3", queueName)
+
+      val concurrentHashMapPassedTrough = new ConcurrentHashMap[String, String]()
+      val concurrentHashMapEventHandler  = new ConcurrentHashMap[String, String]()
+
+      val trackingLimitation = new Limitation {
+        override def limit[T]: Graph[FlowShape[T, T], NotUsed] = Flow[T]
+          .collect{ case x: Message => x }
+          .map(x => {
+            concurrentHashMapPassedTrough.put(x.getMessageId, x.getReceiptHandle)
+            x
+          })
+          .take(3)
+          .map(_.asInstanceOf[T])
+      }
+
+      val settings = ConsumerSettings(
+        Nil,
+        queueName,
+        None,
+        1,
+        Some(trackingLimitation),
+        ReceiveSettings(5, 10, 10, Seq(SentTimestamp))
+      )
+      val sqsClientSpy = spy(sqsClient)
+      val bb = Backbone.apply()(sqsClientSpy, snsClient, system)
+
+      val f: Future[Done] = bb.consumeAsync[String](settings) {
+        case s@"message2" => concurrentHashMapEventHandler.put(s, s); Future.failed(new RuntimeException("something went wrong"))
+        case s: String => concurrentHashMapEventHandler.put(s, s); Future.successful(Consumed)
+        case _ => Future.successful[ProcessingResult](Consumed)
+      }
+
+
+      whenReady(f) { _ =>
+        // check if the values are there
+        Option(concurrentHashMapPassedTrough.get(id1)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id2)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id3)) mustBe defined
+
+        Option(concurrentHashMapEventHandler.get("message1")) mustBe defined
+        Option(concurrentHashMapEventHandler.get("message2")) mustBe defined
+        Option(concurrentHashMapEventHandler.get("message3")) mustBe defined
+      }
+
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id1)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy, VerificationModeFactory.times(0)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id2)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id3)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+    }
+
+    "should delete messages that got removed by the precondition filter " in {
+
+      val queueName = "queue-name-" + UUID.randomUUID.toString
+
+      val attributes = HashMap("VisibilityTimeout" -> "0")
+      val createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes.asJava)
+      sqsClient.createQueue(createQueueRequest)
+
+      val id1 = sendMessage("message1", queueName)
+      val id2 = sendMessage("message2", queueName)
+      val id3 = sendMessage("message3", queueName)
+
+      val concurrentHashMapPassedTrough = new ConcurrentHashMap[String, String]()
+      val concurrentHashMapEventHandler  = new ConcurrentHashMap[String, String]()
+
+      val trackingLimitation = new Limitation {
+        override def limit[T]: Graph[FlowShape[T, T], NotUsed] = Flow[T]
+          .collect{ case x: Message => x }
+          .map(x => {
+            concurrentHashMapPassedTrough.put(x.getMessageId, x.getReceiptHandle)
+            x
+          })
+          .take(3)
+          .map(_.asInstanceOf[T])
+      }
+
+      val settings = ConsumerSettings(
+        Nil,
+        queueName,
+        None,
+        1,
+        Some(trackingLimitation),
+        ReceiveSettings(5, 10, 10, Seq(SentTimestamp))
+      )
+      val sqsClientSpy = spy(sqsClient)
+      val bb = Backbone.apply()(sqsClientSpy, snsClient, system)
+
+      val f: Future[Done] = bb.consumeAsync[String](settings)( {
+        case s: String => concurrentHashMapEventHandler.put(s, s); Future.successful(Rejected)
+        case _ => Future.successful[ProcessingResult](Rejected)
+      },
+        Flow[(MessageContext, String)].map{
+          case (ctx, s) if !"message2".equals(s) => (ctx, Some(s))
+          case (ctx, s) => (ctx, None)
+        }
+      )
+
+
+      whenReady(f) { _ =>
+        // check if the values are there
+        Option(concurrentHashMapPassedTrough.get(id1)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id2)) mustBe defined
+        Option(concurrentHashMapPassedTrough.get(id3)) mustBe defined
+
+        Option(concurrentHashMapEventHandler.get("message1")) mustBe defined
+        Option(concurrentHashMapEventHandler.get("message2")) must not be defined
+        Option(concurrentHashMapEventHandler.get("message3")) mustBe defined
+      }
+
+      verify(sqsClientSpy, VerificationModeFactory.times(0)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id1)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy, VerificationModeFactory.times(1)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id2)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+      verify(sqsClientSpy, VerificationModeFactory.times(0)).deleteMessageAsync(eqTo(s"http://localhost:9324/queue/$queueName"), eqTo(concurrentHashMapPassedTrough.get(id3)), any[AsyncHandler[DeleteMessageRequest, DeleteMessageResult]])
+    }
 
   }
 
