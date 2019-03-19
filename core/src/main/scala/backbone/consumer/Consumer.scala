@@ -3,7 +3,7 @@ package backbone.consumer
 import akka.actor.ActorSystem
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream._
-import akka.stream.alpakka.sqs.SqsSourceSettings
+import akka.stream.alpakka.sqs.{SentTimestamp, SqsSourceSettings}
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, RestartSource, Sink}
 import akka.{Done, NotUsed}
@@ -77,7 +77,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       settings.receiveSettings.waitTimeSeconds,
       settings.receiveSettings.maxBufferSize,
       settings.receiveSettings.maxBatchSize,
-      settings.receiveSettings.attributeNames.distinct,
+      (settings.receiveSettings.attributeNames :+ SentTimestamp).distinct,
       settings.receiveSettings.messageAttributeNames.distinct
     )
 
@@ -93,7 +93,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .map(msg => {
         logger.debug(s"Received message from SQS. message=$msg ")
-        (MessageContext(msg.getReceiptHandle, msg.getMessageId), parseMessage[T](msg))
+        (MessageContext(msg.getReceiptHandle, msg.getMessageId, msg.getAttributes.get(SentTimestamp.name).toLong), parseMessage[T](msg))
       })
       .divertTo(handleFailuresSink, { case (ctx, either) => either.isLeft })
       .collect{ case (msg, Right(value))  => (msg, value)}
