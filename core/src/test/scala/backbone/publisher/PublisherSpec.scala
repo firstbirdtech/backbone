@@ -6,8 +6,10 @@ import backbone.format.DefaultMessageWrites
 import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
 import com.amazonaws.services.sns.model.PublishRequest
 import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{MustMatchers, WordSpec}
 
 import scala.concurrent.duration._
@@ -19,6 +21,8 @@ class PublisherSpec
     with ScalaFutures
     with MockSNSAsyncClient
     with DefaultMessageWrites {
+
+  override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(3, Seconds))
 
   "Publisher" should {
 
@@ -50,6 +54,26 @@ class PublisherSpec
         verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])
       }
     }
+
+    "restarts publisher sink in case of a failure" in {
+      val settings = Publisher.Settings("topic-arn")
+      val messages = "message-1" :: "message-2" :: Nil
+
+      Mockito
+        .doThrow(new RuntimeException("publish exception"))
+        .when(snsClient)
+        .publishAsync(meq(new PublishRequest("topic-arn", "message-1")), any[PublishHandler])
+
+      val result = new Publisher(settings).publishAsync(messages)
+
+      whenReady(result) { res =>
+        res mustBe Done
+        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-1")), any[PublishHandler])
+        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])
+      }
+
+    }
+
   }
 
 }
