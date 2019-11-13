@@ -3,13 +3,14 @@ package backbone.publisher
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.alpakka.sns.scaladsl.SnsPublisher
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, RestartFlow, Sink, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, Supervision}
 import backbone.MessageWriter
 import backbone.publisher.Publisher.Settings
 import com.amazonaws.services.sns.AmazonSNSAsync
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object Publisher {
   case class Settings(topicArn: String)
@@ -30,10 +31,14 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
   }
 
   def sink[T](implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
-    Flow[T]
-      .map(mw.write)
-      .log(getClass.getName, t => s"Publishing message to SNS. $t")
-      .toMat(SnsPublisher.sink(settings.topicArn))(Keep.right)
+    RestartFlow
+      .withBackoff(1.second, 30.seconds, 0.2) { () =>
+        Flow[T]
+          .map(mw.write)
+          .log(getClass.getName, t => s"Publishing message to SNS. $t")
+          .via(SnsPublisher.flow(settings.topicArn))
+      }
+      .toMat(Sink.ignore)(Keep.right)
   }
 
   def actor[T](bufferSize: Int, overflowStrategy: OverflowStrategy)(implicit mw: MessageWriter[T]): ActorRef = {
