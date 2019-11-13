@@ -8,6 +8,7 @@ import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrate
 import backbone.MessageWriter
 import backbone.publisher.Publisher.Settings
 import com.amazonaws.services.sns.AmazonSNSAsync
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -20,6 +21,8 @@ object Publisher {
  * INTERNAL API
  */
 private[backbone] class Publisher(settings: Settings)(implicit system: ActorSystem, sns: AmazonSNSAsync) {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   private[this] implicit val mat = ActorMaterializer(
     ActorMaterializerSettings(system).withSupervisionStrategy(_ => Supervision.Resume)
@@ -37,6 +40,11 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
           .map(mw.write)
           .log(getClass.getName, t => s"Publishing message to SNS. $t")
           .via(SnsPublisher.flow(settings.topicArn))
+          .mapError {
+            case ex =>
+              logger.error("Exception in publishing message to SNS.", ex)
+              ex
+          }
       }
       .toMat(Sink.ignore)(Keep.right)
   }
