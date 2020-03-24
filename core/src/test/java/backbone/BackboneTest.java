@@ -15,6 +15,7 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import org.junit.Test;
 import scala.Int;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +69,7 @@ public class BackboneTest extends TestContext {
             actorRef.tell("message-1", getRef());
             actorRef.tell("message-2", getRef());
 
-            awaitAssert(duration("500 millis"), () -> {
+            awaitAssert(Duration.ofMillis(500), () -> {
                 verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
                 return verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
             });

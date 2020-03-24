@@ -45,7 +45,10 @@ class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: Act
                  f: JFunction1[T, ProcessingResult]): CompletableFuture[Done] = {
 
     val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
-    FutureConverters.toJava(asScala.consume(settings)(asScalaFunction)(format)).toCompletableFuture
+    FutureConverters.toJava(asScala.consume(settings)(
+      asScalaFunction,
+      asScala.defaultPreprocessor[T]
+    )(format)).toCompletableFuture
   }
 
   /** Consume elements of type T until an optional condition in ConsumerSettings is met.

@@ -1,12 +1,12 @@
 package backbone.consumer
 
-import akka.Done
 import akka.actor.ActorSystem
 import akka.stream.ActorAttributes.supervisionStrategy
-import akka.stream.alpakka.sqs.SqsSourceSettings
+import akka.stream._
+import akka.stream.alpakka.sqs.{SentTimestamp, SqsSourceSettings}
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, RestartSource, Sink}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
+import akka.{Done, NotUsed}
 import backbone.aws.AmazonSqsOps
 import backbone.consumer.Consumer.{Settings, _}
 import backbone.json.JsonReader
@@ -15,8 +15,8 @@ import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.Message
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
@@ -28,25 +28,25 @@ object Consumer {
   case object KeepMessage extends MessageAction
 
   case class Settings(
-      queueUrl: String,
-      parallelism: Int = 1,
-      limitation: Option[Limitation] = None,
-      receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
-  ) {
+                       queueUrl: String,
+                       parallelism: Int = 1,
+                       limitation: Option[Limitation] = None,
+                       receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
+                     ) {
     assert(parallelism > 0, "Parallelism must be positive")
   }
 
 }
 
 /** Consumes events from a queue.
- *
- * @param settings consumer settings
- * @param system   implicit ActorSystem
- * @param jr       a Json Reader implementation which
- * @param sqs      implicit AmazonSQSAsyncClient
- */
+  *
+  * @param settings consumer settings
+  * @param system   implicit ActorSystem
+  * @param jr       a Json Reader implementation which
+  * @param sqs      implicit AmazonSQSAsyncClient
+  */
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader)
-    extends AmazonSqsOps {
+  extends AmazonSqsOps {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
@@ -60,48 +60,61 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
   )
 
   /** Consume elements of type T until an optional condition in settings is met.
-   *
-   * After successfully processing elements of type T they are removed from the queue.
-   *
-   * @param f  function which processes objects of type T and returns a ProcessingResult
-   * @param fo Format[T] typeclass instance describing how to decode SQS Message to T
-   * @tparam T type of events to consume
-   * @return a future completing when the stream quits
-   */
-  def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
+    *
+    * After successfully processing elements of type T they are removed from the queue.
+    *
+    * @param f  function which processes objects of type T and returns a ProcessingResult
+    * @param fo Format[T] typeclass instance describing how to decode SQS Message to T
+    * @tparam T type of events to consume
+    * @return a future completing when the stream quits
+    */
+  def consumeAsync[T](f: T => Future[ProcessingResult],
+                      preprocess: Preprocessor[T])(implicit fo: MessageReader[T]): Future[Done] = {
 
     logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
     val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
       settings.receiveSettings.waitTimeSeconds,
       settings.receiveSettings.maxBufferSize,
-      settings.receiveSettings.maxBatchSize
+      settings.receiveSettings.maxBatchSize,
+      (settings.receiveSettings.attributeNames :+ SentTimestamp).distinct,
+      settings.receiveSettings.messageAttributeNames.distinct
     )
+
+    val handleFailuresSink: Sink[(MessageContext, Either[MessageAction, T]), NotUsed] =
+      Flow[(MessageContext, Either[MessageAction, T])]
+      .collect{ case (_, Left(messageAction)) => messageAction}
+      .to(ack)
+
 
     RestartSource
       .withBackoff(3.second, 30.seconds, 0.2)(() => SqsSource(settings.queueUrl, sqsSourceSettings))
-      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
-      .mapAsync(settings.parallelism) { implicit message =>
-        logger.debug(s"Received message from SQS. message=$message ")
-        parseMessage[T](message) match {
-          case Left(a) =>
-            Future.successful(a)
-          case Right(t) =>
-            val future = f(t).map(resultToAction)
-            future.onComplete {
-              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.getMessageId}")
-              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.getMessageId}", t)
-            }
-            future
-        }
-      }
       .withAttributes(supervisionStrategy(restartingDecider))
+      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
+      .map(msg => {
+        logger.debug(s"Received message from SQS. message=$msg ")
+        (MessageContext(msg.getReceiptHandle, msg.getMessageId, msg.getAttributes.get(SentTimestamp.name).toLong), parseMessage[T](msg))
+      })
+      .divertTo(handleFailuresSink, { case (ctx, either) => either.isLeft })
+      .collect{ case (msg, Right(value))  => (msg, value)}
+      .via(preprocess)
+      .mapAsync(settings.parallelism) {
+        case (ctx, Some(v)) =>
+          val future = f(v).map(resultToAction(_)(ctx))
+          future.onComplete {
+            case Success(_) => logger.debug(s"Successfully processed message. messageId=${ctx.messageId}")
+            case Failure(t) => logger.warn(s"Failed processing message. messageId=${ctx.messageId}", t)
+          }
+          // keep messages that resulted in an exception, preventing stream restart
+          future.recover { case x: Exception => KeepMessage }
+        case (ctx, None) => Future.successful(RemoveMessage(ctx.receiptHandle))
+      }
       .runWith(ack)
   }
 
-  private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
+  private[this] def resultToAction(r: ProcessingResult)(implicit message: MessageContext): MessageAction = r match {
     case Rejected => KeepMessage
-    case Consumed => RemoveMessage(message.getReceiptHandle)
+    case Consumed => RemoveMessage(message.receiptHandle)
   }
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
