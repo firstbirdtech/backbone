@@ -41,14 +41,22 @@ class BackboneSubscriptionSpec
       val result = backbone.consume[String](settings)(_ => Consumed)
 
       whenReady(result) { _ =>
-        val request = SubscribeRequest
+        val request1 = SubscribeRequest
           .builder()
           .topicArn("topic-arn")
           .protocol("sqs")
           .endpoint("queue-arn")
           .build()
 
-        verify(snsClient).subscribe(request)
+        val request2 = SubscribeRequest
+          .builder()
+          .topicArn("topic-arn-2")
+          .protocol("sqs")
+          .endpoint("queue-arn")
+          .build()
+
+        verify(snsClient).subscribe(request1)
+        verify(snsClient).subscribe(request2)
       }
     }
 
