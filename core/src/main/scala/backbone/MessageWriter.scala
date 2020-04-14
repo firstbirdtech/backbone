@@ -16,7 +16,7 @@ trait MessageWriter[T] {
 }
 
 object MessageWriter {
-  def apply[T](f: T => String) = new MessageWriter[T] {
+  def apply[T](f: T => String): MessageWriter[T] = new MessageWriter[T] {
     override def write(message: T): String = f(message)
   }
 }

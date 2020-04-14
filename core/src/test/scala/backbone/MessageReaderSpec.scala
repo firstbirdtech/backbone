@@ -28,12 +28,14 @@ class MessageReaderSpec extends AnyFlatSpec with BaseTest {
     reader.read("message") mustBe a[Failure[_]]
   }
 
+  // scalastyle:off null
   "MandatoryMessageReader" should "return Success(None) if the function returned null" in {
     val reader = MandatoryMessageReader(s => Try(null))
     val result = reader.read("message")
     result.success.value must not be null
     result.success.value mustBe empty
   }
+  // scalastyle:on null
 
   it should "return Success(Some()) if the function retured a value" in {
     val reader = MandatoryMessageReader(s => Try(s))

@@ -23,7 +23,7 @@ class BackboneConsumeSpec
     with MockSNSAsyncClient
     with TestActorSystem {
 
-  private val backbone = Backbone()
+  private[this] val backbone = Backbone()
 
   "Backbone.consume" should {
 

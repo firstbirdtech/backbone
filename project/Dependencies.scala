@@ -3,22 +3,22 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private val alpakkaVersion               = "2.0.0-RC2"
-  private val akkaVersion                  = "2.6.4"
-  private val catsVersion                  = "2.1.1"
-  private val circeVersion                 = "0.13.0"
-  private val elasticMqVersion             = "0.15.6"
-  private val gsonVersion                  = "2.8.6"
-  private val java8CompatVersion           = "0.9.1"
-  private val junitVersion                 = "4.13"
-  private val logbackVersion               = "1.2.3"
-  private val mockitoScalaVersion          = "1.13.9"
-  private val playJsonVersion              = "2.8.1"
-  private val scalaTestVersion             = "3.1.1"
-  private val scalaCollectionCompatVersion = "2.1.4"
-  private val slf4jVersion                 = "1.7.30"
+  private[this] val alpakkaVersion               = "2.0.0-RC2"
+  private[this] val akkaVersion                  = "2.6.4"
+  private[this] val catsVersion                  = "2.1.1"
+  private[this] val circeVersion                 = "0.13.0"
+  private[this] val elasticMqVersion             = "0.15.6"
+  private[this] val gsonVersion                  = "2.8.6"
+  private[this] val java8CompatVersion           = "0.9.1"
+  private[this] val junitVersion                 = "4.13"
+  private[this] val logbackVersion               = "1.2.3"
+  private[this] val mockitoScalaVersion          = "1.13.9"
+  private[this] val playJsonVersion              = "2.8.1"
+  private[this] val scalaTestVersion             = "3.1.1"
+  private[this] val scalaCollectionCompatVersion = "2.1.4"
+  private[this] val slf4jVersion                 = "1.7.30"
 
-  private val testDependencies: Seq[ModuleID] = Seq(
+  private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackVersion   % Test,
     "org.scalatest"  %% "scalatest"      % scalaTestVersion % Test
   )

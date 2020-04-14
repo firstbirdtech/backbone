@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 public class BackboneTest extends TestContext {
@@ -52,7 +51,7 @@ public class BackboneTest extends TestContext {
     public void publishAsync_oneMessage_messageSuccessfullyPublished() throws Exception {
         backbone.publishAsync("message", publisherSettings, msg -> msg).get();
 
-        verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message").build()));
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message").build());
     }
 
     @Test
@@ -60,8 +59,8 @@ public class BackboneTest extends TestContext {
         final List<String> messages = Arrays.asList("message-1", "message-2");
         backbone.<String>publishAsync(messages, publisherSettings, msg -> msg).get();
 
-        verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build()));
-        verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build()));
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
     }
 
     @Test
@@ -73,8 +72,8 @@ public class BackboneTest extends TestContext {
             actorRef.tell("message-2", getRef());
 
             awaitAssert(Duration.ofMillis(500), () -> {
-                verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build()));
-                verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build()));
+                verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+                verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
                 return null;
             });
         }};
@@ -90,8 +89,8 @@ public class BackboneTest extends TestContext {
             .runWith(sink, system)
             .get();
 
-        verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build()));
-        verify(sns).publish(eq(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build()));
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
     }
 
 }
