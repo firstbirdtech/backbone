@@ -3,9 +3,10 @@ package backbone.playjson
 import backbone.consumer.Consumer.KeepMessage
 import backbone.json.SnsEnvelope
 import cats.syntax.either._
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
-class PlayJsonReaderSpec extends FlatSpec with MustMatchers {
+class PlayJsonReaderSpec extends AnyFlatSpec with Matchers {
   private[this] val reader = new PlayJsonReader()
 
   "PlayJsonReader " should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {

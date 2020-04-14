@@ -1,48 +1,49 @@
 package backbone.format
 
 import backbone.MessageReader
+import backbone.testutil.BaseTest
 import org.scalatest.TryValues._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.util.{Success, Try}
 
-class DefaultMessageReadsSpec extends FlatSpec with Matchers with DefaultMessageReads {
+class DefaultMessageReadsSpec extends AnyFlatSpec with BaseTest with DefaultMessageReads {
 
   "DefaultMessageReads" should "read a String to a Short value" in {
-    testMessageReader[Short]("1").success.value shouldBe Some(1)
+    testMessageReader[Short]("1").success.value mustBe Some(1)
   }
 
   it should "read a String to a Int value" in {
-    testMessageReader[Int]("1") shouldBe Success(Some(1))
+    testMessageReader[Int]("1") mustBe Success(Some(1))
   }
 
   it should "read a String to a Long value" in {
-    testMessageReader[Long]("1") shouldBe Success(Some(1L))
+    testMessageReader[Long]("1") mustBe Success(Some(1L))
   }
 
   it should "read a String to a Float value" in {
-    testMessageReader[Float]("1.12") shouldBe Success(Some(1.12F))
+    testMessageReader[Float]("1.12") mustBe Success(Some(1.12f))
   }
 
   it should "read a String to a Double value" in {
-    testMessageReader[Double]("1.12") shouldBe Success(Some(1.12D))
+    testMessageReader[Double]("1.12") mustBe Success(Some(1.12d))
   }
 
   it should "read a String to a Boolean value" in {
-    testMessageReader[Boolean]("true") shouldBe Success(Some(true))
+    testMessageReader[Boolean]("true") mustBe Success(Some(true))
   }
 
   it should "read a String to a String value" in {
-    testMessageReader[String]("message").success.value shouldBe Some("message")
+    testMessageReader[String]("message").success.value mustBe Some("message")
   }
 
   it should "read a String to an array of Bytes" in {
     val actual = testMessageReader[Array[Byte]]("message").success.value
-    actual should contain("message".getBytes)
+    actual must contain("message".getBytes)
   }
 
-  it should "read a String to an array of Chars" in {
-    testMessageReader[Array[Char]]("message").success.value should contain("message".toCharArray)
+  it must "read a String to an array of Chars" in {
+    testMessageReader[Array[Char]]("message").success.value must contain("message".toCharArray)
   }
 
   private[this] def testMessageReader[T](message: String)(implicit fo: MessageReader[T]): Try[Option[T]] =

@@ -3,9 +3,10 @@ package backbone.gson
 import backbone.consumer.Consumer.KeepMessage
 import backbone.json.SnsEnvelope
 import cats.syntax.either._
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
-class GsonJsonReaderSpec extends FlatSpec with MustMatchers {
+class GsonJsonReaderSpec extends AnyFlatSpec with Matchers {
 
   private[this] val reader = new GsonJsonReader
 

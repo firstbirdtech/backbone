@@ -14,12 +14,11 @@ import scala.util.Try
 class GsonJsonReader extends JsonReader {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
-  private[this] val parser = new JsonParser()
 
   override def readSnsEnvelope(s: String): Either[Consumer.MessageAction, SnsEnvelope] = {
 
     val optionalSnsEnvelope = for {
-      json    <- Try(parser.parse(s)).map(_.getAsJsonObject).toOption
+      json    <- Try(JsonParser.parseString(s)).map(_.getAsJsonObject).toOption
       message <- Option(json.get("Message")).map(_.getAsString)
     } yield SnsEnvelope(message)
 

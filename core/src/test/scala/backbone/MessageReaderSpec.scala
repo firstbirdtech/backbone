@@ -1,13 +1,14 @@
 package backbone
 
+import backbone.testutil.BaseTest
 import org.scalatest.TryValues._
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.compat.java8.FunctionConverters._
 import scala.compat.java8.OptionConverters._
 import scala.util.{Failure, Try}
 
-class MessageReaderSpec extends FlatSpec with MustMatchers {
+class MessageReaderSpec extends AnyFlatSpec with BaseTest {
 
   "MessageReader" should "return the computed value" in {
     val reader                         = MessageReader(s => Try(Option(s)))

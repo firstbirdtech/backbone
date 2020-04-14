@@ -3,20 +3,20 @@ package backbone.consumer
 import akka.Done
 import akka.actor.ActorSystem
 import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream.Supervision
 import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
 import akka.stream.scaladsl.{Flow, RestartSource, Sink}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import backbone.aws.AmazonSqsOps
 import backbone.consumer.Consumer.{Settings, _}
 import backbone.json.JsonReader
 import backbone.{MessageReader, _}
-import com.amazonaws.services.sqs.AmazonSQSAsync
-import com.amazonaws.services.sqs.model.Message
 import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model.Message
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
@@ -45,7 +45,7 @@ object Consumer {
  * @param jr       a Json Reader implementation which
  * @param sqs      implicit AmazonSQSAsyncClient
  */
-class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: AmazonSQSAsync, jr: JsonReader)
+class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsyncClient, jr: JsonReader)
     extends AmazonSqsOps {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
@@ -55,9 +55,6 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
     logger.error("Error on Consumer stream.", t)
     Supervision.Restart
   }
-  private[this] implicit val mat: ActorMaterializer = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy(restartingDecider)
-  )
 
   /** Consume elements of type T until an optional condition in settings is met.
    *
@@ -72,11 +69,19 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
 
     logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
-    val sqsSourceSettings: SqsSourceSettings = SqsSourceSettings(
-      settings.receiveSettings.waitTimeSeconds,
-      settings.receiveSettings.maxBufferSize,
-      settings.receiveSettings.maxBatchSize
-    )
+    val baseSqsSourceSettings = SqsSourceSettings.Defaults
+      .withWaitTimeSeconds(settings.receiveSettings.waitTimeSeconds)
+      .withMaxBufferSize(settings.receiveSettings.maxBufferSize)
+      .withMaxBatchSize(settings.receiveSettings.maxBatchSize)
+      .withParallelRequests(settings.receiveSettings.parallelRequests)
+      .withAttributes(settings.receiveSettings.attributeNames)
+      .withMessageAttributes(settings.receiveSettings.messageAttributeNames)
+      .withCloseOnEmptyReceive(settings.receiveSettings.closeOnEmptyReceive)
+
+    val sqsSourceSettings = settings.receiveSettings.visibilityTimeout match {
+      case Some(visibilityTimeout) => baseSqsSourceSettings.withVisibilityTimeout(visibilityTimeout)
+      case None                    => baseSqsSourceSettings
+    }
 
     RestartSource
       .withBackoff(3.second, 30.seconds, 0.2)(() => SqsSource(settings.queueUrl, sqsSourceSettings))
@@ -89,8 +94,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
           case Right(t) =>
             val future = f(t).map(resultToAction)
             future.onComplete {
-              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.getMessageId}")
-              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.getMessageId}", t)
+              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.messageId}")
+              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.messageId}", t)
             }
             future
         }
@@ -101,22 +106,22 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: Amazon
 
   private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
     case Rejected => KeepMessage
-    case Consumed => RemoveMessage(message.getReceiptHandle)
+    case Consumed => RemoveMessage(message.receiptHandle)
   }
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
-      sns <- jr.readSnsEnvelope(message.getBody).right
+      sns <- jr.readSnsEnvelope(message.body)
       t <- (fo.read(sns.message) match {
         case Failure(t) =>
-          logger.error(s"Unable to read message. message=${message.getBody}", t)
+          logger.error(s"Unable to read message. message=${message.body}", t)
           Left[MessageAction, T](KeepMessage)
         case Success(None) =>
-          logger.info(s"MessageReader returned empty when parsing message. message=${message.getBody}")
-          Left[MessageAction, T](RemoveMessage(message.getReceiptHandle))
+          logger.info(s"MessageReader returned empty when parsing message. message=${message.body}")
+          Left[MessageAction, T](RemoveMessage(message.receiptHandle))
         case Success(Some(value)) =>
           Right[MessageAction, T](value)
-      }).right
+      })
     } yield t
   }
 

@@ -1,29 +1,27 @@
 package backbone
 
+import java.net.URI
+
 import akka.Done
 import akka.stream.scaladsl.Source
 import backbone.format.DefaultMessageWrites
 import backbone.publisher.PublisherSettings
 import backbone.scaladsl.Backbone
-import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.sns.model.PublishRequest
-import com.amazonaws.services.sqs.{AmazonSQSAsync, AmazonSQSAsyncClientBuilder}
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito.verify
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{fixture, MustMatchers, Outcome}
+import backbone.testutil.{BaseTest, MockSNSAsyncClient, TestActorSystem}
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
+import org.scalatest.Outcome
+import org.scalatest.wordspec.FixtureAnyWordSpec
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class BackbonePublishSpec
-    extends fixture.WordSpec
-    with MockitoSugar
-    with ScalaFutures
-    with MustMatchers
+    extends FixtureAnyWordSpec
+    with BaseTest
     with TestActorSystem
     with MockSNSAsyncClient
     with DefaultMessageWrites {
@@ -37,8 +35,14 @@ class BackbonePublishSpec
 
       whenReady(result) { res =>
         res mustBe Done
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message")),
-                                       any[PublishHandler])
+
+        val req = PublishRequest
+          .builder()
+          .topicArn(publisherSettings.topicArn)
+          .message("message")
+          .build()
+
+        verify(snsClient).publish(req)
       }
     }
 
@@ -50,10 +54,13 @@ class BackbonePublishSpec
 
       whenReady(result) { res =>
         res mustBe Done
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-1")),
-                                       any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-2")),
-                                       any[PublishHandler])
+
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-1").build()
+        )
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-2").build()
+        )
       }
     }
 
@@ -68,10 +75,12 @@ class BackbonePublishSpec
       expectNoMessage(100.millis)
 
       within(100.millis) {
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-1")),
-                                       any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-2")),
-                                       any[PublishHandler])
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-1").build()
+        )
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-2").build()
+        )
       }
     }
 
@@ -86,10 +95,12 @@ class BackbonePublishSpec
       whenReady(result) { res =>
         res mustBe Done
 
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-1")),
-                                       any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(publisherSettings.topicArn, "message-2")),
-                                       any[PublishHandler])
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-1").build()
+        )
+        verify(snsClient).publish(
+          PublishRequest.builder().topicArn(publisherSettings.topicArn).message("message-2").build()
+        )
       }
     }
 
@@ -98,10 +109,12 @@ class BackbonePublishSpec
   case class FixtureParam(backbone: Backbone, publisherSettings: PublisherSettings)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val sqsClient: AmazonSQSAsync = AmazonSQSAsyncClientBuilder
-      .standard()
-      .withEndpointConfiguration(new EndpointConfiguration("http://localhost:9324", "eu-central-1"))
-      .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x")))
+    implicit val sqsClient = SqsAsyncClient
+      .builder()
+      .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("x", "x")))
+      .region(Region.EU_CENTRAL_1)
+      .endpointOverride(URI.create("http://localhost:9342"))
+      .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
       .build()
 
     val backbone          = Backbone()

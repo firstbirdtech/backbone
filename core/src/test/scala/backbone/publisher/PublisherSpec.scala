@@ -3,26 +3,19 @@ package backbone.publisher
 import akka.Done
 import akka.stream.OverflowStrategy
 import backbone.format.DefaultMessageWrites
-import backbone.testutil.{MockSNSAsyncClient, PublishHandler, TestActorSystem}
-import com.amazonaws.services.sns.model.PublishRequest
-import org.mockito.ArgumentMatchers.{any, eq => meq}
+import backbone.testutil.{BaseTest, MockSNSAsyncClient, TestActorSystem}
 import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import software.amazon.awssdk.services.sns.model.PublishRequest
 
 import scala.concurrent.duration._
 
 class PublisherSpec
-    extends WordSpec
+    extends AnyWordSpec
+    with BaseTest
     with TestActorSystem
-    with MustMatchers
-    with ScalaFutures
     with MockSNSAsyncClient
     with DefaultMessageWrites {
-
-  override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(3, Seconds))
 
   "Publisher" should {
 
@@ -34,8 +27,8 @@ class PublisherSpec
 
       whenReady(result) { res =>
         res mustBe Done
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-1")), any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-1").build())
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-2").build())
       }
     }
 
@@ -49,9 +42,8 @@ class PublisherSpec
       expectNoMessage(100.millis)
 
       within(100.millis) {
-
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-1")), any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-1").build())
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-2").build())
       }
     }
 
@@ -62,14 +54,14 @@ class PublisherSpec
       Mockito
         .doThrow(new RuntimeException("publish exception"))
         .when(snsClient)
-        .publishAsync(meq(new PublishRequest("topic-arn", "message-1")), any[PublishHandler])
+        .publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-1").build())
 
       val result = new Publisher(settings).publishAsync(messages)
 
       whenReady(result) { res =>
         res mustBe Done
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-1")), any[PublishHandler])
-        verify(snsClient).publishAsync(meq(new PublishRequest(settings.topicArn, "message-2")), any[PublishHandler])
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-1").build())
+        verify(snsClient).publish(PublishRequest.builder().topicArn(settings.topicArn).message("message-2").build())
       }
 
     }

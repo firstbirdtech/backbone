@@ -1,17 +1,18 @@
 package backbone.aws
 
 import backbone.scaladsl.Backbone.QueueInformation
-import com.amazonaws.services.sns.AmazonSNSAsync
-import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
-
 import scala.concurrent.{ExecutionContext, Future}
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sns.model.SubscribeRequest
+import compat.java8.FutureConverters._
 
-private[backbone] trait AmazonSnsOps extends AmazonAsync {
+private[backbone] trait AmazonSnsOps {
 
-  def sns: AmazonSNSAsync
+  def sns: SnsAsyncClient
 
   def subscribe(queue: QueueInformation, topicArn: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    async[SubscribeRequest, SubscribeResult](sns.subscribeAsync(topicArn, "sqs", queue.arn, _)).map(_ => ())
+    val request = SubscribeRequest.builder().topicArn(topicArn).protocol("sqs").endpoint(queue.arn).build()
+    sns.subscribe(request).toScala.map(_ => ())
   }
 
 }

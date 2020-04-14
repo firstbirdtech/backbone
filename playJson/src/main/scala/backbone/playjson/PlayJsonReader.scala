@@ -13,7 +13,7 @@ class PlayJsonReader extends JsonReader {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  private[this] implicit val snsEnvelopeReads: json.Reads[SnsEnvelope] = (__ \ 'Message)
+  private[this] implicit val snsEnvelopeReads: json.Reads[SnsEnvelope] = (__ \ "Message")
     .read[String]
     .map(SnsEnvelope)
 
