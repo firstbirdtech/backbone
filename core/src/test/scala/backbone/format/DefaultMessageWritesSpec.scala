@@ -19,11 +19,11 @@ class DefaultMessageWritesSpec extends AnyFlatSpec with BaseTest with DefaultMes
   }
 
   it should "write a Float to a String value" in {
-    testMessageWriter[Float](1.12F) mustBe "1.12"
+    testMessageWriter[Float](1.12f) mustBe "1.12"
   }
 
   it should "write a Double to a String value" in {
-    testMessageWriter[Double](1.12D) mustBe "1.12"
+    testMessageWriter[Double](1.12d) mustBe "1.12"
   }
 
   it should "write a Boolean to a String value" in {

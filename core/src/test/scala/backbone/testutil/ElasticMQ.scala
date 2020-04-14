@@ -8,7 +8,12 @@ import org.scalatest._
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, ListQueuesRequest, PurgeQueueRequest, QueueAttributeName}
+import software.amazon.awssdk.services.sqs.model.{
+  CreateQueueRequest,
+  ListQueuesRequest,
+  PurgeQueueRequest,
+  QueueAttributeName
+}
 
 import scala.jdk.CollectionConverters._
 import scala.compat.java8.FutureConverters._

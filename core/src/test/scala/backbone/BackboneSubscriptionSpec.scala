@@ -34,7 +34,8 @@ class BackboneSubscriptionSpec
 
     "subscribe the queue with it's arn to the provided topics" in {
 
-      val settings = ConsumerSettings("topic-arn" :: "topic-arn-2" :: Nil, "Queue-name", None, 1, Some(CountLimitation(0)))
+      val settings =
+        ConsumerSettings("topic-arn" :: "topic-arn-2" :: Nil, "Queue-name", None, 1, Some(CountLimitation(0)))
       val backbone = Backbone()
 
       val result = backbone.consume[String](settings)(_ => Consumed)

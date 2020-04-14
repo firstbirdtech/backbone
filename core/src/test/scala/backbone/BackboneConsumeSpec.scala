@@ -125,7 +125,7 @@ class BackboneConsumeSpec
       sendMessage("message", "no-visibility")
 
       val receiveSettings = ReceiveSettings().withWaitTime(10.seconds).withMaxBufferSize(100).withMaxBatchSize(10)
-      val settings = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(0)), receiveSettings)
+      val settings        = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(0)), receiveSettings)
 
       val result = for {
         _ <- backbone.consume[String](settings)(_ => Rejected)
