@@ -1,6 +1,6 @@
 package backbone
 
-import akka.stream.alpakka.sqs.{MessageAttributeName, MessageSystemAttributeName}
+import akka.stream.alpakka.sqs._
 import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
@@ -22,7 +22,6 @@ import software.amazon.awssdk.services.sqs.model.{
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-import akka.stream.alpakka.sqs.SqsSourceSettings
 
 class BackboneSubscriptionSpec
     extends AnyWordSpec
