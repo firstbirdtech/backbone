@@ -3,9 +3,10 @@ package backbone.circe
 import backbone.consumer.Consumer.KeepMessage
 import backbone.json.SnsEnvelope
 import cats.syntax.either._
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
-class CirceJsonReaderSpec extends FlatSpec with MustMatchers {
+class CirceJsonReaderSpec extends AnyFlatSpec with Matchers {
 
   private[this] val reader = new CirceJsonReader()
 

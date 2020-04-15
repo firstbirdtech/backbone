@@ -5,8 +5,6 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/805331624b64414ab4bebae67557d5f7)](https://www.codacy.com/app/daniel-pfeiffer/backbone?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=firstbirdtech/backbone&amp;utm_campaign=Badge_Grade)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.firstbird/backbone-core_2.11/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccom.firstbird)  
 
-**ATTENTION: WORK IN PROGRESS, UNPUBLISHED, NOT PRODUCTION READY**
-
 Backbone is a durable publish-subscribe platform built on top of Amazon AWS SQS and Amazon AWS SNS utilizing
 Akka to stream events. This library currently is under active development, changes to the public API are still subject
 to change.
@@ -33,7 +31,7 @@ Or add the dependency to your `pom.xml`.
 ```xml
 <dependency>
     <groupId>com.firstbird</groupId>
-    <artifactId>backbone-core_2.11</artifactId>
+    <artifactId>backbone-core_2.13</artifactId>
     <version>X.Y.Z</version>
 </dependency>
 ```
@@ -51,9 +49,17 @@ and sets the needed permissions on SQS side to give permissions to the SNS topic
 to the queue.
 
 ```scala
+import akka.actor._
+import backbone._
+import backbone.scaladsl._
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+
 implicit val system = ActorSystem()
-implicit val sns = new AmazonSNSAsyncClient()
-implicit val sqs = new AmazonSQSAsyncClient()
+val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
+implicit val sns = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val sqs = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
 
 val backbone = Backbone()
 
@@ -85,9 +91,17 @@ Basically they behave the same but provide an interface for various technologies
 Akka Actors.
 
 ```scala
+import akka.actor._
+import backbone._
+import backbone.scaladsl._
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+
 implicit val system = ActorSystem()
-implicit val sns = new AmazonSNSAsyncClient()
-implicit val sqs = new AmazonSQSAsyncClient()
+val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
+implicit val sns = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val sqs = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
 
 val backbone = Backbone()
 
@@ -192,6 +206,6 @@ We very much appreciate feedback, please open an issue and/or create a PR.
 ## Contributors
 
 * Pedro Dias
-* Fabian Grutsch
+* [Fabian Grutsch](https://github.com/fgrutsch)
 * Georgi Lichev
 * [Daniel Pfeiffer](https://github.com/dpfeiffer)

@@ -1,108 +1,129 @@
 package backbone
 
-import akka.actor.ActorSystem
+import akka.stream.alpakka.sqs._
 import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
 import backbone.testutil._
-import com.amazonaws.handlers.AsyncHandler
-import com.amazonaws.services.sns.model.{SubscribeRequest, SubscribeResult}
-import com.amazonaws.services.sqs.model.{CreateQueueRequest, Message, ReceiveMessageRequest}
-import io.circe.syntax._
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import cats.implicits._
+import io.circe.syntax._
+import org.mockito.Mockito
+import org.mockito.captor.ArgCaptor
+import org.scalatest.wordspec.AnyWordSpec
+import software.amazon.awssdk.services.sns.model.SubscribeRequest
+import software.amazon.awssdk.services.sqs.model.{
+  CreateQueueRequest,
+  Message,
+  QueueAttributeName,
+  ReceiveMessageRequest
+}
 
-import scala.collection.JavaConverters._
-import scala.collection.immutable.HashMap
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
 
 class BackboneSubscriptionSpec
-    extends WordSpec
-    with MockitoUtils
-    with BeforeAndAfterAll
+    extends AnyWordSpec
+    with BaseTest
+    with TestActorSystem
     with MockSNSAsyncClient
-    with MockSQSAsyncClient
-    with Matchers {
-
-  private[this] implicit val system = ActorSystem()
-
-  override protected def afterAll(): Unit = {
-    Await.ready(system.terminate(), 5.seconds)
-  }
+    with MockSQSAsyncClient {
 
   "Backbone.consume" should {
 
     "subscribe the queue with it's arn to the provided topics" in {
 
-      val settings = ConsumerSettings("topic-arn" :: Nil, "Queue-name", None, 1, Some(CountLimitation(0)))
+      val settings =
+        ConsumerSettings("topic-arn" :: "topic-arn-2" :: Nil, "Queue-name", None, 1, Some(CountLimitation(0)))
       val backbone = Backbone()
 
-      val f = backbone.consume[String](settings)(_ => Consumed)
-      Await.ready(f, 5.seconds)
+      val result = backbone.consume[String](settings)(_ => Consumed)
 
-      verify(snsClient).subscribeAsync(
-        meq("topic-arn"),
-        meq("sqs"),
-        meq("queue-arn"),
-        any[AsyncHandler[SubscribeRequest, SubscribeResult]]
-      )
+      whenReady(result) { _ =>
+        val request1 = SubscribeRequest
+          .builder()
+          .topicArn("topic-arn")
+          .protocol("sqs")
+          .endpoint("queue-arn")
+          .build()
+
+        val request2 = SubscribeRequest
+          .builder()
+          .topicArn("topic-arn-2")
+          .protocol("sqs")
+          .endpoint("queue-arn")
+          .build()
+
+        verify(snsClient).subscribe(request1)
+        verify(snsClient).subscribe(request2)
+      }
     }
 
     "create a queue with the configured name" in {
       val settings = ConsumerSettings(Nil, "queue-name", None, 1, Some(CountLimitation(0)))
       val backbone = Backbone()
 
-      val f = backbone.consume[String](settings)(_ => Consumed)
-      Await.ready(f, 5.seconds)
+      val result = backbone.consume[String](settings)(_ => Consumed)
 
-      verify(sqsClient).createQueueAsync(meq(new CreateQueueRequest("queue-name")), any[CreateQueueHandler])
+      whenReady(result) { _ =>
+        verify(sqsClient).createQueue(CreateQueueRequest.builder().queueName("queue-name").build())
+      }
     }
 
     "create an encrypted queue with the configured name and kms key alias" in {
-      val settings = ConsumerSettings(Nil,
-                                      "queue-name",
-                                      "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias".some,
-                                      1,
-                                      Some(CountLimitation(0)))
+      val settings = ConsumerSettings(
+        Nil,
+        "queue-name",
+        "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias".some,
+        1,
+        Some(CountLimitation(0))
+      )
+      val backbone = Backbone()
+
+      val result = backbone.consume[String](settings)(_ => Consumed)
+
+      whenReady(result) { _ =>
+        val request = CreateQueueRequest
+          .builder()
+          .queueName("queue-name")
+          .attributes(
+            Map(QueueAttributeName.KMS_MASTER_KEY_ID -> "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias").asJava
+          )
+          .build()
+
+        verify(sqsClient).createQueue(request)
+      }
+    }
+
+    val envelope = SnsEnvelope("message")
+    val message  = Message.builder().body(envelope.asJson.toString()).build()
+
+    "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
+      val receiveSettings = SqsSourceSettings.Defaults
+        .withAttribute(MessageSystemAttributeName.senderId)
+        .withMessageAttribute(MessageAttributeName("TestAttribute"))
+        .withVisibilityTimeout(1.minute)
+
+      val settings =
+        ConsumerSettings("subject" :: Nil, "queue-name", None, 1, Some(CountLimitation(1)), receiveSettings)
+
       val backbone = Backbone()
 
       val f = backbone.consume[String](settings)(_ => Consumed)
       Await.ready(f, 5.seconds)
 
-      verify(sqsClient).createQueueAsync(
-        meq(
-          new CreateQueueRequest("queue-name").withAttributes(
-            HashMap("KmsMasterKeyId" -> "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias").asJava)),
-        any[CreateQueueHandler]
-      )
-    }
+      val captor = ArgCaptor[ReceiveMessageRequest]
 
-    val envelope = SnsEnvelope("message")
+      verify(sqsClient, Mockito.atLeastOnce()).receiveMessage(captor)
+      val request = captor.value
 
-    val message = new Message()
-      .withBody(envelope.asJson.toString())
-
-    "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
-
-      val settings = ConsumerSettings("subject" :: Nil, "queue-name", None, 1, Some(CountLimitation(1)))
-      val backbone = Backbone()
-
-      val f = backbone.consume[String](settings)(s => Consumed)
-      Await.ready(f, 5.seconds)
-
-      val captor = argumentCaptor[ReceiveMessageRequest]
-
-      verify(sqsClient, Mockito.atLeastOnce()).receiveMessageAsync(captor.capture(), any[ReceiveMessagesHandler])
-      val request = captor.getValue
-
-      request.getMaxNumberOfMessages shouldBe 10
-      request.getWaitTimeSeconds shouldBe 20
-      request.getQueueUrl shouldBe "queue-url"
+      request.maxNumberOfMessages() mustBe 10
+      request.waitTimeSeconds() mustBe 20
+      request.attributeNamesAsStrings() mustBe List("SenderId").asJava
+      request.messageAttributeNames() mustBe List("TestAttribute").asJava
+      request.visibilityTimeout() mustBe 60
+      request.queueUrl() mustBe "queue-url"
     }
   }
 }

@@ -1,13 +1,14 @@
 package backbone
 
+import backbone.testutil.BaseTest
 import org.scalatest.TryValues._
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.compat.java8.FunctionConverters._
 import scala.compat.java8.OptionConverters._
 import scala.util.{Failure, Try}
 
-class MessageReaderSpec extends FlatSpec with MustMatchers {
+class MessageReaderSpec extends AnyFlatSpec with BaseTest {
 
   "MessageReader" should "return the computed value" in {
     val reader                         = MessageReader(s => Try(Option(s)))
@@ -27,12 +28,14 @@ class MessageReaderSpec extends FlatSpec with MustMatchers {
     reader.read("message") mustBe a[Failure[_]]
   }
 
+  // scalastyle:off null
   "MandatoryMessageReader" should "return Success(None) if the function returned null" in {
     val reader = MandatoryMessageReader(s => Try(null))
     val result = reader.read("message")
     result.success.value must not be null
     result.success.value mustBe empty
   }
+  // scalastyle:on null
 
   it should "return Success(Some()) if the function retured a value" in {
     val reader = MandatoryMessageReader(s => Try(s))

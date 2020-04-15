@@ -1,48 +1,50 @@
 package backbone.aws
 
 import backbone.scaladsl.Backbone.QueueInformation
-import com.amazonaws.auth.policy.Policy
-import com.amazonaws.services.sqs.AmazonSQSAsync
-import com.amazonaws.services.sqs.model._
-import org.slf4j.LoggerFactory
 import cats.implicits._
-import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.model._
 
-private[backbone] trait AmazonSqsOps extends AmazonAsync {
+import scala.compat.java8.FutureConverters._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters._
+
+private[backbone] trait AmazonSqsOps {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  def sqs: AmazonSQSAsync
+  def sqs: SqsAsyncClient
 
   def getQueueArn(queueUrl: String)(implicit ec: ExecutionContext): Future[String] = {
-    val attributeNames = List(QueueAttributeName.QueueArn.toString)
+    val request = GetQueueAttributesRequest
+      .builder()
+      .queueUrl(queueUrl)
+      .attributeNames(QueueAttributeName.QUEUE_ARN)
+      .build()
 
-    for {
-      response <- async[GetQueueAttributesRequest, GetQueueAttributesResult](
-        sqs.getQueueAttributesAsync(queueUrl, attributeNames.asJava, _)
-      )
-      attributes = response.getAttributes.asScala
-      arn        = attributes(QueueAttributeName.QueueArn.toString)
-    } yield arn
+    sqs.getQueueAttributes(request).toScala.map { response =>
+      val attributes = response.attributes.asScala
+      attributes(QueueAttributeName.QUEUE_ARN)
+    }
   }
 
-  def savePolicy(queueUrl: String, policy: Policy)(implicit ec: ExecutionContext): Future[Unit] = {
-    val attributes = Map(QueueAttributeName.Policy.toString -> policy.toJson)
-    async[SetQueueAttributesRequest, SetQueueAttributesResult](
-      sqs.setQueueAttributesAsync(queueUrl, attributes.asJava, _)
-    ).map(_ => ())
+  def savePolicy(queueUrl: String, policy: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    val attributes = Map(QueueAttributeName.POLICY -> policy)
+    val request    = SetQueueAttributesRequest.builder().queueUrl(queueUrl).attributes(attributes.asJava).build()
+
+    sqs.setQueueAttributes(request).toScala.map(_ => ())
   }
 
   def createQueue(params: CreateQueueParams)(implicit ec: ExecutionContext): Future[QueueInformation] = {
-
-    val createRequest = new CreateQueueRequest(params.name)
-    params.kmsKeyId.map(key => createRequest.addAttributesEntry("KmsMasterKeyId", key))
-
     logger.info(s"Creating queue. queueName=$params.name")
+
+    val attributes = params.kmsKeyId.map(key => QueueAttributeName.KMS_MASTER_KEY_ID -> key).toMap
+    val request    = CreateQueueRequest.builder().queueName(params.name).attributes(attributes.asJava).build()
+
     for {
-      createResponse <- async[CreateQueueRequest, CreateQueueResult](sqs.createQueueAsync(createRequest, _))
-      url = createResponse.getQueueUrl
+      createResponse <- sqs.createQueue(request).toScala
+      url = createResponse.queueUrl()
       _   <- logger.debug(s"Created queue. queueParams=$params, url=$url").pure[Future]
       arn <- getQueueArn(url)
       _   <- logger.debug(s"Requested queueArn. queueParams=$params, queueArn=$arn").pure[Future]
@@ -50,7 +52,8 @@ private[backbone] trait AmazonSqsOps extends AmazonAsync {
   }
 
   def deleteMessage(queueUrl: String, receiptHandle: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    async[DeleteMessageRequest, DeleteMessageResult](sqs.deleteMessageAsync(queueUrl, receiptHandle, _)).map(_ => ())
+    val request = DeleteMessageRequest.builder().queueUrl(queueUrl).receiptHandle(receiptHandle).build()
+    sqs.deleteMessage(request).toScala.map(_ => ())
   }
 
 }

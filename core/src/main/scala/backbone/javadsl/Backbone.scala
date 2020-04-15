@@ -11,20 +11,20 @@ import akka.stream.javadsl.Sink
 import backbone.consumer.ConsumerSettings
 import backbone.publisher.PublisherSettings
 import backbone.{MessageReader, scaladsl, _}
-import com.amazonaws.services.sns.AmazonSNSAsync
-import com.amazonaws.services.sqs.AmazonSQSAsync
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.compat.java8.{FunctionConverters, FutureConverters}
 
 /** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
  * and publish messages to an Amazon SNS topic.
  *
- * @param sqs    AmazonSQSASync
- * @param sns    AmazonSNSAsync
- * @param system implicit actor system
+ * @param sqs    aws sqs async client
+ * @param sns    aws sns async client
+ * @param system actor system
  */
-class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: ActorSystem) {
+class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: ActorSystem) {
 
   val asScala = new scaladsl.Backbone()(sqs, sns, system)
 
@@ -132,7 +132,7 @@ class Backbone(val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, val system: Act
 }
 
 object Backbone {
-  def create(sqs: AmazonSQSAsync, sns: AmazonSNSAsync, system: ActorSystem): Backbone = {
+  def create(sqs: SqsAsyncClient, sns: SnsAsyncClient, system: ActorSystem): Backbone = {
     new Backbone(sqs, sns, system)
   }
 }

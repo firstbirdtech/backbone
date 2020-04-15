@@ -1,37 +1,30 @@
 package backbone
 
-import akka.Done
-import backbone.consumer.{ConsumerSettings, CountLimitation, ReceiveSettings}
+import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
-import backbone.testutil.{ElasticMQ, MockSNSAsyncClient, TestActorSystem}
-import com.amazonaws.services.sqs.model.{CreateQueueRequest, Message, SendMessageRequest}
-import io.circe.syntax._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.time.{Seconds, Span}
-import org.scalatest.{MustMatchers, WordSpec}
-
-import scala.collection.JavaConverters._
-import scala.collection.immutable.HashMap
-import scala.concurrent.Future
-import scala.util.Success
-
+import backbone.testutil.{BaseTest, ElasticMQ, MockSNSAsyncClient, TestActorSystem}
 import cats.implicits._
+import io.circe.syntax._
+import org.scalatest.wordspec.AnyWordSpec
+import software.amazon.awssdk.services.sqs.model._
+
+import scala.collection.immutable.HashMap
+import scala.compat.java8.FutureConverters._
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
+import scala.util.Success
+import akka.stream.alpakka.sqs.SqsSourceSettings
 
 class BackboneConsumeSpec
-    extends WordSpec
+    extends AnyWordSpec
+    with BaseTest
     with ElasticMQ
     with MockSNSAsyncClient
-    with MockitoSugar
-    with ScalaFutures
-    with MustMatchers
     with TestActorSystem {
 
-  override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(3, Seconds))
-
-  val backbone = Backbone()
+  private[this] val backbone = Backbone()
 
   "Backbone.consume" should {
 
@@ -39,53 +32,78 @@ class BackboneConsumeSpec
 
       val settings = ConsumerSettings(Nil, "queue-name-1", None, 1, Some(CountLimitation(0)))
 
-      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
+      val result = for {
+        _ <- backbone.consume[String](settings)(_ => Consumed)
+        r <- sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName("queue-name-1").build()).toScala
+      } yield r
 
-      whenReady(f) { res =>
-        sqsClient.getQueueUrl("queue-name-1").getQueueUrl must be("http://localhost:9324/queue/queue-name-1")
-      }
-
+      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/queue/queue-name-1") }
     }
 
     "create an encrypted queue with the configured name and kms key alias" in {
 
-      val settings = ConsumerSettings(Nil, "queue-name-2", "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias".some, 1, Some(CountLimitation(0)))
+      val settings = ConsumerSettings(
+        Nil,
+        "queue-name-2",
+        "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias".some,
+        1,
+        Some(CountLimitation(0))
+      )
 
-      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
+      val result = for {
+        _ <- backbone.consume[String](settings)(_ => Consumed)
+        r <- sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName("queue-name-2").build()).toScala
+      } yield r
 
-      whenReady(f) { res =>
-        sqsClient.getQueueUrl("queue-name-2").getQueueUrl must be("http://localhost:9324/queue/queue-name-2")
-      }
-
+      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/queue/queue-name-2") }
     }
 
     "fail parsing a wrongly formatted message and keep in on the queue" in {
 
-      val message            = new Message().withBody("blabla")
-      val attributes         = HashMap("VisibilityTimeout" -> "0")
-      val createQueueRequest = new CreateQueueRequest("no-visibility").withAttributes(attributes.asJava)
+      val message    = Message.builder().body("blabla").build()
+      val attributes = HashMap(QueueAttributeName.VISIBILITY_TIMEOUT -> "0")
+      val createQueueRequest = CreateQueueRequest
+        .builder()
+        .queueName("no-visibility")
+        .attributes(attributes.asJava)
+        .build()
 
-      sqsClient.createQueue(createQueueRequest)
-      sqsClient.sendMessage(new SendMessageRequest("http://localhost:9324/queue/no-visibility", message.getBody))
+      val sendMessageRequest = SendMessageRequest
+        .builder()
+        .queueUrl("http://localhost:9324/queue/no-visibility")
+        .messageBody(message.body)
+        .build()
 
-      val settings        = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(1)))
-      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
+      val receiveMessageRequest = ReceiveMessageRequest
+        .builder()
+        .queueUrl("http://localhost:9324/queue/no-visibility")
+        .build()
 
-      whenReady(f) { _ =>
-        sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
-      }
+      val settings = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(1)))
 
+      val result = for {
+        _ <- sqsClient.createQueue(createQueueRequest).toScala
+        _ <- sqsClient.sendMessage(sendMessageRequest).toScala
+        _ <- backbone.consume[String](settings)(_ => Consumed)
+        r <- sqsClient.receiveMessage(receiveMessageRequest).toScala
+      } yield r
+
+      whenReady(result) { res => res.messages() must have size 1 }
     }
 
     "consume messages from the queue url" in {
       sendMessage("message", "queue-name")
 
-      val settings        = ConsumerSettings(Nil, "queue-name", None, 1, Some(CountLimitation(1)))
-      val f: Future[Done] = backbone.consume[String](settings)(s => Consumed)
+      val settings = ConsumerSettings(Nil, "queue-name", None, 1, Some(CountLimitation(1)))
 
-      whenReady(f) { _ =>
-        sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
-      }
+      val result = for {
+        _ <- backbone.consume[String](settings)(_ => Consumed)
+        r <- sqsClient
+          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
+          .toScala
+      } yield r
+
+      whenReady(result) { res => res.messages() must have size 0 }
     }
 
     "consume messages from the queue url if the MessageReader returns no event" in {
@@ -94,30 +112,42 @@ class BackboneConsumeSpec
       val settings = ConsumerSettings(Nil, "queue-name", None, 1, Some(CountLimitation(1)))
       val reader   = MessageReader(_ => Success(Option.empty[String]))
 
-      val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)(reader)
+      val result = for {
+        _ <- backbone.consume[String](settings)(_ => Rejected)(reader)
+        r <- sqsClient
+          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
+          .toScala
+      } yield r
 
-      whenReady(f) { _ =>
-        sqsClient.receiveMessage("http://localhost:9324/queue/queue-name").getMessages must have size 0
-      }
+      whenReady(result) { res => res.messages() must have size 0 }
     }
 
     "reject messages from the queue" in {
       sendMessage("message", "no-visibility")
 
-      val settings        = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(0)), ReceiveSettings(0, 100, 10))
-      val f: Future[Done] = backbone.consume[String](settings)(s => Rejected)
+      val receiveSettings = SqsSourceSettings().withWaitTime(10.seconds).withMaxBufferSize(100).withMaxBatchSize(10)
+      val settings        = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(0)), receiveSettings)
 
-      whenReady(f) { _ =>
-        sqsClient.receiveMessage("http://localhost:9324/queue/no-visibility").getMessages must have size 1
-      }
+      val result = for {
+        _ <- backbone.consume[String](settings)(_ => Rejected)
+        r <- sqsClient
+          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/no-visibility").build())
+          .toScala
+      } yield r
+
+      whenReady(result) { res => res.messages() must have size 1 }
     }
   }
 
   private[this] def sendMessage(message: String, queue: String): Unit = {
-    val envelope = SnsEnvelope(message)
+    val envelope   = SnsEnvelope(message)
+    val sqsMessage = Message.builder().body(envelope.asJson.toString).build()
+    val request = SendMessageRequest
+      .builder()
+      .queueUrl(s"http://localhost:9324/queue/$queue")
+      .messageBody(sqsMessage.body)
+      .build()
 
-    val sqsMessage = new Message()
-      .withBody(envelope.asJson.toString())
-    sqsClient.sendMessage(new SendMessageRequest(s"http://localhost:9324/queue/$queue", sqsMessage.getBody))
+    sqsClient.sendMessage(request)
   }
 }

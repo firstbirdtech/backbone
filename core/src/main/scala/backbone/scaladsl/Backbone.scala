@@ -10,12 +10,9 @@ import backbone.json.JsonReader
 import backbone.publisher.{Publisher, PublisherSettings}
 import backbone.scaladsl.Backbone.QueueInformation
 import backbone.{MessageReader, MessageWriter, ProcessingResult}
-import com.amazonaws.auth.policy.actions.SQSActions
-import com.amazonaws.auth.policy.conditions.ConditionFactory
-import com.amazonaws.auth.policy.{Policy, Principal, Resource, Statement}
-import com.amazonaws.services.sns.AmazonSNSAsync
-import com.amazonaws.services.sqs.AmazonSQSAsync
 import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -24,7 +21,7 @@ object Backbone {
 
   case class QueueInformation(url: String, arn: String)
 
-  def apply()(implicit sqs: AmazonSQSAsync, sns: AmazonSNSAsync, system: ActorSystem): Backbone =
+  def apply()(implicit sqs: SqsAsyncClient, sns: SnsAsyncClient, system: ActorSystem): Backbone =
     new Backbone()
 
 }
@@ -36,14 +33,15 @@ object Backbone {
  * @param sns    implicit aws sns async client
  * @param system implicit actor system
  */
-class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system: ActorSystem)
+class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system: ActorSystem)
     extends AmazonSqsOps
     with AmazonSnsOps {
 
-  private[this] val logger                          = LoggerFactory.getLogger(getClass)
-  private[this] val config                          = system.settings.config
-  private[this] val jsonReaderClass                 = Class.forName(config.getString("backbone.json.reader"))
-  private[this] implicit val jsonReader: JsonReader = jsonReaderClass.newInstance().asInstanceOf[JsonReader]
+  private[this] val logger          = LoggerFactory.getLogger(getClass)
+  private[this] val config          = system.settings.config
+  private[this] val jsonReaderClass = Class.forName(config.getString("backbone.json.reader"))
+  private[this] implicit val jsonReader: JsonReader =
+    jsonReaderClass.getDeclaredConstructor().newInstance().asInstanceOf[JsonReader]
 
   /** Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
@@ -73,8 +71,9 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
    * @tparam T type of events to consume
    * @return a future completing when the stream quits
    */
-  def consumeAsync[T](settings: ConsumerSettings)(f: T => Future[ProcessingResult])(
-      implicit fo: MessageReader[T]): Future[Done] = {
+  def consumeAsync[T](
+      settings: ConsumerSettings
+  )(f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     logger.debug(s"Preparing to consume messages. config=$settings")
@@ -142,7 +141,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
   def actorPublisher[T](
       settings: PublisherSettings,
       bufferSize: Int = Int.MaxValue,
-      overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead)(implicit mw: MessageWriter[T]): ActorRef = {
+      overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead
+  )(implicit mw: MessageWriter[T]): ActorRef = {
     new Publisher(Publisher.Settings(settings.topicArn)).actor(bufferSize, overflowStrategy)
   }
 
@@ -159,7 +159,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
   }
 
   private[this] def subscribe(queue: QueueInformation, topics: List[String])(
-      implicit ec: ExecutionContext): Future[Unit] = {
+      implicit ec: ExecutionContext
+  ): Future[Unit] = {
 
     logger.info(s"Subscribing queue to topics. queueArn=${queue.arn}, topicArns=$topics")
     for {
@@ -169,7 +170,8 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
   }
 
   private[this] def updatePolicy(queue: QueueInformation, topics: List[String])(
-      implicit ec: ExecutionContext): Future[Unit] = {
+      implicit ec: ExecutionContext
+  ): Future[Unit] = {
     topics match {
       case Nil => Future.successful(())
       case ts =>
@@ -179,17 +181,28 @@ class Backbone(implicit val sqs: AmazonSQSAsync, val sns: AmazonSNSAsync, system
     }
   }
 
-  private[this] def createPolicy(queueArn: String, topicsArns: Seq[String]): Policy = {
-    val statements = topicsArns.map { arn =>
-      new Statement(Statement.Effect.Allow)
-        .withId("topic-subscription-" + arn)
-        .withPrincipals(Principal.AllUsers)
-        .withActions(SQSActions.SendMessage)
-        .withResources(new Resource(queueArn))
-        .withConditions(ConditionFactory.newSourceArnCondition(arn))
+  private[this] def createPolicy(queueArn: String, topicsArns: Seq[String]): String = {
+    val statements = topicsArns.map { topicArn =>
+      s"""
+         |{
+         |  "Sid": "topic-subscription-arn:aws:$topicArn",
+         |  "Effect": "Allow",
+         |  "Principal": {
+         |    "AWS": "*"
+         |  },
+         |  "Action": "sqs:SendMessage",
+         |  "Resource": "$queueArn",
+         |  "Condition": {
+         |    "ArnLike": {
+         |      "aws:SourceArn": "$topicArn"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
     }
 
-    new Policy().withStatements(statements: _*)
+    val statementsJsonString = statements.mkString(",")
+    s"""{ "Version": "2012-10-17", "Statement": [$statementsJsonString] }"""
   }
 
 }

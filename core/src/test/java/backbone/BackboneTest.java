@@ -10,11 +10,15 @@ import backbone.consumer.ConsumerSettings;
 import backbone.consumer.CountLimitation;
 import backbone.publisher.PublisherSettings;
 import backbone.testutil.TestContext;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import org.junit.Test;
 import scala.Int;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,9 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.verify;
 
 public class BackboneTest extends TestContext {
@@ -35,20 +37,21 @@ public class BackboneTest extends TestContext {
     @Test
     public void consume_oneMessage_messageConsumed() throws ExecutionException, InterruptedException {
 
-        final ConsumerSettings consumerSettings = ConsumerSettings.create(new ArrayList<String>(), "queue-name", Optional.empty(), 1, Optional.of(new CountLimitation(1)));
-        sqs.createQueue("queue-name");
-        sqs.sendMessage(new SendMessageRequest("http://localhost:9324/queue/queue-name", "\"message\":\"body\""));
+        final ConsumerSettings consumerSettings = ConsumerSettings.create(new ArrayList<>(), "queue-name", Optional.empty(), 1, Optional.of(new CountLimitation(1)));
+        async(sqs.createQueue(CreateQueueRequest.builder().queueName("queue-name").build()));
+        async(sqs.sendMessage(SendMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").messageBody("\"message\":\"body\"").build()));
         final MessageReader<String> messageReader = MandatoryMessageReader.create(s -> s);
         backbone.consume(consumerSettings, messageReader, f -> Consumed.instance()).get();
 
-        assertThat(sqs.receiveMessage("http://localhost:9324/queue/queue-name").getMessages().size(), is(0));
+        final ReceiveMessageResponse result = async(sqs.receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build()));
+        assertThat(result.messages().size(), is(0));
     }
 
     @Test
     public void publishAsync_oneMessage_messageSuccessfullyPublished() throws Exception {
         backbone.publishAsync("message", publisherSettings, msg -> msg).get();
 
-        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message")), any());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message").build());
     }
 
     @Test
@@ -56,8 +59,8 @@ public class BackboneTest extends TestContext {
         final List<String> messages = Arrays.asList("message-1", "message-2");
         backbone.<String>publishAsync(messages, publisherSettings, msg -> msg).get();
 
-        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
-        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
     }
 
     @Test
@@ -68,9 +71,10 @@ public class BackboneTest extends TestContext {
             actorRef.tell("message-1", getRef());
             actorRef.tell("message-2", getRef());
 
-            awaitAssert(duration("500 millis"), () -> {
-                verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
-                return verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
+            awaitAssert(Duration.ofMillis(500), () -> {
+                verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+                verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
+                return null;
             });
         }};
     }
@@ -82,11 +86,11 @@ public class BackboneTest extends TestContext {
         final List<String> messages = Arrays.asList("message-1", "message-2");
 
         Source.from(messages)
-            .runWith(sink, mat)
+            .runWith(sink, system)
             .get();
 
-        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-1")), any());
-        verify(sns).publishAsync(eq(new PublishRequest(publisherSettings.topicArn(), "message-2")), any());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-1").build());
+        verify(sns).publish(PublishRequest.builder().topicArn(publisherSettings.topicArn()).message("message-2").build());
     }
 
 }

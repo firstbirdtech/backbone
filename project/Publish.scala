@@ -1,3 +1,5 @@
+import bintray.BintrayPlugin
+import bintray.BintrayPlugin.autoImport._
 import sbt.Keys._
 import sbt._
 import sbt.plugins._
@@ -13,9 +15,6 @@ object NoPublish extends AutoPlugin {
 }
 
 object Publish extends AutoPlugin {
-  import bintray.BintrayPlugin
-  import bintray.BintrayPlugin.autoImport._
-
   override def trigger: PluginTrigger = allRequirements
   override def requires: Plugins      = BintrayPlugin
 
