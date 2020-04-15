@@ -31,7 +31,7 @@ object Consumer {
       queueUrl: String,
       parallelism: Int = 1,
       limitation: Option[Limitation] = None,
-      receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
+      receiveSettings: SqsSourceSettings = SqsSourceSettings.Defaults
   ) {
     assert(parallelism > 0, "Parallelism must be positive")
   }

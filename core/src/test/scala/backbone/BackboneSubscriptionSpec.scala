@@ -1,7 +1,7 @@
 package backbone
 
 import akka.stream.alpakka.sqs.{MessageAttributeName, MessageSystemAttributeName}
-import backbone.consumer.{ConsumerSettings, CountLimitation, ReceiveSettings}
+import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.sqs.model.{
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
+import akka.stream.alpakka.sqs.SqsSourceSettings
 
 class BackboneSubscriptionSpec
     extends AnyWordSpec
@@ -100,7 +101,7 @@ class BackboneSubscriptionSpec
     val message  = Message.builder().body(envelope.asJson.toString()).build()
 
     "request messages form the queue url returned when creating the queue" in withMessages(message :: Nil) {
-      val receiveSettings = ReceiveSettings()
+      val receiveSettings = SqsSourceSettings.Defaults
         .withAttribute(MessageSystemAttributeName.senderId)
         .withMessageAttribute(MessageAttributeName("TestAttribute"))
         .withVisibilityTimeout(1.minute)

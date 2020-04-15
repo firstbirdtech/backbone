@@ -4,6 +4,7 @@ import java.util.{List => JList, Optional => JOption}
 
 import scala.jdk.CollectionConverters._
 import scala.compat.java8.OptionConverters
+import akka.stream.alpakka.sqs.SqsSourceSettings
 
 object ConsumerSettings {
 
@@ -28,7 +29,7 @@ object ConsumerSettings {
       kmsKeyAlias: JOption[String],
       parallelism: Integer,
       consumeWithin: JOption[Limitation],
-      receiveSettings: ReceiveSettings
+      receiveSettings: SqsSourceSettings
   ): ConsumerSettings =
     apply(topics.asScala.toList,
           queue,
@@ -55,5 +56,5 @@ case class ConsumerSettings(
     kmsKeyAlias: Option[String] = None,
     parallelism: Int = 1,
     consumeWithin: Option[Limitation] = None,
-    receiveSettings: ReceiveSettings = ReceiveSettings.Defaults
+    receiveSettings: SqsSourceSettings = SqsSourceSettings.Defaults
 )

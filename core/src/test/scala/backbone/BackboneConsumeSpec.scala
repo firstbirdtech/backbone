@@ -1,6 +1,6 @@
 package backbone
 
-import backbone.consumer.{ConsumerSettings, CountLimitation, ReceiveSettings}
+import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
@@ -15,6 +15,7 @@ import scala.compat.java8.FutureConverters._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.Success
+import akka.stream.alpakka.sqs.SqsSourceSettings
 
 class BackboneConsumeSpec
     extends AnyWordSpec
@@ -124,7 +125,7 @@ class BackboneConsumeSpec
     "reject messages from the queue" in {
       sendMessage("message", "no-visibility")
 
-      val receiveSettings = ReceiveSettings().withWaitTime(10.seconds).withMaxBufferSize(100).withMaxBatchSize(10)
+      val receiveSettings = SqsSourceSettings().withWaitTime(10.seconds).withMaxBufferSize(100).withMaxBatchSize(10)
       val settings        = ConsumerSettings(Nil, "no-visibility", None, 1, Some(CountLimitation(0)), receiveSettings)
 
       val result = for {
