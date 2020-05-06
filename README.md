@@ -198,7 +198,7 @@ libraryDependencies += "com.firstbird" %% "backbone-gson"       % "X.Y.Z"
 ## Running the Tests
 
 Run the tests from sbt with:
-```
+```sbt
 test
 ```
 
@@ -207,7 +207,7 @@ We very much appreciate feedback, please open an issue and/or create a PR.
 
 ## Contributors
 
-* Pedro Dias
-* [Fabian Grutsch](https://github.com/fgrutsch)
-* Georgi Lichev
-* [Daniel Pfeiffer](https://github.com/dpfeiffer)
+*   Pedro Dias
+*   [Fabian Grutsch](https://github.com/fgrutsch)
+*   Georgi Lichev
+*   [Daniel Pfeiffer](https://github.com/dpfeiffer)

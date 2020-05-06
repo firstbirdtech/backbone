@@ -5,10 +5,11 @@ on: push
 jobs:
   build:
     name: jdk-${{ matrix.java }} tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         java: [8, 11]
         include:
         - os: ubuntu-latest
@@ -32,7 +33,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sbt-            
       - name: Run CI
         run: sbt clean scalafmtCheckAll scalafmtSbtCheck coverage +test coverageReport coverageAggregate
-      # - name: Upload coverage to Codacy
-      #   run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
-      #   env:
-      #     CODACY_PROJECT_TOKEN:
+      - name: Upload coverage to Codacy
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
