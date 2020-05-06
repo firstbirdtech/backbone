@@ -21,12 +21,13 @@ class CirceJsonReader extends JsonReader {
         logger.error(s"Unable to parse json. reason=${f.message}")
         Consumer.KeepMessage
       })
-      envelope <- json
-        .as[SnsEnvelope]
-        .leftMap(f => {
-          logger.error(s"Unable to decode to SnsEnvelope. message=$s, reason=${f.message}")
-          Consumer.KeepMessage
-        })
+      envelope <-
+        json
+          .as[SnsEnvelope]
+          .leftMap(f => {
+            logger.error(s"Unable to decode to SnsEnvelope. message=$s, reason=${f.message}")
+            Consumer.KeepMessage
+          })
     } yield envelope
   }
 }

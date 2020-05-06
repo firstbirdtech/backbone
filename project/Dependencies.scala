@@ -3,8 +3,8 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val alpakkaVersion               = "2.0.0-RC2"
-  private[this] val akkaVersion                  = "2.6.4"
+  private[this] val alpakkaVersion               = "2.0.0"
+  private[this] val akkaVersion                  = "2.6.5"
   private[this] val catsVersion                  = "2.1.1"
   private[this] val circeVersion                 = "0.13.0"
   private[this] val elasticMqVersion             = "0.15.6"
@@ -12,10 +12,10 @@ object Dependencies {
   private[this] val java8CompatVersion           = "0.9.1"
   private[this] val junitVersion                 = "4.13"
   private[this] val logbackVersion               = "1.2.3"
-  private[this] val mockitoScalaVersion          = "1.13.9"
+  private[this] val mockitoScalaVersion          = "1.14.0"
   private[this] val playJsonVersion              = "2.8.1"
   private[this] val scalaTestVersion             = "3.1.1"
-  private[this] val scalaCollectionCompatVersion = "2.1.4"
+  private[this] val scalaCollectionCompatVersion = "2.1.6"
   private[this] val slf4jVersion                 = "1.7.30"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(

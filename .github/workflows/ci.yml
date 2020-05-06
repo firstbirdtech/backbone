@@ -1,0 +1,38 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    name: jdk-${{ matrix.java }} tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        java: [8, 11]
+        include:
+        - os: ubuntu-latest
+          CACHE_PATH: ~/.cache/coursier/v1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: olafurpg/setup-scala@v7
+        with:
+          java-version: "adopt@1.${{ matrix.java }}"
+      - uses: actions/cache@v1
+        with:
+          path: $CACHE_PATH
+          key: ${{ runner.os }}-coursier-${{ hashFiles('**/*.sbt') }}
+          restore-keys: |
+            ${{ runner.os }}-coursier-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.sbt
+          key: |
+            ${{ runner.os }}-sbt-${{ hashFiles('project/build.properties') }}-${{ hashFiles('project/plugins.sbt') }}
+          restore-keys: ${{ runner.os }}-sbt-            
+      - name: Run CI
+        run: sbt clean scalafmtCheckAll scalafmtSbtCheck coverage +test coverageReport coverageAggregate
+      # - name: Upload coverage to Codacy
+      #   run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
+      #   env:
+      #     CODACY_PROJECT_TOKEN:

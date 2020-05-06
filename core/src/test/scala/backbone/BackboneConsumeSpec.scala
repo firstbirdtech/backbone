@@ -98,9 +98,10 @@ class BackboneConsumeSpec
 
       val result = for {
         _ <- backbone.consume[String](settings)(_ => Consumed)
-        r <- sqsClient
-          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
-          .toScala
+        r <-
+          sqsClient
+            .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
+            .toScala
       } yield r
 
       whenReady(result) { res => res.messages() must have size 0 }
@@ -114,9 +115,10 @@ class BackboneConsumeSpec
 
       val result = for {
         _ <- backbone.consume[String](settings)(_ => Rejected)(reader)
-        r <- sqsClient
-          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
-          .toScala
+        r <-
+          sqsClient
+            .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/queue-name").build())
+            .toScala
       } yield r
 
       whenReady(result) { res => res.messages() must have size 0 }
@@ -130,9 +132,11 @@ class BackboneConsumeSpec
 
       val result = for {
         _ <- backbone.consume[String](settings)(_ => Rejected)
-        r <- sqsClient
-          .receiveMessage(ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/no-visibility").build())
-          .toScala
+        r <-
+          sqsClient
+            .receiveMessage(
+              ReceiveMessageRequest.builder().queueUrl("http://localhost:9324/queue/no-visibility").build())
+            .toScala
       } yield r
 
       whenReady(result) { res => res.messages() must have size 1 }
