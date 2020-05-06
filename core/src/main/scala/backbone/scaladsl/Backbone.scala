@@ -158,8 +158,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
     new Publisher(Publisher.Settings(settings.topicArn)).sink
   }
 
-  private[this] def subscribe(queue: QueueInformation, topics: List[String])(
-      implicit ec: ExecutionContext
+  private[this] def subscribe(queue: QueueInformation, topics: List[String])(implicit
+      ec: ExecutionContext
   ): Future[Unit] = {
 
     logger.info(s"Subscribing queue to topics. queueArn=${queue.arn}, topicArns=$topics")
@@ -169,8 +169,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
     } yield ()
   }
 
-  private[this] def updatePolicy(queue: QueueInformation, topics: List[String])(
-      implicit ec: ExecutionContext
+  private[this] def updatePolicy(queue: QueueInformation, topics: List[String])(implicit
+      ec: ExecutionContext
   ): Future[Unit] = {
     topics match {
       case Nil => Future.successful(())

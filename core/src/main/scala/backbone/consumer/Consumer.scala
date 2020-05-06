@@ -104,24 +104,25 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
       .runWith(ack)
   }
 
-  private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = r match {
-    case Rejected => KeepMessage
-    case Consumed => RemoveMessage(message.receiptHandle)
-  }
+  private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction =
+    r match {
+      case Rejected => KeepMessage
+      case Consumed => RemoveMessage(message.receiptHandle)
+    }
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
       sns <- jr.readSnsEnvelope(message.body)
       t <- (fo.read(sns.message) match {
-        case Failure(t) =>
-          logger.error(s"Unable to read message. message=${message.body}", t)
-          Left[MessageAction, T](KeepMessage)
-        case Success(None) =>
-          logger.info(s"MessageReader returned empty when parsing message. message=${message.body}")
-          Left[MessageAction, T](RemoveMessage(message.receiptHandle))
-        case Success(Some(value)) =>
-          Right[MessageAction, T](value)
-      })
+          case Failure(t) =>
+            logger.error(s"Unable to read message. message=${message.body}", t)
+            Left[MessageAction, T](KeepMessage)
+          case Success(None) =>
+            logger.info(s"MessageReader returned empty when parsing message. message=${message.body}")
+            Left[MessageAction, T](RemoveMessage(message.receiptHandle))
+          case Success(Some(value)) =>
+            Right[MessageAction, T](value)
+        })
     } yield t
   }
 

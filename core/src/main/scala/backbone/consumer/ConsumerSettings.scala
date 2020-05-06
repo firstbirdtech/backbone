@@ -15,11 +15,12 @@ object ConsumerSettings {
       parallelism: Integer,
       consumeWithin: JOption[Limitation]
   ): ConsumerSettings = {
-    apply(topics.asScala.toList,
-          queue,
-          OptionConverters.toScala(kmsKeyAlias),
-          parallelism,
-          OptionConverters.toScala(consumeWithin))
+    apply(
+      topics.asScala.toList,
+      queue,
+      OptionConverters.toScala(kmsKeyAlias),
+      parallelism,
+      OptionConverters.toScala(consumeWithin))
 
   }
 
@@ -31,12 +32,13 @@ object ConsumerSettings {
       consumeWithin: JOption[Limitation],
       receiveSettings: SqsSourceSettings
   ): ConsumerSettings =
-    apply(topics.asScala.toList,
-          queue,
-          OptionConverters.toScala(kmsKeyAlias),
-          parallelism,
-          OptionConverters.toScala(consumeWithin),
-          receiveSettings)
+    apply(
+      topics.asScala.toList,
+      queue,
+      OptionConverters.toScala(kmsKeyAlias),
+      parallelism,
+      OptionConverters.toScala(consumeWithin),
+      receiveSettings)
 
 }
 
