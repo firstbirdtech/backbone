@@ -1,6 +1,10 @@
 name: CI
 
-on: push
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
   build:
@@ -31,8 +35,10 @@ jobs:
           key: |
             ${{ runner.os }}-sbt-${{ hashFiles('project/build.properties') }}-${{ hashFiles('project/plugins.sbt') }}
           restore-keys: ${{ runner.os }}-sbt-            
-      - name: Run CI
-        run: sbt clean scalafmtCheckAll scalafmtSbtCheck coverage +test coverageReport coverageAggregate
+      - name: Run scalafmt
+        run: sbt clean scalafmtCheckAll scalafmtSbtCheck
+      - name: Run unit tests
+        run: sbt coverage +test coverageReport coverageAggregate        
       - name: Upload coverage to Codacy
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
         env:
