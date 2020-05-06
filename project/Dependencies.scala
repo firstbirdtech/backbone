@@ -20,7 +20,7 @@ object Dependencies {
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackVersion   % Test,
-    "org.scalatest"  %% "scalatest"      % scalaTestVersion % Test
+    "org.scalatest" %% "scalatest"       % scalaTestVersion % Test
   )
 
   val core: Seq[ModuleID] = Seq(
@@ -29,13 +29,13 @@ object Dependencies {
     "org.typelevel"          %% "cats-core"               % catsVersion,
     "org.scala-lang.modules" %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "org.scala-lang.modules" %% "scala-java8-compat"      % java8CompatVersion,
-    "org.slf4j"              % "slf4j-api"                % slf4jVersion,
-    "org.elasticmq"          %% "elasticmq-rest-sqs"      % elasticMqVersion % Test,
-    "io.circe"               %% "circe-parser"            % circeVersion % Test,
-    "io.circe"               %% "circe-core"              % circeVersion % Test,
-    "com.typesafe.akka"      %% "akka-testkit"            % akkaVersion % Test,
+    "org.slf4j"               % "slf4j-api"               % slf4jVersion,
+    "org.elasticmq"          %% "elasticmq-rest-sqs"      % elasticMqVersion    % Test,
+    "io.circe"               %% "circe-parser"            % circeVersion        % Test,
+    "io.circe"               %% "circe-core"              % circeVersion        % Test,
+    "com.typesafe.akka"      %% "akka-testkit"            % akkaVersion         % Test,
     "org.mockito"            %% "mockito-scala"           % mockitoScalaVersion % Test,
-    "junit"                  % "junit"                    % junitVersion % Test
+    "junit"                   % "junit"                   % junitVersion        % Test
   ) ++ testDependencies
 
   val jsonCirce: Seq[ModuleID] = Seq(
