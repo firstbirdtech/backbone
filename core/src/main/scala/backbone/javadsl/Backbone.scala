@@ -40,9 +40,10 @@ class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: Act
    * @tparam T type of events to consume
    * @return a java future completing when the stream quits
    */
-  def consume[T](settings: ConsumerSettings,
-                 format: MessageReader[T],
-                 f: JFunction1[T, ProcessingResult]): CompletableFuture[Done] = {
+  def consume[T](
+      settings: ConsumerSettings,
+      format: MessageReader[T],
+      f: JFunction1[T, ProcessingResult]): CompletableFuture[Done] = {
 
     val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
     FutureConverters.toJava(asScala.consume(settings)(asScalaFunction)(format)).toCompletableFuture
@@ -60,9 +61,10 @@ class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: Act
    * @tparam T type of events to consume
    * @return a java future completing when the stream quits
    */
-  def consumeAsync[T](settings: ConsumerSettings,
-                      format: MessageReader[T],
-                      f: JFunction1[T, CompletionStage[ProcessingResult]]): CompletableFuture[Done] = {
+  def consumeAsync[T](
+      settings: ConsumerSettings,
+      format: MessageReader[T],
+      f: JFunction1[T, CompletionStage[ProcessingResult]]): CompletableFuture[Done] = {
 
     val asScalaFunction = FunctionConverters.asScalaFromFunction(f)
     val asScalaFuture   = asScalaFunction.andThen(a => FutureConverters.toScala(a))
@@ -107,10 +109,11 @@ class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: Act
    * @tparam T type of messages to publish
    * @return an ActorRef that publishes received messages
    */
-  def actorPublisher[T](settings: PublisherSettings,
-                        bufferSize: Int,
-                        overflowStrategy: OverflowStrategy,
-                        mw: MessageWriter[T]): ActorRef = {
+  def actorPublisher[T](
+      settings: PublisherSettings,
+      bufferSize: Int,
+      overflowStrategy: OverflowStrategy,
+      mw: MessageWriter[T]): ActorRef = {
     asScala.actorPublisher(settings, bufferSize, overflowStrategy)(mw)
   }
 
