@@ -1,7 +1,5 @@
 # Backbone
 
-dummy
-
 ![](https://github.com/firstbirdtech/backbone/workflows/CI/badge.svg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/267982f6925248ef908962ddaf44632e)](https://www.codacy.com/gh/firstbirdtech/backbone?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=firstbirdtech/backbone&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/267982f6925248ef908962ddaf44632e)](https://www.codacy.com/gh/firstbirdtech/backbone?utm_source=github.com&utm_medium=referral&utm_content=firstbirdtech/backbone&utm_campaign=Badge_Coverage)
