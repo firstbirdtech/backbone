@@ -39,7 +39,7 @@ jobs:
         run: sbt clean scalafmtCheckAll scalafmtSbtCheck
       - name: Run unit tests
         run: sbt coverage +test coverageReport coverageAggregate        
-      - name: Upload coverage to Codacy
-        run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
-        env:
-          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
