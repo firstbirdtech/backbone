@@ -12,7 +12,7 @@ object Dependencies {
   private[this] val java8CompatVersion           = "0.9.1"
   private[this] val junitVersion                 = "4.13"
   private[this] val logbackVersion               = "1.2.3"
-  private[this] val mockitoScalaVersion          = "1.14.3"
+  private[this] val mockitoScalaVersion          = "1.14.4"
   private[this] val playJsonVersion              = "2.9.0"
   private[this] val scalaTestVersion             = "3.1.2"
   private[this] val scalaCollectionCompatVersion = "2.1.6"
