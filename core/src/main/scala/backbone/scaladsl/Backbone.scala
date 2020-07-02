@@ -26,7 +26,8 @@ object Backbone {
 
 }
 
-/** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
+/**
+ * Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
  * and publish messages to an Amazon SNS topic.
  *
  * @param sqs    implicit aws sqs async client
@@ -43,7 +44,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   private[this] implicit val jsonReader: JsonReader =
     jsonReaderClass.getDeclaredConstructor().newInstance().asInstanceOf[JsonReader]
 
-  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+  /**
+   * Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
@@ -59,7 +61,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
     consumeAsync[T](settings)(f.andThen(Future.successful))
   }
 
-  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+  /**
+   * Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to

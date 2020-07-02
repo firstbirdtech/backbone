@@ -3,8 +3,8 @@ package backbone.consumer
 import akka.NotUsed
 import akka.stream.{FlowShape, Graph}
 
-/** Defines an interface for limiting the consumption of elements of type T
- *
+/**
+ * Defines an interface for limiting the consumption of elements of type T
  */
 trait Limitation {
 

@@ -43,14 +43,12 @@ object ConsumerSettings {
 }
 
 /**
- *
  * @param topics          a list of topics to subscribe to
  * @param queue           the name of a queue to consume from
  * @param kmsKeyAlias     optional kms key alias if queue should be encrypted
  * @param parallelism     number of concurrent messages in process
  * @param consumeWithin   optional limitation when backbone should stop consuming
  * @param receiveSettings settings for the SQS Source from alpakka
- *
  */
 case class ConsumerSettings(
     topics: List[String],

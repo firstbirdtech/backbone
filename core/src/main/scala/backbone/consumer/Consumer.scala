@@ -38,7 +38,8 @@ object Consumer {
 
 }
 
-/** Consumes events from a queue.
+/**
+ * Consumes events from a queue.
  *
  * @param settings consumer settings
  * @param system   implicit ActorSystem
@@ -56,7 +57,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
     Supervision.Restart
   }
 
-  /** Consume elements of type T until an optional condition in settings is met.
+  /**
+   * Consume elements of type T until an optional condition in settings is met.
    *
    * After successfully processing elements of type T they are removed from the queue.
    *

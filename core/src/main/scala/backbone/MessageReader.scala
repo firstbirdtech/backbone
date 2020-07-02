@@ -14,7 +14,6 @@ import scala.util.Try
 trait MessageReader[T] {
 
   /**
-   *
    * @param s String to be read as T
    * @return T read from the String.
    */
