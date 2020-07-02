@@ -4,7 +4,8 @@ import akka.stream.scaladsl.Flow
 
 object CountLimitation {
 
-  /** Create a new CountLimitation
+  /**
+   * Create a new CountLimitation
    *
    * @param n number of elements to consume before finishing
    * @return a CountLimitation
@@ -12,7 +13,8 @@ object CountLimitation {
   def apply(n: Int): CountLimitation = new CountLimitation(n)
 }
 
-/** Limitation which finishes the consumption of events after n elements.
+/**
+ * Limitation which finishes the consumption of events after n elements.
  *
  * @param n number of elements to consume before finishing
  */

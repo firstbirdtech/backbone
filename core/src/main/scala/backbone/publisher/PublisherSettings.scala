@@ -7,7 +7,6 @@ object PublisherSettings {
 }
 
 /**
- *
  * @param topicArn the AWS topic ARN to publish to
  */
 case class PublisherSettings(topicArn: String)

@@ -17,7 +17,8 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import scala.jdk.CollectionConverters._
 import scala.compat.java8.{FunctionConverters, FutureConverters}
 
-/** Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
+/**
+ * Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
  * and publish messages to an Amazon SNS topic.
  *
  * @param sqs    aws sqs async client
@@ -28,7 +29,8 @@ class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: Act
 
   val asScala = new scaladsl.Backbone()(sqs, sns, system)
 
-  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+  /**
+   * Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
@@ -49,7 +51,8 @@ class Backbone(val sqs: SqsAsyncClient, val sns: SnsAsyncClient, val system: Act
     FutureConverters.toJava(asScala.consume(settings)(asScalaFunction)(format)).toCompletableFuture
   }
 
-  /** Consume elements of type T until an optional condition in ConsumerSettings is met.
+  /**
+   * Consume elements of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes
    * the queue to all provided topics and modifies the AWS Policy to allow sending messages to
