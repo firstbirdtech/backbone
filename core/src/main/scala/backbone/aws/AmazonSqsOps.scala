@@ -51,9 +51,4 @@ private[backbone] trait AmazonSqsOps {
     } yield QueueInformation(url, arn)
   }
 
-  def deleteMessage(queueUrl: String, receiptHandle: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    val request = DeleteMessageRequest.builder().queueUrl(queueUrl).receiptHandle(receiptHandle).build()
-    sqs.deleteMessage(request).toScala.map(_ => ())
-  }
-
 }

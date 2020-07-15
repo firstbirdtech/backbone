@@ -1,8 +1,6 @@
 package backbone.circe
 
-import backbone.consumer.Consumer.KeepMessage
 import backbone.json.SnsEnvelope
-import cats.syntax.either._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 
@@ -10,29 +8,29 @@ class CirceJsonReaderSpec extends AnyFlatSpec with Matchers {
 
   private[this] val reader = new CirceJsonReader()
 
-  "CirceJsonReader" should "return Right(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
+  "CirceJsonReader" should "return Some(SnsEnvelope) if it can successfully decode a sns envelope json string" in {
     val json = """
       |{
       | "Message": "test-message"
       |}
     """.stripMargin
 
-    reader.readSnsEnvelope(json) mustBe SnsEnvelope("test-message").asRight
+    reader.readSnsEnvelope(json) must contain(SnsEnvelope("test-message"))
   }
 
-  it should "return Left(KeepMessage) if it can not parse a sns envelope json string" in {
+  it should "return None if it can not parse a sns envelope json string" in {
     val json = """
        |{
        | "NotAMessage": "test-message"
        |}
      """.stripMargin
 
-    reader.readSnsEnvelope(json) mustBe KeepMessage.asLeft
+    reader.readSnsEnvelope(json) mustBe empty
   }
 
-  it should "return Left(KeepMessage) if the sns envelope is not formatted properly" in {
+  it should "return None if the sns envelope is not formatted properly" in {
     val json = "[1,2,3]"
-    reader.readSnsEnvelope(json) mustBe KeepMessage.asLeft
+    reader.readSnsEnvelope(json) mustBe empty
   }
 
 }

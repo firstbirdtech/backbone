@@ -1,9 +1,8 @@
 package backbone.circe
 
 import backbone.circe.CirceJsonReader._
-import backbone.consumer.Consumer
 import backbone.json.{JsonReader, SnsEnvelope}
-import cats.syntax.either._
+import cats.implicits._
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory
@@ -15,18 +14,21 @@ object CirceJsonReader {
 class CirceJsonReader extends JsonReader {
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  override def readSnsEnvelope(s: String): Either[Consumer.MessageAction, SnsEnvelope] = {
+  override def readSnsEnvelope(s: String): Option[SnsEnvelope] = {
     for {
-      json <- parse(s).leftMap(f => {
-        logger.error(s"Unable to parse json. reason=${f.message}")
-        Consumer.KeepMessage
-      })
+      json <- parse(s)
+        .map(_.some)
+        .valueOr(f => {
+          logger.error(s"Unable to parse json. reason=${f.message}")
+          none
+        })
       envelope <-
         json
           .as[SnsEnvelope]
-          .leftMap(f => {
+          .map(Some(_))
+          .valueOr(f => {
             logger.error(s"Unable to decode to SnsEnvelope. message=$s, reason=${f.message}")
-            Consumer.KeepMessage
+            none
           })
     } yield envelope
   }
