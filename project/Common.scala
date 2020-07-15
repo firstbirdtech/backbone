@@ -19,7 +19,7 @@ object Common extends AutoPlugin {
       url("https://github.com/firstbirdtech/backbone/graphs/contributors")
     ),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-    scalaVersion := "2.13.2",
+    scalaVersion := "2.13.3",
     crossScalaVersions := Seq("2.12.11", scalaVersion.value),
     scalacOptions ++= Seq(
       "-encoding",
