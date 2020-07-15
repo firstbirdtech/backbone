@@ -2,13 +2,14 @@ package backbone.consumer
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.Supervision
-import akka.stream.alpakka.sqs.SqsSourceSettings
-import akka.stream.alpakka.sqs.scaladsl.SqsSource
-import akka.stream.scaladsl.{Flow, RestartSource, Sink}
+import akka.stream.alpakka.sqs.scaladsl.{SqsAckFlow, SqsSource}
+import akka.stream.alpakka.sqs.{MessageAction, SqsSourceSettings}
+import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink}
 import backbone.aws.AmazonSqsOps
-import backbone.consumer.Consumer.{Settings, _}
+import backbone.consumer.Consumer.Settings
 import backbone.json.JsonReader
 import backbone.{MessageReader, _}
 import org.slf4j.LoggerFactory
@@ -20,12 +21,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Left, Right, Success}
 
 object Consumer {
-
-  sealed trait MessageAction
-
-  case class RemoveMessage(receiptHandle: String) extends MessageAction
-
-  case object KeepMessage extends MessageAction
 
   case class Settings(
       queueUrl: String,
@@ -49,7 +44,8 @@ object Consumer {
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsyncClient, jr: JsonReader)
     extends AmazonSqsOps {
 
-  private[this] val logger = LoggerFactory.getLogger(getClass)
+  private[this] val logger       = LoggerFactory.getLogger(getClass)
+  private[this] implicit val log = Logging(system, classOf[Consumer])
 
   private[this] implicit val ec: ExecutionContextExecutor = system.dispatcher
   private[this] val restartingDecider: Supervision.Decider = { t =>
@@ -108,35 +104,38 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
 
   private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction =
     r match {
-      case Rejected => KeepMessage
-      case Consumed => RemoveMessage(message.receiptHandle)
+      case Rejected => MessageAction.Ignore(message)
+      case Consumed => MessageAction.Delete(message)
     }
 
   private[this] def parseMessage[T](message: Message)(implicit fo: MessageReader[T]): Either[MessageAction, T] = {
     for {
-      sns <- jr.readSnsEnvelope(message.body)
-      t <- (fo.read(sns.message) match {
-          case Failure(t) =>
-            logger.error(s"Unable to read message. message=${message.body}", t)
-            Left[MessageAction, T](KeepMessage)
-          case Success(None) =>
-            logger.info(s"MessageReader returned empty when parsing message. message=${message.body}")
-            Left[MessageAction, T](RemoveMessage(message.receiptHandle))
-          case Success(Some(value)) =>
-            Right[MessageAction, T](value)
-        })
+      sns <- jr.readSnsEnvelope(message.body).toRight(MessageAction.Ignore(message))
+      t <- fo.read(sns.message) match {
+        case Failure(t) =>
+          logger.error(s"Unable to read message. message=${message.body}", t)
+          Left[MessageAction, T](MessageAction.Ignore(message))
+        case Success(None) =>
+          logger.info(s"MessageReader returned empty when parsing message. message=${message.body}")
+          Left[MessageAction, T](MessageAction.Delete(message))
+        case Success(Some(value)) =>
+          Right[MessageAction, T](value)
+      }
     } yield t
   }
 
   private[this] def ack: Sink[MessageAction, Future[Done]] = {
     Flow[MessageAction]
-      .mapAsync(1) {
-        case KeepMessage => Future.successful(())
-        case RemoveMessage(h) =>
-          logger.debug(s"Removing message from queue. deleteHandle=$h")
-          deleteMessage(settings.queueUrl, h)
-      }
+      .log(
+        "ack",
+        {
+          case a: MessageAction.Ignore                  => s"Keeping message on queue. id=${a.message.messageId}"
+          case a: MessageAction.Delete                  => s"Removing message from queue. id=${a.message.messageId}"
+          case a: MessageAction.ChangeMessageVisibility => s"Changing visibility of message. id=${a.message.messageId}"
+        }
+      )
+      .via(SqsAckFlow(settings.queueUrl))
       .withAttributes(supervisionStrategy(restartingDecider))
-      .toMat(Sink.ignore)((_, f) => f)
+      .toMat(Sink.ignore)(Keep.right)
   }
 }

@@ -25,10 +25,7 @@ trait MessageReader[T] {
  */
 object MessageReader {
 
-  def apply[T](f: String => Try[Option[T]]): MessageReader[T] =
-    new MessageReader[T] {
-      override def read(s: String): Try[Option[T]] = f(s)
-    }
+  def apply[T](f: String => Try[Option[T]]): MessageReader[T] = (s: String) => f(s)
 }
 
 /**
