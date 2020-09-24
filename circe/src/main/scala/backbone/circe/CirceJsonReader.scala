@@ -2,7 +2,7 @@ package backbone.circe
 
 import backbone.circe.CirceJsonReader._
 import backbone.json.{JsonReader, SnsEnvelope}
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory
