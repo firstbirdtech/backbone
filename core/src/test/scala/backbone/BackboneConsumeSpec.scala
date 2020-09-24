@@ -5,7 +5,7 @@ import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
 import backbone.testutil.{BaseTest, ElasticMQ, MockSNSAsyncClient, TestActorSystem}
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.syntax._
 import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.awssdk.services.sqs.model._

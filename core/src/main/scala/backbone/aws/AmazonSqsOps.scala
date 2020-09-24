@@ -1,7 +1,7 @@
 package backbone.aws
 
 import backbone.scaladsl.Backbone.QueueInformation
-import cats.implicits._
+import cats.syntax.all._
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._

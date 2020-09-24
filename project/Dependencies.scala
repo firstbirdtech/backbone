@@ -5,7 +5,7 @@ object Dependencies {
 
   private[this] val alpakkaVersion               = "2.0.1"
   private[this] val akkaVersion                  = "2.6.4"
-  private[this] val catsVersion                  = "2.1.1"
+  private[this] val catsVersion                  = "2.2.0"
   private[this] val circeVersion                 = "0.13.0"
   private[this] val elasticMqVersion             = "0.15.6"
   private[this] val gsonVersion                  = "2.8.6"
