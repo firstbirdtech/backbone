@@ -69,8 +69,8 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
 
     val baseSqsSourceSettings = SqsSourceSettings.Defaults
       .withWaitTimeSeconds(settings.receiveSettings.waitTimeSeconds)
-      .withMaxBufferSize(settings.receiveSettings.maxBufferSize)
       .withMaxBatchSize(settings.receiveSettings.maxBatchSize)
+      .withMaxBufferSize(settings.receiveSettings.maxBufferSize)
       .withParallelRequests(settings.receiveSettings.parallelRequests)
       .withAttributes(settings.receiveSettings.attributeNames)
       .withMessageAttributes(settings.receiveSettings.messageAttributeNames)
