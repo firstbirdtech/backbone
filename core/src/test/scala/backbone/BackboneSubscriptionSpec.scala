@@ -6,7 +6,7 @@ import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
 import backbone.testutil.Implicits._
 import backbone.testutil._
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.syntax._
 import org.mockito.Mockito
 import org.mockito.captor.ArgCaptor
