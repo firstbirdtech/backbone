@@ -37,10 +37,9 @@ private[backbone] class Publisher(settings: Settings)(implicit system: ActorSyst
           .map(mw.write)
           .log(getClass.getName, t => s"Publishing message to SNS. $t")
           .via(SnsPublisher.flow(settings.topicArn))
-          .mapError {
-            case ex =>
-              logger.error("Exception in publishing message to SNS.", ex)
-              ex
+          .mapError { case ex =>
+            logger.error("Exception in publishing message to SNS.", ex)
+            ex
           }
       }
       .withAttributes(supervisionStrategy(Supervision.resumingDecider))
