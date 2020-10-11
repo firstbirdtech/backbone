@@ -10,7 +10,7 @@ object Dependencies {
   private[this] val elasticMqVersion             = "0.15.6"
   private[this] val gsonVersion                  = "2.8.6"
   private[this] val java8CompatVersion           = "0.9.1"
-  private[this] val junitVersion                 = "4.13"
+  private[this] val junitVersion                 = "4.13.1"
   private[this] val logbackVersion               = "1.2.3"
   private[this] val mockitoScalaVersion          = "1.15.0"
   private[this] val playJsonVersion              = "2.9.1"
