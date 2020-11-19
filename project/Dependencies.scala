@@ -4,10 +4,10 @@ import sbt.librarymanagement.ModuleID
 object Dependencies {
 
   private[this] val alpakkaVersion               = "2.0.2"
-  private[this] val akkaVersion                  = "2.6.4"
+  private[this] val akkaVersion                  = "2.6.10"
   private[this] val catsVersion                  = "2.2.0"
   private[this] val circeVersion                 = "0.13.0"
-  private[this] val elasticMqVersion             = "0.15.6"
+  private[this] val elasticMqVersion             = "0.15.8"
   private[this] val gsonVersion                  = "2.8.6"
   private[this] val java8CompatVersion           = "0.9.1"
   private[this] val junitVersion                 = "4.13.1"
@@ -24,6 +24,8 @@ object Dependencies {
   )
 
   val core: Seq[ModuleID] = Seq(
+    "com.typesafe.akka"      %% "akka-actor"              % akkaVersion,
+    "com.typesafe.akka"      %% "akka-stream"             % akkaVersion,
     "com.lightbend.akka"     %% "akka-stream-alpakka-sqs" % alpakkaVersion,
     "com.lightbend.akka"     %% "akka-stream-alpakka-sns" % alpakkaVersion,
     "org.typelevel"          %% "cats-core"               % catsVersion,

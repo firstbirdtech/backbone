@@ -20,7 +20,7 @@ jobs:
           CACHE_PATH: ~/.cache/coursier/v1
     steps:
       - uses: actions/checkout@v2
-      - uses: olafurpg/setup-scala@v7
+      - uses: olafurpg/setup-scala@v10
         with:
           java-version: "adopt@1.${{ matrix.java }}"
       - uses: actions/cache@v1
