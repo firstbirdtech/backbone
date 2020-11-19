@@ -4,6 +4,7 @@ import akka.Done
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream.RestartSettings
 import akka.stream.Supervision
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckFlow, SqsSource}
 import akka.stream.alpakka.sqs.{MessageAction, SqsSourceSettings}
@@ -82,7 +83,7 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
     }
 
     RestartSource
-      .withBackoff(3.second, 30.seconds, 0.2)(() => SqsSource(settings.queueUrl, sqsSourceSettings))
+      .withBackoff(RestartSettings(3.second, 30.seconds, 0.2))(() => SqsSource(settings.queueUrl, sqsSourceSettings))
       .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
       .mapAsync(settings.parallelism) { implicit message =>
         logger.debug(s"Received message from SQS. message=$message ")
