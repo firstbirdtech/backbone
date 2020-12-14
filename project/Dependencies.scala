@@ -5,7 +5,7 @@ object Dependencies {
 
   private[this] val alpakkaVersion               = "2.0.2"
   private[this] val akkaVersion                  = "2.6.10"
-  private[this] val catsVersion                  = "2.2.0"
+  private[this] val catsVersion                  = "2.3.0"
   private[this] val circeVersion                 = "0.13.0"
   private[this] val elasticMqVersion             = "1.0.0"
   private[this] val gsonVersion                  = "2.8.6"
@@ -15,7 +15,7 @@ object Dependencies {
   private[this] val mockitoScalaVersion          = "1.16.3"
   private[this] val playJsonVersion              = "2.9.1"
   private[this] val scalaTestVersion             = "3.2.3"
-  private[this] val scalaCollectionCompatVersion = "2.2.0"
+  private[this] val scalaCollectionCompatVersion = "2.3.0"
   private[this] val slf4jVersion                 = "1.7.30"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
