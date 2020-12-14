@@ -1,0 +1,9 @@
+pull_request_rules:
+  - name: merge scala-steward PRs
+    conditions:
+      - "author=scala-steward"
+      - "status-success=jdk-8 tests"
+      - "status-success=jdk-11 tests"
+    actions:
+      merge:
+        method: squash
