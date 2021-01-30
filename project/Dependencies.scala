@@ -15,7 +15,7 @@ object Dependencies {
   private[this] val mockitoScalaVersion          = "1.16.15"
   private[this] val playJsonVersion              = "2.9.2"
   private[this] val scalaTestVersion             = "3.2.3"
-  private[this] val scalaCollectionCompatVersion = "2.4.0"
+  private[this] val scalaCollectionCompatVersion = "2.4.1"
   private[this] val slf4jVersion                 = "1.7.30"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
