@@ -1,7 +1,5 @@
 package backbone.testutil
 
-import java.net.URI
-
 import com.github.matsluni.akkahttpspi.AkkaHttpClient
 import org.elasticmq.rest.sqs.{SQSRestServer, SQSRestServerBuilder}
 import org.scalatest._
@@ -15,9 +13,10 @@ import software.amazon.awssdk.services.sqs.model.{
   QueueAttributeName
 }
 
-import scala.jdk.CollectionConverters._
+import java.net.URI
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.{Await, Future}
+import scala.jdk.CollectionConverters._
 
 trait ElasticMQ extends TestSuiteMixin with BeforeAndAfterEach with BeforeAndAfterAll {
   this: TestSuite with BaseTest with TestActorSystem =>

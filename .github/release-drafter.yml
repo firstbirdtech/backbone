@@ -1,4 +1,8 @@
 template: |
-  ## Pull Requests
+  ## What's changed
   
   $CHANGES
+
+  ## Contributors
+  
+  $CONTRIBUTORS

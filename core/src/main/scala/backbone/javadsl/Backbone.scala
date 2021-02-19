@@ -1,8 +1,25 @@
-package backbone.javadsl
+/*
+ * Copyright (c) 2021 Backbone contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-import java.util.concurrent.{CompletableFuture, CompletionStage}
-import java.util.function.{Function => JFunction1}
-import java.util.{List => JList}
+package backbone.javadsl
 
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
@@ -14,8 +31,11 @@ import backbone.{MessageReader, scaladsl, _}
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
-import scala.jdk.CollectionConverters._
+import java.util.concurrent.{CompletableFuture, CompletionStage}
+import java.util.function.{Function => JFunction1}
+import java.util.{List => JList}
 import scala.compat.java8.{FunctionConverters, FutureConverters}
+import scala.jdk.CollectionConverters._
 
 /**
  * Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue,
