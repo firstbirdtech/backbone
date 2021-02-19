@@ -1,7 +1,7 @@
 package backbone.testutil
 
-import backbone.{MandatoryMessageReader, MessageReader}
 import backbone.json.{JsonReader, SnsEnvelope}
+import backbone.{MandatoryMessageReader, MessageReader}
 import io.circe.{Decoder, Encoder}
 
 import scala.util.Try
