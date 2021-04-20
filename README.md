@@ -108,7 +108,6 @@ val awsAkkaHttpClient = AkkaHttpClient
   .withConnectionPoolSettings(
       ConnectionPoolSettings(system)
         .withMaxConnections(???)
-        .withUpdatedConnectionSettings(_.withConnectingTimeout(???))
   )
   .build()
 
@@ -145,8 +144,8 @@ val f1: Future[PublishResult] = backbone.publishAsync[String]("send this to sns"
 > should be at least >= the number of consumers that run simultaneously + considering other usages of the same shared
 > AkkaHttpClient (e.g. publishers).
 >
-> If you use long polling (configured by default with the waitTimeSeconds setting) the connecting timeout of the 
-> AkkaHttpClient may need to be adapted as well. AWS explicitly mentions
+> If you use long polling (configured by default with the waitTimeSeconds setting) the request timeout of the 
+> AkkaHttpClient (https://doc.akka.io/docs/akka-http/current/common/timeouts.html) may need to be adapted as well. AWS explicitly mentions
 > [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-long-polling.html) that the request
 > timeout should be larger than the maximum long polling time, otherwise requests may time out.
 
