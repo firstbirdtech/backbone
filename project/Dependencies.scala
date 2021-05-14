@@ -9,7 +9,7 @@ object Dependencies {
   private[this] val circeVersion                 = "0.13.0"
   private[this] val elasticMqVersion             = "1.0.0"
   private[this] val gsonVersion                  = "2.8.6"
-  private[this] val java8CompatVersion           = "0.9.1"
+  private[this] val java8CompatVersion           = "1.0.0"
   private[this] val junitVersion                 = "4.13.2"
   private[this] val logbackVersion               = "1.2.3"
   private[this] val mockitoScalaVersion          = "1.16.37"
