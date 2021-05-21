@@ -19,7 +19,7 @@ lazy val commonSettings = Seq(
     url("https://github.com/firstbirdtech/backbone/graphs/contributors")
   ),
   scalaVersion := "2.13.6",
-  crossScalaVersions := Seq("2.12.11", scalaVersion.value),
+  crossScalaVersions := Seq("2.12.13", scalaVersion.value),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
