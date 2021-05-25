@@ -1,8 +1,9 @@
 # Backbone
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.firstbird/backbone-core_2.13/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccom.firstbird)
-![](https://github.com/firstbirdtech/backbone/workflows/CI/badge.svg)
+[![Maven Central](https://img.shields.io/maven-central/v/com.firstbird/backbone-core_2.13.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.firstbird%22%20AND%20a:%22backbone-core_2.13%22)
+[![Github Actions CI Workflow](https://github.com/firstbirdtech/backbone/workflows/CI/badge.svg)](https://github.com/firstbirdtech/backbone/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/firstbirdtech/backbone/branch/master/graph/badge.svg)](https://codecov.io/gh/firstbirdtech/backbone)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
 
 
@@ -107,7 +108,6 @@ val awsAkkaHttpClient = AkkaHttpClient
   .withConnectionPoolSettings(
       ConnectionPoolSettings(system)
         .withMaxConnections(???)
-        .withUpdatedConnectionSettings(_.withConnectingTimeout(???))
   )
   .build()
 
@@ -144,8 +144,8 @@ val f1: Future[PublishResult] = backbone.publishAsync[String]("send this to sns"
 > should be at least >= the number of consumers that run simultaneously + considering other usages of the same shared
 > AkkaHttpClient (e.g. publishers).
 >
-> If you use long polling (configured by default with the waitTimeSeconds setting) the connecting timeout of the 
-> AkkaHttpClient may need to be adapted as well. AWS explicitly mentions
+> If you use long polling (configured by default with the waitTimeSeconds setting) the request timeout of the 
+> AkkaHttpClient (https://doc.akka.io/docs/akka-http/current/common/timeouts.html) may need to be adapted as well. AWS explicitly mentions
 > [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-long-polling.html) that the request
 > timeout should be larger than the maximum long polling time, otherwise requests may time out.
 

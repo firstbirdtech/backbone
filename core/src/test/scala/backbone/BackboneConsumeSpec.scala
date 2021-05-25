@@ -1,5 +1,6 @@
 package backbone
 
+import akka.stream.alpakka.sqs.SqsSourceSettings
 import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.json.SnsEnvelope
 import backbone.scaladsl.Backbone
@@ -15,7 +16,6 @@ import scala.compat.java8.FutureConverters._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.Success
-import akka.stream.alpakka.sqs.SqsSourceSettings
 
 class BackboneConsumeSpec
     extends AnyWordSpec

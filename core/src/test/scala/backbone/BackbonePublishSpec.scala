@@ -1,7 +1,5 @@
 package backbone
 
-import java.net.URI
-
 import akka.Done
 import akka.stream.scaladsl.Source
 import backbone.format.DefaultMessageWrites
@@ -16,6 +14,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
+import java.net.URI
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

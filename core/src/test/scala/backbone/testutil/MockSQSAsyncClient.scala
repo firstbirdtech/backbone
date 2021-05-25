@@ -1,12 +1,11 @@
 package backbone.testutil
 
-import java.util.concurrent.CompletableFuture
-
 import org.mockito.Mockito
 import org.scalatest.{Outcome, TestSuite, TestSuiteMixin}
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
 
+import java.util.concurrent.CompletableFuture
 import scala.jdk.CollectionConverters._
 
 trait MockSQSAsyncClient extends TestSuiteMixin { this: TestSuite with BaseTest =>
