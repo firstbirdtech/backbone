@@ -11,7 +11,7 @@ object Dependencies {
   private[this] val gsonVersion                  = "2.8.8"
   private[this] val java8CompatVersion           = "0.9.1"
   private[this] val junitVersion                 = "4.13.2"
-  private[this] val logbackVersion               = "1.2.5"
+  private[this] val logbackVersion               = "1.2.6"
   private[this] val mockitoScalaVersion          = "1.16.39"
   private[this] val playJsonVersion              = "2.9.2"
   private[this] val scalaTestVersion             = "3.2.9"
