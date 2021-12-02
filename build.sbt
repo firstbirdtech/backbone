@@ -42,7 +42,7 @@ lazy val commonSettings = Seq(
     "-Xlint:deprecation"
   ),
   // show full stack traces and test case durations
-  testOptions in Test += Tests.Argument("-oDF"),
+  Test / testOptions += Tests.Argument("-oDF"),
   headerLicense := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
   semanticdbEnabled := true,
   semanticdbVersion := scalafixSemanticdb.revision
@@ -51,7 +51,7 @@ lazy val commonSettings = Seq(
 lazy val backbone = project
   .in(file("."))
   .settings(commonSettings)
-  .settings(skip in publish := true)
+  .settings(publish / skip := true)
   .aggregate(core, playJson, circe, gson)
 
 lazy val core = project
@@ -59,7 +59,8 @@ lazy val core = project
   .settings(commonSettings)
   .settings(
     name := "backbone-core",
-    libraryDependencies ++= Dependencies.core
+    libraryDependencies ++= Dependencies.core,
+    dependencyOverrides ++= Dependencies.coreOverrides
   )
 
 lazy val playJson = project
