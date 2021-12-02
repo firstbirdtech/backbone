@@ -27,7 +27,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.javadsl.Sink
 import backbone.consumer.ConsumerSettings
 import backbone.publisher.PublisherSettings
-import backbone.{MessageReader, scaladsl, _}
+import backbone.{scaladsl, MessageReader, _}
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 

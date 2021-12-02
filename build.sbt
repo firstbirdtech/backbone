@@ -46,7 +46,7 @@ lazy val commonSettings = Seq(
   ),
   // show full stack traces and test case durations
   Test / testOptions += Tests.Argument("-oDF"),
-  headerLicense := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
+  headerLicense     := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
   semanticdbEnabled := true,
   semanticdbVersion := scalafixSemanticdb.revision
 )
