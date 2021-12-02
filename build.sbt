@@ -1,6 +1,6 @@
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-// akka-actor 2.12 depends on version < 1.z, but 0.x and 1.x are still binary compatible
+// akka-actor 2.12 depends on version < 1.x, but 0.x and 1.x are still binary compatible
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-java8-compat" % "always"
 
 addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
