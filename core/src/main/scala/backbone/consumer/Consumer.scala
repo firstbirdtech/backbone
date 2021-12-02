@@ -57,10 +57,14 @@ object Consumer {
 /**
  * Consumes events from a queue.
  *
- * @param settings consumer settings
- * @param system   implicit ActorSystem
- * @param jr       a Json Reader implementation which
- * @param sqs      implicit AmazonSQSAsyncClient
+ * @param settings
+ *   consumer settings
+ * @param system
+ *   implicit ActorSystem
+ * @param jr
+ *   a Json Reader implementation which
+ * @param sqs
+ *   implicit AmazonSQSAsyncClient
  */
 class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsyncClient, jr: JsonReader)
     extends AmazonSqsOps {
@@ -79,10 +83,14 @@ class Consumer(settings: Settings)(implicit system: ActorSystem, val sqs: SqsAsy
    *
    * After successfully processing elements of type T they are removed from the queue.
    *
-   * @param f  function which processes objects of type T and returns a ProcessingResult
-   * @param fo Format[T] typeclass instance describing how to decode SQS Message to T
-   * @tparam T type of events to consume
-   * @return a future completing when the stream quits
+   * @param f
+   *   function which processes objects of type T and returns a ProcessingResult
+   * @param fo
+   *   Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T
+   *   type of events to consume
+   * @return
+   *   a future completing when the stream quits
    */
   def consumeAsync[T](f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
 

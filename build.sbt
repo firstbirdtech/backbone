@@ -7,10 +7,10 @@ addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
 addCommandAlias("codeVerify", ";scalafmtCheckAll;scalafmtSbtCheck;scalafixAll --check;headerCheck")
 
 lazy val commonSettings = Seq(
-  organization := "com.firstbird",
-  organizationName := "Firstbird GmbH",
+  organization        := "com.firstbird",
+  organizationName    := "Firstbird GmbH",
   sonatypeProfileName := "com.firstbird",
-  homepage := Some(url("https://github.com/firstbirdtech/backbone")),
+  homepage            := Some(url("https://github.com/firstbirdtech/backbone")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   scmInfo := Some(
     ScmInfo(homepage.value.get, "scm:git:https://github.com/firstbirdtech/backbone.git")
@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
     "hello@firstbird.com",
     url("https://github.com/firstbirdtech/backbone/graphs/contributors")
   ),
-  scalaVersion := "2.13.7",
+  scalaVersion       := "2.13.7",
   crossScalaVersions := Seq("2.12.15", scalaVersion.value),
   scalacOptions ++= Seq(
     "-deprecation",
@@ -46,7 +46,7 @@ lazy val commonSettings = Seq(
   ),
   // show full stack traces and test case durations
   Test / testOptions += Tests.Argument("-oDF"),
-  headerLicense := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
+  headerLicense     := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
   semanticdbEnabled := true,
   semanticdbVersion := scalafixSemanticdb.revision
 )

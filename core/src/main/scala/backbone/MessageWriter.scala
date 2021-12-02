@@ -28,8 +28,10 @@ package backbone
 trait MessageWriter[T] {
 
   /**
-   * @param message message to be written as String
-   * @return String write from the message
+   * @param message
+   *   message to be written as String
+   * @return
+   *   String write from the message
    */
   def write(message: T): String
 
