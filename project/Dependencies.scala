@@ -3,13 +3,13 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val alpakkaVersion               = "2.0.2"
-  private[this] val akkaVersion                  = "2.6.10"
+  private[this] val alpakkaVersion               = "3.0.4"
+  private[this] val akkaVersion                  = "2.6.17"
   private[this] val catsVersion                  = "2.7.0"
   private[this] val circeVersion                 = "0.14.1"
   private[this] val elasticMqVersion             = "1.0.0"
   private[this] val gsonVersion                  = "2.8.9"
-  private[this] val java8CompatVersion           = "0.9.1"
+  private[this] val java8CompatVersion           = "1.0.2"
   private[this] val junitVersion                 = "4.13.2"
   private[this] val logbackVersion               = "1.2.7"
   private[this] val mockitoScalaVersion          = "1.16.46"
@@ -39,6 +39,10 @@ object Dependencies {
     "org.mockito"            %% "mockito-scala"           % mockitoScalaVersion % Test,
     "junit"                   % "junit"                   % junitVersion        % Test
   ) ++ testDependencies
+
+  val coreOverrides: Seq[ModuleID] = Seq(
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+  )
 
   val jsonCirce: Seq[ModuleID] = Seq(
     "io.circe" %% "circe-parser" % circeVersion,
