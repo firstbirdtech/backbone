@@ -37,7 +37,7 @@ class BackboneConsumeSpec
         r <- sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName("queue-name-1").build()).toScala
       } yield r
 
-      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/queue/queue-name-1") }
+      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/000000000000/queue-name-1") }
     }
 
     "create an encrypted queue with the configured name and kms key alias" in {
@@ -55,7 +55,7 @@ class BackboneConsumeSpec
         r <- sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName("queue-name-2").build()).toScala
       } yield r
 
-      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/queue/queue-name-2") }
+      whenReady(result) { res => res.queueUrl must be("http://localhost:9324/000000000000/queue-name-2") }
     }
 
     "fail parsing a wrongly formatted message and keep in on the queue" in {
