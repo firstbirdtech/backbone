@@ -1,5 +1,8 @@
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
+// akka-actor 2.12 depends on version < 1.x, but 0.x and 1.x are still binary compatible
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-java8-compat" % "always"
+
 addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
 addCommandAlias("codeVerify", ";scalafmtCheckAll;scalafmtSbtCheck;scalafixAll --check;headerCheck")
 
@@ -42,7 +45,7 @@ lazy val commonSettings = Seq(
     "-Xlint:deprecation"
   ),
   // show full stack traces and test case durations
-  testOptions in Test += Tests.Argument("-oDF"),
+  Test / testOptions += Tests.Argument("-oDF"),
   headerLicense := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
   semanticdbEnabled := true,
   semanticdbVersion := scalafixSemanticdb.revision
@@ -51,7 +54,7 @@ lazy val commonSettings = Seq(
 lazy val backbone = project
   .in(file("."))
   .settings(commonSettings)
-  .settings(skip in publish := true)
+  .settings(publish / skip := true)
   .aggregate(core, playJson, circe, gson)
 
 lazy val core = project
@@ -59,7 +62,8 @@ lazy val core = project
   .settings(commonSettings)
   .settings(
     name := "backbone-core",
-    libraryDependencies ++= Dependencies.core
+    libraryDependencies ++= Dependencies.core,
+    dependencyOverrides ++= Dependencies.coreOverrides
   )
 
 lazy val playJson = project
