@@ -34,8 +34,10 @@ import scala.util.Try
 trait MessageReader[T] {
 
   /**
-   * @param s String to be read as T
-   * @return T read from the String.
+   * @param s
+   *   String to be read as T
+   * @return
+   *   T read from the String.
    */
   def read(s: String): Try[Option[T]]
 }
@@ -49,8 +51,8 @@ object MessageReader {
 }
 
 /**
- * This is an alternative object containing the same factory methods as MessageReader companion object.
- * This is needed for Java interop
+ * This is an alternative object containing the same factory methods as MessageReader companion object. This is needed
+ * for Java interop
  */
 object OptionalMessageReader {
   def apply[T](f: String => Try[Option[T]]): MessageReader[T]       = MessageReader(f)
@@ -58,8 +60,8 @@ object OptionalMessageReader {
 }
 
 /**
- * This object contains factory methods creating MessageReader instances that assume that in every case a
- * parsed message is returned or the parsing fails.
+ * This object contains factory methods creating MessageReader instances that assume that in every case a parsed message
+ * is returned or the parsing fails.
  */
 object MandatoryMessageReader {
   def apply[T](f: String => Try[T]): MessageReader[T]      = MessageReader(s => f(s).map(Option(_)))
