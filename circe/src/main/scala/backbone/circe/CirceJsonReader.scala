@@ -22,20 +22,21 @@
 package backbone.circe
 
 import backbone.circe.CirceJsonReader._
-import backbone.json.{JsonReader, SnsEnvelope}
+import backbone.consumer.JsonReader
 import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.parser._
 import org.slf4j.LoggerFactory
 
 object CirceJsonReader {
-  implicit val decodeSnsEnvelope: Decoder[SnsEnvelope] = Decoder.forProduct1("Message")(SnsEnvelope)
+  implicit val decodeSnsEnvelope: Decoder[JsonReader.SnsEnvelope] =
+    Decoder.forProduct1("Message")(JsonReader.SnsEnvelope)
 }
 
 class CirceJsonReader extends JsonReader {
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  override def readSnsEnvelope(s: String): Option[SnsEnvelope] = {
+  override def readSnsEnvelope(s: String): Option[JsonReader.SnsEnvelope] = {
     for {
       json <- parse(s)
         .map(_.some)
@@ -45,7 +46,7 @@ class CirceJsonReader extends JsonReader {
         })
       envelope <-
         json
-          .as[SnsEnvelope]
+          .as[JsonReader.SnsEnvelope]
           .map(Some(_))
           .valueOr(f => {
             logger.error(s"Unable to decode to SnsEnvelope. message=$s, reason=${f.message}")

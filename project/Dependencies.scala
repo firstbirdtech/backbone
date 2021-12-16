@@ -3,54 +3,62 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val alpakkaVersion               = "3.0.4"
-  private[this] val akkaVersion                  = "2.6.17"
-  private[this] val catsVersion                  = "2.7.0"
-  private[this] val circeVersion                 = "0.14.1"
-  private[this] val elasticMqVersion             = "1.3.3"
-  private[this] val gsonVersion                  = "2.8.9"
-  private[this] val java8CompatVersion           = "1.0.2"
-  private[this] val junitVersion                 = "4.13.2"
-  private[this] val logbackVersion               = "1.2.7"
-  private[this] val mockitoScalaVersion          = "1.16.46"
-  private[this] val playJsonVersion              = "2.9.2"
-  private[this] val scalaTestVersion             = "3.2.10"
-  private[this] val scalaCollectionCompatVersion = "2.6.0"
-  private[this] val slf4jVersion                 = "1.7.32"
+  private[this] val alpakkaVersion        = "3.0.4"
+  private[this] val akkaVersion           = "2.6.17"
+  private[this] val circeVersion          = "0.14.1"
+  private[this] val logbackClassicVersion = "1.2.8"
+  private[this] val scalaTestVersion      = "3.2.10"
+  private[this] val slf4jVersion          = "1.7.32"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % logbackVersion   % Test,
-    "org.scalatest" %% "scalatest"       % scalaTestVersion % Test
+    "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
+    "org.scalatest" %% "scalatest"       % scalaTestVersion      % Test
   )
 
   val core: Seq[ModuleID] = Seq(
-    "com.typesafe.akka"      %% "akka-actor"              % akkaVersion,
-    "com.typesafe.akka"      %% "akka-stream"             % akkaVersion,
-    "com.lightbend.akka"     %% "akka-stream-alpakka-sqs" % alpakkaVersion,
-    "com.lightbend.akka"     %% "akka-stream-alpakka-sns" % alpakkaVersion,
-    "org.typelevel"          %% "cats-core"               % catsVersion,
-    "org.scala-lang.modules" %% "scala-collection-compat" % scalaCollectionCompatVersion,
-    "org.scala-lang.modules" %% "scala-java8-compat"      % java8CompatVersion,
-    "org.slf4j"               % "slf4j-api"               % slf4jVersion,
-    "org.elasticmq"          %% "elasticmq-rest-sqs"      % elasticMqVersion    % Test,
-    "io.circe"               %% "circe-parser"            % circeVersion        % Test,
-    "io.circe"               %% "circe-core"              % circeVersion        % Test,
-    "com.typesafe.akka"      %% "akka-testkit"            % akkaVersion         % Test,
-    "org.mockito"            %% "mockito-scala"           % mockitoScalaVersion % Test,
-    "junit"                   % "junit"                   % junitVersion        % Test
+    "org.slf4j" % "slf4j-api" % slf4jVersion,
+    "junit"     % "junit"     % "4.13.2" % Test
   ) ++ testDependencies
 
-  val coreOverrides: Seq[ModuleID] = Seq(
-    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
-  )
+  val consumer: Seq[ModuleID] = Seq(
+    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
+    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
+    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion
+  ) ++ testDependencies
+
+  val publisher: Seq[ModuleID] = Seq(
+    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
+    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
+    "com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion
+  ) ++ testDependencies
 
   val jsonCirce: Seq[ModuleID] = Seq(
     "io.circe" %% "circe-parser" % circeVersion,
     "io.circe" %% "circe-core"   % circeVersion
   ) ++ testDependencies
 
-  val jsonPlay: Seq[ModuleID] = Seq("com.typesafe.play" %% "play-json" % playJsonVersion) ++ testDependencies
+  val jsonPlay: Seq[ModuleID] = Seq(
+    "com.typesafe.play" %% "play-json" % "2.9.2"
+  ) ++ testDependencies
 
-  val jsonGson: Seq[ModuleID] = Seq("com.google.code.gson" % "gson" % gsonVersion) ++ testDependencies
+  val jsonGson: Seq[ModuleID] = Seq(
+    "com.google.code.gson" % "gson" % "2.8.9"
+  ) ++ testDependencies
+
+  val testutils: Seq[ModuleID] = Seq(
+    "com.github.matsluni"   %% "aws-spi-akka-http"  % "0.0.11",
+    "com.github.sbt"         % "junit-interface"    % "0.13.2",
+    "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
+    "io.circe"              %% "circe-parser"       % circeVersion,
+    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.3",
+    "org.mockito"           %% "mockito-scala"      % "1.16.46",
+    "org.scalatest"         %% "scalatest"          % scalaTestVersion,
+    "software.amazon.awssdk" % "sqs"                % "2.17.99"
+  )
+
+  val integrationtest: Seq[ModuleID] = Seq(
+    "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
+    "ch.qos.logback"     % "logback-classic" % logbackClassicVersion
+  )
 
 }

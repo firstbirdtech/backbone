@@ -26,11 +26,12 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Sink
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps, CreateQueueParams}
-import backbone.consumer.{Consumer, ConsumerSettings}
-import backbone.json.JsonReader
-import backbone.publisher.{Publisher, PublisherSettings}
+import backbone.consumer.ConsumerSettings
+import backbone.consumer.scaladsl.Consumer
+import backbone.publisher.PublisherSettings
+import backbone.publisher.scaladsl.Publisher
 import backbone.scaladsl.Backbone.QueueInformation
-import backbone.{MessageReader, MessageWriter, ProcessingResult}
+import backbone.{MessageReader, MessageWriter, ProcessingResult, consumer, publisher}
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -40,15 +41,14 @@ import scala.util.{Failure, Success}
 
 object Backbone {
 
-  case class QueueInformation(url: String, arn: String)
+  final case class QueueInformation(url: String, arn: String)
 
-  def apply()(implicit sqs: SqsAsyncClient, sns: SnsAsyncClient, system: ActorSystem): Backbone =
-    new Backbone()
+  def apply()(implicit sqs: SqsAsyncClient, sns: SnsAsyncClient, system: ActorSystem): Backbone = new Backbone()
 
 }
 
 /**
- * Subscribing to certain kinds of events from various SNS topics and consume them via a Amazon SQS queue, and publish
+ * Subscribing to certain kinds of messages from various SNS topics and consume them via a Amazon SQS queue, and publish
  * messages to an Amazon SNS topic.
  *
  * @param sqs
@@ -62,14 +62,10 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
     extends AmazonSqsOps
     with AmazonSnsOps {
 
-  private[this] val logger          = LoggerFactory.getLogger(getClass)
-  private[this] val config          = system.settings.config
-  private[this] val jsonReaderClass = Class.forName(config.getString("backbone.json.reader"))
-  private[this] implicit val jsonReader: JsonReader =
-    jsonReaderClass.getDeclaredConstructor().newInstance().asInstanceOf[JsonReader]
+  private[this] val logger = LoggerFactory.getLogger(getClass)
 
   /**
-   * Consume elements of type T until an optional condition in ConsumerSettings is met.
+   * Consume messages of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes the queue to all
    * provided topics and modifies the AWS Policy to allow sending messages to the queue from the topics.
@@ -77,11 +73,11 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
    * @param settings
    *   ConsumerSettings configuring Backbone
    * @param f
-   *   function which processes objects of type T and returns a ProcessingResult
+   *   function which processes messages of type T and returns a ProcessingResult
    * @param fo
    *   Format[T] typeclass instance describing how to decode SQS Message to T
    * @tparam T
-   *   type of events to consume
+   *   type of message to consume
    * @return
    *   a future completing when the stream quits
    */
@@ -90,7 +86,7 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   }
 
   /**
-   * Consume elements of type T until an optional condition in ConsumerSettings is met.
+   * Consume messages of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes the queue to all
    * provided topics and modifies the AWS Policy to allow sending messages to the queue from the topics.
@@ -98,11 +94,11 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
    * @param settings
    *   ConsumerSettings configuring Backbone
    * @param f
-   *   function which processes objects of type T and returns a Future[ProcessingResult]
+   *   function which processes messages of type T and returns a Future[ProcessingResult]
    * @param fo
    *   Format[T] typeclass instance describing how to decode SQS Message to T
    * @tparam T
-   *   type of events to consume
+   *   type of message to consume
    * @return
    *   a future completing when the stream quits
    */
@@ -125,8 +121,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
 
     val result = for {
       queue <- subscription
-      set = Consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
-      r <- new Consumer(set).consumeAsync(f)
+      set = consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
+      r <- Consumer().consumeAsync[T](set)(f)
     } yield r
 
     result.onComplete {
@@ -138,7 +134,7 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   }
 
   /**
-   * Publish a single element of type T to an AWS SNS topic.
+   * Publish a single message of type T to an AWS SNS topic.
    *
    * @param message
    *   the message to publish
@@ -152,11 +148,12 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
    *   a future completing when the stream quits
    */
   def publishAsync[T](message: T, settings: PublisherSettings)(implicit mw: MessageWriter[T]): Future[Done] = {
-    new Publisher(Publisher.Settings(settings.topicArn)).publishAsync(message :: Nil)
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().publishAsync[T](publisherSettings)(message)
   }
 
   /**
-   * Publish a list of elements of type T to an AWS SNS topic.
+   * Publish a list of messages of type T to an AWS SNS topic.
    *
    * @param messages
    *   the messages to publish
@@ -170,11 +167,12 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
    *   a future completing when the stream quits
    */
   def publishAsync[T](messages: List[T], settings: PublisherSettings)(implicit mw: MessageWriter[T]): Future[Done] = {
-    new Publisher(Publisher.Settings(settings.topicArn)).publishAsync(messages)
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().publishAsync[T](publisherSettings)(messages: _*)
   }
 
   /**
-   * An actor reference that publishes received elements of type T to an AWS SNS topic.
+   * An actor reference that publishes received messages of type T to an AWS SNS topic.
    *
    * @param settings
    *   PublisherSettings configuring Backbone
@@ -194,7 +192,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
       bufferSize: Int = Int.MaxValue,
       overflowStrategy: OverflowStrategy = OverflowStrategy.dropHead
   )(implicit mw: MessageWriter[T]): ActorRef = {
-    new Publisher(Publisher.Settings(settings.topicArn)).actor(bufferSize, overflowStrategy)
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().actor[T](publisherSettings)(bufferSize, overflowStrategy)
   }
 
   /**
@@ -210,7 +209,8 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
    *   a Sink that publishes received messages
    */
   def publisherSink[T](settings: PublisherSettings)(implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
-    new Publisher(Publisher.Settings(settings.topicArn)).sink
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().sink[T](publisherSettings)
   }
 
   private[this] def subscribe(queue: QueueInformation, topics: List[String])(implicit

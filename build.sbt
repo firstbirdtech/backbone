@@ -1,8 +1,5 @@
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-// akka-actor 2.12 depends on version < 1.x, but 0.x and 1.x are still binary compatible
-ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-java8-compat" % "always"
-
 addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
 addCommandAlias("codeVerify", ";scalafmtCheckAll;scalafmtSbtCheck;scalafixAll --check;headerCheck")
 
@@ -22,7 +19,7 @@ lazy val commonSettings = Seq(
     url("https://github.com/firstbirdtech/backbone/graphs/contributors")
   ),
   scalaVersion       := "2.13.7",
-  crossScalaVersions := Seq("2.12.15", scalaVersion.value),
+  crossScalaVersions := Seq(scalaVersion.value),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
@@ -32,13 +29,9 @@ lazy val commonSettings = Seq(
     "-language:higherKinds",
     "-unchecked",
     "-Xcheckinit",
-    "-Xfatal-warnings"
-  ),
-  scalacOptions ++= (
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-Wdead-code", "-Wunused:imports")
-      case _             => Seq("-Xfuture", "-Ywarn-dead-code", "-Ywarn-unused:imports", "-Yno-adapted-args")
-    }
+    "-Xfatal-warnings",
+    "-Wdead-code",
+    "-Wunused:imports"
   ),
   javacOptions ++= Seq(
     "-Xlint:unchecked",
@@ -46,25 +39,44 @@ lazy val commonSettings = Seq(
   ),
   // show full stack traces and test case durations
   Test / testOptions += Tests.Argument("-oDF"),
-  headerLicense     := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
-  semanticdbEnabled := true,
-  semanticdbVersion := scalafixSemanticdb.revision
+  Test / parallelExecution := false,
+  headerLicense            := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
+  semanticdbEnabled        := true,
+  semanticdbVersion        := scalafixSemanticdb.revision
 )
 
 lazy val backbone = project
   .in(file("."))
   .settings(commonSettings)
   .settings(publish / skip := true)
-  .aggregate(core, playJson, circe, gson)
+  .aggregate(core, consumer, publisher, playJson, circe, gson, testutils, integrationtest)
 
 lazy val core = project
   .in(file("core"))
   .settings(commonSettings)
   .settings(
     name := "backbone-core",
-    libraryDependencies ++= Dependencies.core,
-    dependencyOverrides ++= Dependencies.coreOverrides
+    libraryDependencies ++= Dependencies.core
   )
+  .dependsOn(consumer, publisher, testutils % Test)
+
+lazy val consumer = project
+  .in(file("consumer"))
+  .settings(commonSettings)
+  .settings(
+    name := "backbone-consumer",
+    libraryDependencies ++= Dependencies.consumer
+  )
+  .dependsOn(testutils % Test)
+
+lazy val publisher = project
+  .in(file("publisher"))
+  .settings(commonSettings)
+  .settings(
+    name := "backbone-publisher",
+    libraryDependencies ++= Dependencies.publisher
+  )
+  .dependsOn(testutils % Test)
 
 lazy val playJson = project
   .in(file("playJson"))
@@ -73,7 +85,7 @@ lazy val playJson = project
     name := "backbone-play-json",
     libraryDependencies ++= Dependencies.jsonPlay
   )
-  .dependsOn(core)
+  .dependsOn(consumer)
 
 lazy val circe = project
   .in(file("circe"))
@@ -82,7 +94,7 @@ lazy val circe = project
     name := "backbone-circe",
     libraryDependencies ++= Dependencies.jsonCirce
   )
-  .dependsOn(core)
+  .dependsOn(consumer)
 
 lazy val gson = project
   .in(file("gson"))
@@ -91,4 +103,24 @@ lazy val gson = project
     name := "backbone-gson",
     libraryDependencies ++= Dependencies.jsonGson
   )
-  .dependsOn(core)
+  .dependsOn(consumer)
+
+lazy val testutils = project
+  .in(file("testutils"))
+  .settings(commonSettings)
+  .settings(
+    name := "backbone-testutils",
+    libraryDependencies ++= Dependencies.testutils,
+    publish / skip := true
+  )
+
+lazy val integrationtest = project
+  .in(file("integration-test"))
+  .settings(commonSettings)
+  .settings(
+    name := "backbone-integration-test",
+    libraryDependencies ++= Dependencies.integrationtest,
+    run / fork     := true,
+    publish / skip := true
+  )
+  .dependsOn(core, circe, consumer, publisher)

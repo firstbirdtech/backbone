@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Backbone Demo Stack
+Resources:
+
+  IAMUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref "AWS::StackName"
+      Policies:
+        - PolicyName: backbone-core-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sns:Publish"
+                  - "sns:Subscribe"
+                  - "sns:Unsubscribe"
+                Resource:
+                  - !Ref BackboneCoreTopic
+              - Effect: Allow
+                Action:
+                  - "sqs:CreateQueue"
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - "sqs:ReceiveMessage"
+                  - "sqs:DeleteMessage"
+                  - "sqs:GetQueueAttributes"
+                  - "sqs:SetQueueAttributes"
+                Resource:
+                  - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${AWS::StackName}-core-queue"
+        - PolicyName: backbone-consumer-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sqs:ReceiveMessage"
+                  - "sqs:DeleteMessage"
+                Resource:
+                  - !GetAtt BackboneConsumerPublisherQueue.Arn
+        - PolicyName: backbone-publisher-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sns:Publish"
+                Resource:
+                  - !Ref BackboneConsumerPublisherTopic
+
+  IAMUserAccessKey:
+    DependsOn: IAMUser
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref "AWS::StackName"
+
+  BackboneCoreTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-core-topic"
+
+  BackboneConsumerPublisherTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-consumerpublisher-topic"
+
+  BackboneConsumerPublisherQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-consumerpublisher-queue"
+
+  BackboneConsumerPublisherTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt BackboneConsumerPublisherQueue.Arn
+      TopicArn: !Ref BackboneConsumerPublisherTopic
+
+Outputs:
+  AwsRegion:
+    Description: The region where this stack is deployed to
+    Value: !Ref AWS::Region
+  AccessKeyId:
+    Description: IAM User access key id
+    Value: !Ref IAMUserAccessKey
+  SecretAccessKey:
+    Description: IAM User secret access key
+    Value: !GetAtt IAMUserAccessKey.SecretAccessKey
+  BackboneCoreTopic:
+    Description: SNS Topic ARN for the backbone-core module
+    Value: !Ref BackboneCoreTopic
+  BackboneConsumerPublisherTopic:
+    Description: SNS Topic ARN for the backbone-consumer/backbone-publisher module
+    Value: !Ref BackboneConsumerPublisherTopic
+  BackboneConsumerPublisherQueue:
+    Description: SQS queue URL for the backbone-consumer/backbone-publisher module
+    Value: !Ref BackboneConsumerPublisherQueue

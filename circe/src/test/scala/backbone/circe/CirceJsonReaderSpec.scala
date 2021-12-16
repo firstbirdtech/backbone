@@ -1,6 +1,6 @@
 package backbone.circe
 
-import backbone.json.SnsEnvelope
+import backbone.consumer.JsonReader
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 
@@ -15,7 +15,7 @@ class CirceJsonReaderSpec extends AnyFlatSpec with Matchers {
       |}
     """.stripMargin
 
-    reader.readSnsEnvelope(json) must contain(SnsEnvelope("test-message"))
+    reader.readSnsEnvelope(json) must contain(JsonReader.SnsEnvelope("test-message"))
   }
 
   it should "return None if it can not parse a sns envelope json string" in {

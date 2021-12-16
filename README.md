@@ -8,45 +8,200 @@
 
 
 Backbone is a durable publish-subscribe platform built on top of Amazon AWS SQS and Amazon AWS SNS utilizing
-Akka to stream events. This library currently is under active development, changes to the public API are still subject
+Akka to stream messages. This library currently is under active development, changes to the public API are still subject
 to change.
 
-Backbone provides nice high-level API for consuming events.
+Backbone provides nice high-level API for consuming messages:
 
 ```scala
-backbone.consume[String](settings){ str =>
+consumer.consume[String](settings){ str =>
     println(str)
     Consumed //or Rejected in case of an failure
 }
 ```
 
-## Quick Start
+There are three different main modules available:
+
+* backbone-consumer: Standalone consumer for streaming messages from SQS
+* backbone-publisher: Standalone publisher for publishing messages to SNS
+* backbone-core: Consumer and publisher for streaming messages (SQS) and publishing messages (SNS), including automatic SQS queue creation and SNS subscription 
+
+## backbone-consumer
 
 ### Installation
+
+To use backbone-consumer add the following dependency to your `build.sbt`.
+
+```scala
+libraryDependencies += "com.firstbird" %% "backbone-consumer"   % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-circe"      % "X.Y.Z" // or one of the JSON modules below
+```
+
+### JSON Modules
+
+The consumer module of backbone is completely independent of a JSON library (because there are many around in the JVM ecosystem).
+You can configure which library you want to use by adding one of the following to the classpath.
+
+```scala
+libraryDependencies += "com.firstbird" %% "backbone-circe"      % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-play-json"  % "X.Y.Z"
+libraryDependencies += "com.firstbird" %% "backbone-gson"       % "X.Y.Z"
+```
+
+### Usage
+
+To consume messages you have to specify the query url from which messages should be consumed. The `parallelism` parameter
+indicates how many messages are getting processed at a single time.
+
+To create an instance of `Consumer` the only things you need is an `SqsAsyncClient` and a running `ActorSystem` which are
+passed as implicit parameters.
+
+```scala
+import akka.actor._
+import backbone.consumer._
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+
+implicit val system   = ActorSystem()
+val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
+implicit val sqs      = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+
+val consumer = Consumer()
+
+val settings = Settings("<queue-url>", parallelism = 5)
+
+//You need to define a MessageReader that tells Backbone how to decode the message body of the AWS SNS Message
+implicit val messageReader = MessageReader(s => Success(Some(s)))
+
+//Synchronous API
+consumer.consume[String](settings){ _ =>
+    //process the message
+    Consumed
+}
+
+//Asynchronous API
+consumer.consumeAsync[String](settings){ _ =>
+  Future.succesful(Consumed)
+}
+```
+
+### AWS Policy
+
+To allow consuming messages via backbone the AWS user needs permissions to receive messages and
+delete messages (when consumed successfully) from the configured queue.
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1474984885000",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage"
+            ],
+            "Resource": [
+                "arn:aws:sqs:{awsRegion}:{awsAccountId}:{queueName}"
+            ]
+        }
+    ]
+}
+```
+
+## backbone-publisher
+
+### Installation
+
+To use backbone-publisher add the following dependency to your `build.sbt`.
+
+```scala
+libraryDependencies += "com.firstbird" %% "backbone-publisher" % "X.Y.Z"
+```
+
+### Usage
+
+backbone-publisher provides a couple of different methods which can be used to send messages to an AWS SNS Topic.
+Basically they behave the same but provide an interface for various technologies as: `Future`s, Akka Streams and
+Akka Actors.
+
+To create an instance of `Publisher` the only things you need is an `SnsAsyncClient` and a running `ActorSystem` which are
+passed as implicit parameters.
+
+```scala
+import akka.actor._
+import akka.stream._
+import backbone.publisher._
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+
+implicit val system   = ActorSystem()
+val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
+implicit val sns      = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+
+val publisher = Publisher()
+
+val settings = Settings("<topic-arn>")
+
+//You need to define a MessageWriter that tells Backbone how to encode the message body of the AWS SNS Message
+implicit val writer = MessageWriter(s => s)
+
+//Actor Publisher
+val actor: ActorRef = publisher.actor[String](settings)(bufferSize = Int.MaxValue, overflowStrategy = OverflowStrategy.dropHead)
+actor ! "send this to sns"
+
+//Akka Streams Sink
+implicit val mat = ActorMaterializer()
+
+val sink = publisher.sink[String](settings)
+Source.single("send this to sns").to(sink)
+
+//Async Publish
+val f: Future[PublishResult]  = publisher.publishAsync[String](settings)("send this to sns")
+val f1: Future[PublishResult] = publisher.publishAsync[String](settings)("send this to sns", "and this")
+```
+
+### AWS Policy
+
+To allow publishing of messages via Backbone the AWS user needs permissions to publish to the SNS topic.
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1474367067000",
+            "Effect": "Allow",
+            "Action": [
+                "sns:Publish"
+            ],
+            "Resource": [
+                "{topicArnToPublishTo}"
+            ]
+        }
+    ]
+}
+```
+
+## backbone-core
+
+This is a legacy module and shouldn't be used anymore for new projects as it won't be maintained anymore and 
+removed in the near future. Use `backbone-consumer` and `backbone-publisher` instead which allow to have full
+control over the used AWS resources.
+
+### Installation
+
 To use backbone add the following dependency to your `build.sbt`.
 ```scala
 libraryDependencies += "com.firstbird" %% "backbone-core"   % "X.Y.Z"
-libraryDependencies += "com.firstbird" %% "backbone-circe"  % "X.Y.Z" //or any other JSON library
+libraryDependencies += "com.firstbird" %% "backbone-circe"  % "X.Y.Z" // or any other JSON module (see backbone-consumer)
 ```
 
-Or add the dependency to your `pom.xml`.
-```xml
-<dependency>
-    <groupId>com.firstbird</groupId>
-    <artifactId>backbone-core_2.13</artifactId>
-    <version>X.Y.Z</version>
-</dependency>
-```
+### Consuming Usage
 
-### Consuming Events
+Same usage as the `backbone-consumer` except that you have to create an instance of `Backbone` instead of `Consumer`.
 
-To consume messages you have to specify the topics from which messages
-should be consumed and a queue name that should be subscribed to the topics. The `parallelism` parameter
-indicates how many messages are getting processed at a single time. To create an instance of `Backbone`
-the only things you need are the according Amazon clients and a running `ActorSystem` which are
-passed as implicit parameters.
-
-When consuming of messages starts, Backbone subscribes the SQS queue automatically to the SNS topics
+When consuming of messages starts, Backbone create the SQS queue, subscribes the queue automatically to the SNS topics
 and sets the needed permissions on SQS side to give permissions to the SNS topics to send messages
 to the queue.
 
@@ -55,13 +210,13 @@ import akka.actor._
 import backbone._
 import backbone.scaladsl._
 import com.github.matsluni.akkahttpspi.AkkaHttpClient
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
-implicit val system = ActorSystem()
+implicit val system   = ActorSystem()
 val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
-implicit val sns = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
-implicit val sqs = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val sns      = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val sqs      = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
 
 val backbone = Backbone()
 
@@ -75,8 +230,8 @@ val settings = ConsumerSettings(
 implicit val messageReader = MessageReader(s => Success(Some(s)))
 
 //Synchronous API
-backbone.consume[String](settings){ str =>
-    //process the event
+backbone.consume[String](settings){ _ =>
+    //process the message
     Consumed
 }
 
@@ -86,33 +241,23 @@ backbone.consumeAsync[String](settings){ _ =>
 }
 ```
 
-### Publishing Events
+### Publishing Usage
 
-Backbone provides a couple of different methods which can be used to send messages to a Amazon AWS SNS Topic.
-Basically they behave the same but provide an interface for various technologies as: `Future`s, Akka Streams,
-Akka Actors.
+Same usage as the `backbone-publisher` except that you have to create an instance of `Backbone` instead of `Publisher`.
 
 ```scala
 import akka.actor._
+import akka.stream._
 import backbone._
 import backbone.scaladsl._
 import com.github.matsluni.akkahttpspi.AkkaHttpClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 
-implicit val system = ActorSystem()
-
-val awsAkkaHttpClient = AkkaHttpClient
-  .builder()
-  .withActorSystem(system)
-  .withConnectionPoolSettings(
-      ConnectionPoolSettings(system)
-        .withMaxConnections(???)
-  )
-  .build()
-
-implicit val sns = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
-implicit val sqs = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val system   = ActorSystem()
+val awsAkkaHttpClient = AkkaHttpClient.builder().withActorSystem(system).build()
+implicit val sns      = SnsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
+implicit val sqs      = SqsAsyncClient.builder().httpClient(awsAkkaHttpClient).build()
 
 val backbone = Backbone()
 
@@ -132,29 +277,17 @@ val sink = backbone.publisherSink[String](publishSettings)
 Source.single("send this to sns").to(sink)
 
 //Async Publish
-val f: Future[PublishResult] = backbone.publishAsync[String]("send this to sns", publishSettings)
+val f: Future[PublishResult]  = backbone.publishAsync[String]("send this to sns", publishSettings)
 val f1: Future[PublishResult] = backbone.publishAsync[String]("send this to sns" :: "and this" :: Nil, publishSettings)
 ```
 
-> **_IMPORTANT NOTE:_**
->
-> The max connections of the AkkaHttpClient may need to be adapted depending on the number of consumers
-> and/or publishers your application runs with. Due to long polling requests no further connections might be
-> available which can lead to problems (e.g. unable to acknowledge messages fast enough). Therefore, the max connections
-> should be at least >= the number of consumers that run simultaneously + considering other usages of the same shared
-> AkkaHttpClient (e.g. publishers).
->
-> If you use long polling (configured by default with the waitTimeSeconds setting) the request timeout of the 
-> AkkaHttpClient (https://doc.akka.io/docs/akka-http/current/common/timeouts.html) may need to be adapted as well. AWS explicitly mentions
-> [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-long-polling.html) that the request
-> timeout should be larger than the maximum long polling time, otherwise requests may time out.
-
-## AWS Policies
+### AWS Policies
 
 To work properly the AWS user used for running Backbone needs special permission which are being set
 by following example policies.
 
-To allow publishing of events via Backbone the AWS user needs the right to publish to the SNS topic.
+To allow publishing of messages via Backbone the AWS user needs the right to publish to the SNS topic.
+
 ```json
 {
     "Version": "2012-10-17",
@@ -163,7 +296,7 @@ To allow publishing of events via Backbone the AWS user needs the right to publi
             "Sid": "Stmt1474367067000",
             "Effect": "Allow",
             "Action": [
-                "sns:*"
+                "sns:Publish"
             ],
             "Resource": [
                 "{topicArnToPublishTo}"
@@ -173,7 +306,7 @@ To allow publishing of events via Backbone the AWS user needs the right to publi
 }
 ```
 
-To allow Backbone consuming events from the configured queue the AWS user needs full permissions for the
+To allow Backbone consuming messages from the configured queue the AWS user needs full permissions for the
 queue that should be created for consuming messages as well as permissions to subscribe and unsubscribe
 the queue to the configured SNS topics.
 ```json
@@ -184,12 +317,25 @@ the queue to the configured SNS topics.
             "Sid": "Stmt1474984885000",
             "Effect": "Allow",
             "Action": [
-                "sqs:*"
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes"
             ],
             "Resource": [
-                "arn:aws:sqs:eu-central-1:{awsAccountId}:{queueName}"
+                "arn:aws:sqs:{awsRegion}:{awsAccountId}:{queueName}"
             ]
         },
+        {
+            "Sid": "Stmt1474984886000",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:CreateQueue"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },      
         {
             "Sid": "Stmt1474985033000",
             "Effect": "Allow",
@@ -206,16 +352,18 @@ the queue to the configured SNS topics.
 }
 ```
 
-### JSON Modules
+## Notes
 
-The core module of backbone is completely independent of a JSON library (because there are many around in the JVM ecosystem).
-You can configure which library you want to use by adding one of the following to the classpath. 
-
-```scala
-libraryDependencies += "com.firstbird" %% "backbone-circe"      % "X.Y.Z"
-libraryDependencies += "com.firstbird" %% "backbone-play-json"  % "X.Y.Z"
-libraryDependencies += "com.firstbird" %% "backbone-gson"       % "X.Y.Z"
-```
+> The max connections of the AkkaHttpClient may need to be adapted depending on the number of consumers
+> and/or publishers your application runs with. Due to long polling requests no further connections might be
+> available which can lead to problems (e.g. unable to acknowledge messages fast enough). Therefore, the max connections
+> should be at least >= the number of consumers that run simultaneously + considering other usages of the same shared
+> AkkaHttpClient (e.g. publishers).
+>
+> If you use long polling (configured by default with the waitTimeSeconds setting) the request timeout of the
+> AkkaHttpClient (https://doc.akka.io/docs/akka-http/current/common/timeouts.html) may need to be adapted as well. AWS explicitly mentions
+> [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-long-polling.html) that the request
+> timeout should be larger than the maximum long polling time, otherwise requests may time out.
 
 ## Running the Tests
 
@@ -224,7 +372,11 @@ Run the tests from sbt with:
 test
 ```
 
+For integration tests please check the `integration-test` directory which contains cloudformation templates as well
+as demo apps for backbone modules.
+
 ## Feedback
+
 We very much appreciate feedback, please open an issue and/or create a PR.
 
 ## Contributors

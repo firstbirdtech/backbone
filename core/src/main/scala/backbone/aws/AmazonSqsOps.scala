@@ -22,7 +22,6 @@
 package backbone.aws
 
 import backbone.scaladsl.Backbone.QueueInformation
-import cats.syntax.all._
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
@@ -66,9 +65,9 @@ private[backbone] trait AmazonSqsOps {
     for {
       createResponse <- sqs.createQueue(request).toScala
       url = createResponse.queueUrl()
-      _   <- logger.debug(s"Created queue. queueParams=$params, url=$url").pure[Future]
+      _   <- Future.successful(logger.debug(s"Created queue. queueParams=$params, url=$url"))
       arn <- getQueueArn(url)
-      _   <- logger.debug(s"Requested queueArn. queueParams=$params, queueArn=$arn").pure[Future]
+      _   <- Future.successful(logger.debug(s"Requested queueArn. queueParams=$params, queueArn=$arn"))
     } yield QueueInformation(url, arn)
   }
 
