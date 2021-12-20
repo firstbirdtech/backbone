@@ -19,6 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import backbone.format.{DefaultMessageReads, DefaultMessageWrites}
+import backbone.consumer.DefaultMessageReaders
+import backbone.publisher.DefaultMessageWriters
 
-package object backbone extends DefaultMessageReads with DefaultMessageWrites
+package object backbone extends DefaultMessageReaders with DefaultMessageWriters

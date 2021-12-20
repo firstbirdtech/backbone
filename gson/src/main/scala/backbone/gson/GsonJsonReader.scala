@@ -20,7 +20,8 @@
  */
 
 package backbone.gson
-import backbone.json.{JsonReader, SnsEnvelope}
+
+import backbone.consumer.JsonReader
 import com.google.gson.JsonParser
 import org.slf4j.LoggerFactory
 
@@ -33,12 +34,12 @@ class GsonJsonReader extends JsonReader {
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
-  override def readSnsEnvelope(s: String): Option[SnsEnvelope] = {
+  override def readSnsEnvelope(s: String): Option[JsonReader.SnsEnvelope] = {
 
     val maybeSnsEnvelope = for {
       json    <- Try(JsonParser.parseString(s)).map(_.getAsJsonObject).toOption
       message <- Option(json.get("Message")).map(_.getAsString)
-    } yield SnsEnvelope(message)
+    } yield JsonReader.SnsEnvelope(message)
 
     if (maybeSnsEnvelope.isEmpty) {
       logger.error(s"Unable to decode to SnsEnvelope. message=$s")

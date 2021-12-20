@@ -21,4 +21,4 @@
 
 package backbone.aws
 
-case class CreateQueueParams(name: String, kmsKeyId: Option[String])
+private[backbone] final case class CreateQueueParams(name: String, kmsKeyId: Option[String])
