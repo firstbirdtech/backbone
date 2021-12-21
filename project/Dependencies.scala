@@ -48,6 +48,7 @@ object Dependencies {
   val testutils: Seq[ModuleID] = Seq(
     "com.github.matsluni"   %% "aws-spi-akka-http"  % "0.0.11",
     "com.github.sbt"         % "junit-interface"    % "0.13.2",
+    "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
     "io.circe"              %% "circe-parser"       % circeVersion,
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.3",
