@@ -53,7 +53,7 @@ object Dependencies {
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.3",
     "org.mockito"           %% "mockito-scala"      % "1.16.49",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.17.100"
+    "software.amazon.awssdk" % "sqs"                % "2.17.101"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
