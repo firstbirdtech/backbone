@@ -66,18 +66,31 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub "${AWS::StackName}-consumerpublisher-topic"
+      Subscription:
+        - Endpoint: !GetAtt BackboneConsumerPublisherQueue.Arn
+          Protocol: sqs      
 
   BackboneConsumerPublisherQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub "${AWS::StackName}-consumerpublisher-queue"
 
-  BackboneConsumerPublisherTopicSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      Protocol: sqs
-      Endpoint: !GetAtt BackboneConsumerPublisherQueue.Arn
-      TopicArn: !Ref BackboneConsumerPublisherTopic
+  BackboneConsumerPublisherQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties: 
+      Queues: 
+        - !Ref BackboneConsumerPublisherQueue
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "sns.amazonaws.com"
+            Action:
+              - "sqs:SendMessage"
+            Resource: "*"
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !Ref BackboneConsumerPublisherTopic
 
 Outputs:
   AwsRegion:
