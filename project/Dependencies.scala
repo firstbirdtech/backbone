@@ -51,7 +51,7 @@ object Dependencies {
     "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
     "io.circe"              %% "circe-parser"       % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.4",
+    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.5",
     "org.mockito"           %% "mockito-scala"      % "1.17.5",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.17.133"
