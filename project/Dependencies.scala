@@ -6,7 +6,7 @@ object Dependencies {
   private[this] val alpakkaVersion        = "3.0.4"
   private[this] val akkaVersion           = "2.6.18"
   private[this] val circeVersion          = "0.14.1"
-  private[this] val logbackClassicVersion = "1.2.10"
+  private[this] val logbackClassicVersion = "1.2.11"
   private[this] val scalaTestVersion      = "3.2.10"
   private[this] val slf4jVersion          = "1.7.36"
 
