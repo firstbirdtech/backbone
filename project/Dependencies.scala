@@ -7,7 +7,7 @@ object Dependencies {
   private[this] val akkaVersion           = "2.6.19"
   private[this] val circeVersion          = "0.14.1"
   private[this] val logbackClassicVersion = "1.2.11"
-  private[this] val scalaTestVersion      = "3.2.10"
+  private[this] val scalaTestVersion      = "3.2.11"
   private[this] val slf4jVersion          = "1.7.36"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
@@ -51,7 +51,7 @@ object Dependencies {
     "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
     "io.circe"              %% "circe-parser"       % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.4",
+    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.6",
     "org.mockito"           %% "mockito-scala"      % "1.17.5",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.17.155"
