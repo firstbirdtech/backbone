@@ -8,7 +8,7 @@ object Dependencies {
   private[this] val circeVersion          = "0.14.2"
   private[this] val logbackClassicVersion = "1.2.11"
   private[this] val scalaTestVersion      = "3.2.13"
-  private[this] val slf4jVersion          = "1.7.36"
+  private[this] val slf4jVersion          = "2.0.0"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
