@@ -3,7 +3,7 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val alpakkaVersion        = "3.0.4"
+  private[this] val alpakkaVersion        = "4.0.0"
   private[this] val akkaVersion           = "2.6.19"
   private[this] val circeVersion          = "0.14.2"
   private[this] val logbackClassicVersion = "1.2.11"
@@ -54,7 +54,7 @@ object Dependencies {
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.9",
     "org.mockito"           %% "mockito-scala"      % "1.17.12",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.17.267"
+    "software.amazon.awssdk" % "sqs"                % "2.17.270"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
