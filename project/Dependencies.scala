@@ -5,8 +5,8 @@ object Dependencies {
 
   private[this] val alpakkaVersion        = "4.0.0"
   private[this] val akkaVersion           = "2.6.20"
-  private[this] val circeVersion          = "0.14.3"
-  private[this] val logbackClassicVersion = "1.4.5"
+  private[this] val circeVersion          = "0.14.5"
+  private[this] val logbackClassicVersion = "1.4.6"
   private[this] val scalaTestVersion      = "3.2.14"
   private[this] val slf4jVersion          = "2.0.4"
 
@@ -38,7 +38,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val jsonPlay: Seq[ModuleID] = Seq(
-    "com.typesafe.play" %% "play-json" % "2.9.3"
+    "com.typesafe.play" %% "play-json" % "2.9.4"
   ) ++ testDependencies
 
   val jsonGson: Seq[ModuleID] = Seq(
@@ -54,7 +54,7 @@ object Dependencies {
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.3.14",
     "org.mockito"           %% "mockito-scala"      % "1.17.12",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.19.8"
+    "software.amazon.awssdk" % "sqs"                % "2.20.25"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
