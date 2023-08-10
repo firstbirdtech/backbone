@@ -26,10 +26,10 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckFlow, SqsSource}
-import akka.stream.alpakka.sqs.{MessageAction, SqsSourceSettings}
+import akka.stream.alpakka.sqs.{MessageAction, MessageAttributeName, SqsSourceSettings}
 import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink}
 import akka.stream.{RestartSettings, Supervision}
-import backbone.consumer.{JsonReader, Settings}
+import backbone.consumer.{JsonReader, MessageHeaders, Settings}
 import backbone.{MessageReader, _}
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -37,8 +37,8 @@ import software.amazon.awssdk.services.sqs.model.Message
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Left, Right, Success}
-
 object Consumer {
 
   /**
@@ -117,6 +117,67 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
   }
 
   /**
+   * Consume messages of type A and available headers until an optional condition in settings is met.
+   *
+   * After successfully processing messages of type A they are removed from the queue.
+   *
+   * @param settings
+   *   consumer settings
+   * @param f
+   *   function which processes objects of type A and MessageHeaders and returns a Future[ProcessingResult]
+   * @param mr
+   *   implicit MessageReader describing how to decode SQS Message to A
+   * @tparam A
+   *   type of message to consume
+   * @return
+   *   a future completing when the stream quits
+   */
+  def consumeWithHeadersAsync[A](settings: Settings)(f: (A, MessageHeaders) => Future[ProcessingResult])(implicit
+      mr: MessageReader[A]): Future[Done] = {
+    logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
+
+    val baseSqsSourceSettings = SqsSourceSettings.Defaults
+      .withWaitTimeSeconds(settings.receiveSettings.waitTimeSeconds)
+      .withMaxBatchSize(settings.receiveSettings.maxBatchSize)
+      .withMaxBufferSize(settings.receiveSettings.maxBufferSize)
+      .withParallelRequests(settings.receiveSettings.parallelRequests)
+      .withAttributes(settings.receiveSettings.attributeNames)
+      .withMessageAttributes(settings.receiveSettings.messageAttributeNames)
+      .withCloseOnEmptyReceive(settings.receiveSettings.closeOnEmptyReceive)
+      .withMessageAttributes(MessageAttributeName("All") :: Nil)
+
+    val sqsSourceSettings = settings.receiveSettings.visibilityTimeout match {
+      case Some(visibilityTimeout) => baseSqsSourceSettings.withVisibilityTimeout(visibilityTimeout)
+      case None                    => baseSqsSourceSettings
+    }
+
+    RestartSource
+      .withBackoff(RestartSettings(3.second, 30.seconds, 0.2))(() => SqsSource(settings.queueUrl, sqsSourceSettings))
+      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
+      .mapAsync(settings.parallelism) { implicit message =>
+        logger.debug(s"Received message from SQS. message=$message ")
+
+        val headers = MessageHeaders(message.messageAttributes.asScala.collect {
+          case (k, v) if v.dataType == "String" => k -> v.stringValue()
+        }.toMap)
+        message.attributes().forEach((k, v) => println("key: " + k + " value: " + v))
+        parseMessage[A](message) match {
+          case Left(a) =>
+            Future.successful(a)
+          case Right(t) =>
+            val future = f(t, headers).map(resultToAction)
+            future.onComplete {
+              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.messageId}")
+              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.messageId}", t)
+            }
+            future
+        }
+      }
+      .withAttributes(supervisionStrategy(restartingDecider))
+      .runWith(ack(settings))
+  }
+
+  /**
    * Consume messages of type A until an optional condition in settings is met.
    *
    * After successfully processing messages of type A they are removed from the queue.
@@ -136,39 +197,7 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
       mr: MessageReader[A]): Future[Done] = {
     logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
-    val baseSqsSourceSettings = SqsSourceSettings.Defaults
-      .withWaitTimeSeconds(settings.receiveSettings.waitTimeSeconds)
-      .withMaxBatchSize(settings.receiveSettings.maxBatchSize)
-      .withMaxBufferSize(settings.receiveSettings.maxBufferSize)
-      .withParallelRequests(settings.receiveSettings.parallelRequests)
-      .withAttributes(settings.receiveSettings.attributeNames)
-      .withMessageAttributes(settings.receiveSettings.messageAttributeNames)
-      .withCloseOnEmptyReceive(settings.receiveSettings.closeOnEmptyReceive)
-
-    val sqsSourceSettings = settings.receiveSettings.visibilityTimeout match {
-      case Some(visibilityTimeout) => baseSqsSourceSettings.withVisibilityTimeout(visibilityTimeout)
-      case None                    => baseSqsSourceSettings
-    }
-
-    RestartSource
-      .withBackoff(RestartSettings(3.second, 30.seconds, 0.2))(() => SqsSource(settings.queueUrl, sqsSourceSettings))
-      .via(settings.limitation.map(_.limit[Message]).getOrElse(Flow[Message]))
-      .mapAsync(settings.parallelism) { implicit message =>
-        logger.debug(s"Received message from SQS. message=$message ")
-        parseMessage[A](message) match {
-          case Left(a) =>
-            Future.successful(a)
-          case Right(t) =>
-            val future = f(t).map(resultToAction)
-            future.onComplete {
-              case Success(_) => logger.debug(s"Successfully processed message. messageId=${message.messageId}")
-              case Failure(t) => logger.warn(s"Failed processing message. messageId=${message.messageId}", t)
-            }
-            future
-        }
-      }
-      .withAttributes(supervisionStrategy(restartingDecider))
-      .runWith(ack(settings))
+    consumeWithHeadersAsync(settings)((a, _) => f(a))
   }
 
   private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = {

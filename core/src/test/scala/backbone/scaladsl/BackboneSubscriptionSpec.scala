@@ -1,6 +1,6 @@
 package backbone.scaladsl
 
-import akka.stream.alpakka.sqs.{MessageAttributeName, MessageSystemAttributeName, SqsSourceSettings}
+import akka.stream.alpakka.sqs.{MessageSystemAttributeName, SqsSourceSettings}
 import backbone.Consumed
 import backbone.consumer.{ConsumerSettings, CountLimitation, JsonReader}
 import backbone.scaladsl.Backbone
@@ -96,7 +96,6 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
 
       val receiveSettings = SqsSourceSettings.Defaults
         .withAttribute(MessageSystemAttributeName.senderId)
-        .withMessageAttribute(MessageAttributeName("TestAttribute"))
         .withVisibilityTimeout(1.minute)
 
       val settings =
@@ -112,7 +111,7 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
       request.maxNumberOfMessages() mustBe 10
       request.waitTimeSeconds() mustBe 20
       request.attributeNamesAsStrings() mustBe List("SenderId").asJava
-      request.messageAttributeNames() mustBe List("TestAttribute").asJava
+      request.messageAttributeNames() mustBe List("All").asJava
       request.visibilityTimeout() mustBe 60
       request.queueUrl() mustBe "queue-url"
     }

@@ -7,7 +7,7 @@ object Dependencies {
   private[this] val akkaVersion           = "2.6.20"
   private[this] val circeVersion          = "0.14.5"
   private[this] val logbackClassicVersion = "1.4.9"
-  private[this] val scalaTestVersion      = "3.2.15"
+  private[this] val scalaTestVersion      = "3.2.16"
   private[this] val slf4jVersion          = "2.0.7"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
@@ -42,7 +42,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val jsonGson: Seq[ModuleID] = Seq(
-    "com.google.code.gson" % "gson" % "2.10"
+    "com.google.code.gson" % "gson" % "2.10.1"
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
