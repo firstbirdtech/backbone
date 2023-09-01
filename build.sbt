@@ -109,6 +109,7 @@ lazy val testutils = project
   .settings(
     name := "backbone-testutils",
     libraryDependencies ++= Dependencies.testutils,
+    dependencyOverrides ++= Dependencies.testutilsOverrides,
     publish / skip := true
   )
 

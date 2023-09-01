@@ -3,8 +3,8 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val alpakkaVersion        = "4.0.0"
-  private[this] val akkaVersion           = "2.6.20"
+  private[this] val alpakkaVersion        = "6.0.2"
+  private[this] val akkaVersion           = "2.8.4"
   private[this] val circeVersion          = "0.14.6"
   private[this] val logbackClassicVersion = "1.4.11"
   private[this] val scalaTestVersion      = "3.2.16"
@@ -46,15 +46,19 @@ object Dependencies {
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
-    "com.github.matsluni"   %% "aws-spi-akka-http"  % "0.0.11",
-    "com.github.sbt"         % "junit-interface"    % "0.13.3",
-    "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
-    "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
-    "io.circe"              %% "circe-parser"       % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.4.3",
-    "org.mockito"           %% "mockito-scala"      % "1.17.22",
-    "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.20.138"
+    "com.github.sbt"         % "junit-interface"      % "0.13.3",
+    "com.typesafe.akka"     %% "akka-slf4j"           % akkaVersion,
+    "com.typesafe.akka"     %% "akka-testkit"         % akkaVersion,
+    "com.typesafe.akka"     %% "akka-http-spray-json" % "10.5.1",
+    "io.circe"              %% "circe-parser"         % circeVersion,
+    "org.elasticmq"         %% "elasticmq-rest-sqs"   % "1.4.3",
+    "org.mockito"           %% "mockito-scala"        % "1.17.22",
+    "org.scalatest"         %% "scalatest"            % scalaTestVersion,
+    "software.amazon.awssdk" % "sqs"                  % "2.20.138"
+  )
+
+  val testutilsOverrides: Seq[ModuleID] = Seq(
+    "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.1"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(

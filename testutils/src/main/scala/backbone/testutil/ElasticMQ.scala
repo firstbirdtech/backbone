@@ -21,11 +21,11 @@
 
 package backbone.testutil
 
-import com.github.matsluni.akkahttpspi.AkkaHttpClient
 import org.elasticmq.rest.sqs.{SQSRestServer, SQSRestServerBuilder}
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, ListQueuesRequest, SendMessageRequest, _}
@@ -52,7 +52,7 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("x", "x")))
     .region(Region.EU_CENTRAL_1)
     .endpointOverride(URI.create(elasticMqHost))
-    .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
+    .httpClient(NettyNioAsyncHttpClient.create())
     .build()
 
   protected def createQueue(
