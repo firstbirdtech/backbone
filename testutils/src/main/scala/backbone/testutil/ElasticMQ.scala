@@ -70,14 +70,18 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
       .map(_ => ())
   }
 
-  protected def sendMessage(message: String, queueUrl: String): Future[Unit] = {
+  protected def sendMessage(message: String, queueUrl: String, headers: (String, String)*): Future[Unit] = {
     val sqsMessage = Message.builder().body(message).build()
     val request = SendMessageRequest
       .builder()
       .queueUrl(queueUrl)
+      .messageAttributes(
+        headers
+          .map { case (k, v) => k -> MessageAttributeValue.builder().stringValue(v).dataType("String").build() }
+          .toMap
+          .asJava)
       .messageBody(sqsMessage.body)
       .build()
-
     sqsClient.sendMessage(request).asScala.map(_ => ())
   }
 
@@ -85,6 +89,7 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
     val receiveMessageRequest = ReceiveMessageRequest
       .builder()
       .queueUrl(queueUrl)
+      .messageAttributeNames(".*")
       .build()
 
     sqsClient

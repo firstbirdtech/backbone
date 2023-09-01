@@ -29,12 +29,14 @@ import akka.stream.alpakka.sns.scaladsl.SnsPublisher
 import akka.stream.scaladsl.{Flow, Keep, RestartFlow, Sink, Source}
 import akka.stream.{OverflowStrategy, RestartSettings, Supervision}
 import backbone.MessageWriter
-import backbone.publisher.Settings
+import backbone.publisher.{MessageHeaders, Settings}
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sns.model.{MessageAttributeValue, PublishRequest}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
 
 object Publisher {
 
@@ -78,6 +80,26 @@ class Publisher(implicit system: ActorSystem, sns: SnsAsyncClient) {
    * @return
    *   a future completing when the stream quits
    */
+  def publishWithHeadersAsync[A](settings: Settings)(messages: (A, MessageHeaders)*)(implicit
+      mw: MessageWriter[A]): Future[Done] = {
+    Source(messages.toList)
+      .runWith(sinkWithHeaders(settings))
+  }
+
+  /**
+   * Publish messages of type A to an AWS SNS topic.
+   *
+   * @param settings
+   *   publisher settings
+   * @param messages
+   *   the messages to publish
+   * @param mw
+   *   typeclass instance describing how to write the message to a String
+   * @tparam A
+   *   type of message to publish
+   * @return
+   *   a future completing when the stream quits
+   */
   def publishAsync[A](settings: Settings)(messages: A*)(implicit mw: MessageWriter[A]): Future[Done] = {
     Source(messages.toList)
       .runWith(sink(settings))
@@ -95,13 +117,25 @@ class Publisher(implicit system: ActorSystem, sns: SnsAsyncClient) {
    * @return
    *   a future completing when the stream quits
    */
-  def sink[A](settings: Settings)(implicit mw: MessageWriter[A]): Sink[A, Future[Done]] = {
+  def sinkWithHeaders[A](settings: Settings)(implicit mw: MessageWriter[A]): Sink[(A, MessageHeaders), Future[Done]] = {
     RestartFlow
       .withBackoff(RestartSettings(1.second, 30.seconds, 0.2)) { () =>
-        Flow[A]
-          .map(mw.write)
-          .log("sink", t => s"Publishing message to SNS. $t")
-          .via(SnsPublisher.flow(settings.topicArn))
+        Flow[(A, MessageHeaders)]
+          .map { case (message, headers) => (mw.write(message), headers) }
+          .log("sink", { case (m, headers) => s"Publishing message to SNS. message=$m, headers=$headers" })
+          .map { case (message, headers) =>
+            val attributes = headers.underlying.view
+              .mapValues(v => MessageAttributeValue.builder().dataType("String").stringValue(v).build())
+              .toMap
+
+            PublishRequest
+              .builder()
+              .message(message)
+              .topicArn(settings.topicArn)
+              .messageAttributes({ if (attributes.isEmpty) null else attributes.asJava })
+              .build()
+          }
+          .via(SnsPublisher.publishFlow(settings.topicArn))
           .mapError { case ex =>
             logger.error("Exception in publishing message to SNS.", ex)
             ex
@@ -109,6 +143,22 @@ class Publisher(implicit system: ActorSystem, sns: SnsAsyncClient) {
       }
       .withAttributes(supervisionStrategy(Supervision.resumingDecider))
       .toMat(Sink.ignore)(Keep.right)
+  }
+
+  /**
+   * Sink that publishes messages of type A to an AWS SNS topic.
+   *
+   * @param settings
+   *   publisher settings
+   * @param mw
+   *   typeclass instance describing how to write the message to a String
+   * @tparam A
+   *   type of message to publish
+   * @return
+   *   a future completing when the stream quits
+   */
+  def sink[A](settings: Settings)(implicit mw: MessageWriter[A]): Sink[A, Future[Done]] = {
+    sinkWithHeaders(settings).contramap(x => (x, MessageHeaders(Map.empty)))
   }
 
   /**

@@ -86,6 +86,28 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   }
 
   /**
+   * Consume messages of type T including MessageHeaders until an optional condition in ConsumerSettings is met.
+   *
+   * Creates a queue with the name provided in settings if it does not already exist. Subscribes the queue to all
+   * provided topics and modifies the AWS Policy to allow sending messages to the queue from the topics.
+   *
+   * @param settings
+   *   ConsumerSettings configuring Backbone
+   * @param f
+   *   function which processes messages of type T and returns a ProcessingResult
+   * @param fo
+   *   Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T
+   *   type of message to consume
+   * @return
+   *   a future completing when the stream quits
+   */
+  def consumeWithHeaders[T](settings: ConsumerSettings)(f: (T, consumer.MessageHeaders) => ProcessingResult)(implicit
+      fo: MessageReader[T]): Future[Done] = {
+    consumeWithHeadersAsync[T](settings) { case (t, h) => Future.successful(f(t, h)) }
+  }
+
+  /**
    * Consume messages of type T until an optional condition in ConsumerSettings is met.
    *
    * Creates a queue with the name provided in settings if it does not already exist. Subscribes the queue to all
@@ -105,6 +127,29 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   def consumeAsync[T](
       settings: ConsumerSettings
   )(f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
+    consumeWithHeadersAsync(settings)((t, _) => f(t))
+  }
+
+  /**
+   * Consume messages of type T until an optional condition in ConsumerSettings is met.
+   *
+   * Creates a queue with the name provided in settings if it does not already exist. Subscribes the queue to all
+   * provided topics and modifies the AWS Policy to allow sending messages to the queue from the topics.
+   *
+   * @param settings
+   *   ConsumerSettings configuring Backbone
+   * @param f
+   *   function which processes messages of type T and returns a Future[ProcessingResult]
+   * @param fo
+   *   Format[T] typeclass instance describing how to decode SQS Message to T
+   * @tparam T
+   *   type of message to consume
+   * @return
+   *   a future completing when the stream quits
+   */
+  def consumeWithHeadersAsync[T](
+      settings: ConsumerSettings
+  )(f: (T, consumer.MessageHeaders) => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
     implicit val ec = system.dispatcher
 
     logger.debug(s"Preparing to consume messages. config=$settings")
@@ -122,7 +167,7 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
     val result = for {
       queue <- subscription
       set = consumer.Settings(queue.url, settings.parallelism, settings.consumeWithin, settings.receiveSettings)
-      r <- Consumer().consumeAsync[T](set)(f)
+      r <- Consumer().consumeWithHeadersAsync[T](set)(f)
     } yield r
 
     result.onComplete {
@@ -150,6 +195,26 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   def publishAsync[T](message: T, settings: PublisherSettings)(implicit mw: MessageWriter[T]): Future[Done] = {
     val publisherSettings = publisher.Settings(settings.topicArn)
     Publisher().publishAsync[T](publisherSettings)(message)
+  }
+
+  /**
+   * Publish a single message of type T including MessageHeaders to an AWS SNS topic.
+   *
+   * @param message
+   *   the message to publish
+   * @param settings
+   *   PublisherSettings configuring Backbone
+   * @param mw
+   *   typeclass instance describing how to write the message to a String
+   * @tparam T
+   *   type of message to publish
+   * @return
+   *   a future completing when the stream quits
+   */
+  def publishWithHeadersAsync[T](message: T, headers: publisher.MessageHeaders, settings: PublisherSettings)(implicit
+      mw: MessageWriter[T]): Future[Done] = {
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().publishWithHeadersAsync[T](publisherSettings)(message -> headers)
   }
 
   /**
@@ -211,6 +276,24 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   def publisherSink[T](settings: PublisherSettings)(implicit mw: MessageWriter[T]): Sink[T, Future[Done]] = {
     val publisherSettings = publisher.Settings(settings.topicArn)
     Publisher().sink[T](publisherSettings)
+  }
+
+  /**
+   * Returns a sink that publishes received messages of type T including message headers to an AWS SNS topic.
+   *
+   * @param settings
+   *   PublisherSettings configuring Backbone
+   * @param mw
+   *   typeclass instance describing how to write a single message to a String
+   * @tparam T
+   *   type of messages to publish
+   * @return
+   *   a Sink that publishes received messages
+   */
+  def publisherSinkWithHeaders[T](settings: PublisherSettings)(implicit
+      mw: MessageWriter[T]): Sink[(T, publisher.MessageHeaders), Future[Done]] = {
+    val publisherSettings = publisher.Settings(settings.topicArn)
+    Publisher().sinkWithHeaders[T](publisherSettings)
   }
 
   private[this] def subscribe(queue: QueueInformation, topics: List[String])(implicit
