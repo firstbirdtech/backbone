@@ -14,6 +14,8 @@ import software.amazon.awssdk.services.sns.model.{MessageAttributeValue, Publish
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
+import Mockito._
+import org.mockito.ArgumentMatchers
 
 class PublisherSpec extends FixtureAnyWordSpec with BaseTest with TestActorSystem with DefaultMessageWriters {
 
@@ -138,9 +140,9 @@ class PublisherSpec extends FixtureAnyWordSpec with BaseTest with TestActorSyste
   case class FixtureParam(publisher: Publisher, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val snsClient: SnsAsyncClient = mock[SnsAsyncClient]
+    implicit val snsClient: SnsAsyncClient = mock[SnsAsyncClient](classOf[SnsAsyncClient])
 
-    when(snsClient.publish(*[PublishRequest])).thenReturn {
+    when(snsClient.publish(ArgumentMatchers.any[PublishRequest])).thenReturn {
       val response = PublishResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

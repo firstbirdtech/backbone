@@ -16,6 +16,8 @@ import software.amazon.awssdk.services.sqs.model._
 import java.util.concurrent.CompletableFuture
 import scala.compat.java8.FutureConverters._
 import scala.util.Success
+import org.mockito.Mockito
+import org.mockito.ArgumentMatchers
 
 class BackboneConsumeSpec extends FixtureAnyWordSpec with BaseTest with ElasticMQ with TestActorSystem {
 
@@ -123,9 +125,9 @@ class BackboneConsumeSpec extends FixtureAnyWordSpec with BaseTest with ElasticM
   case class FixtureParam(backbone: Backbone)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val snsClient = Mockito.mock[SnsAsyncClient](classOf[SnsAsyncClient])
 
-    when(snsClient.subscribe(*[SubscribeRequest])).thenReturn {
+    Mockito.when(snsClient.subscribe(ArgumentMatchers.any[SubscribeRequest])).thenReturn {
       val response = SubscribeResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

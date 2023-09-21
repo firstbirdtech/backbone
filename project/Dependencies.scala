@@ -21,15 +21,15 @@ object Dependencies {
   ) ++ testDependencies
 
   val consumer: Seq[ModuleID] = Seq(
-    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
-    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion
+    "org.slf4j"            % "slf4j-api"               % slf4jVersion,
+    "com.typesafe.akka"   %% "akka-stream"             % akkaVersion,
+    ("com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion).cross(CrossVersion.for3Use2_13)
   ) ++ testDependencies
 
   val publisher: Seq[ModuleID] = Seq(
-    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
-    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion
+    "org.slf4j"            % "slf4j-api"               % slf4jVersion,
+    "com.typesafe.akka"   %% "akka-stream"             % akkaVersion,
+    ("com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion).cross(CrossVersion.for3Use2_13)
   ) ++ testDependencies
 
   val jsonCirce: Seq[ModuleID] = Seq(
@@ -46,15 +46,16 @@ object Dependencies {
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
-    "com.github.sbt"         % "junit-interface"      % "0.13.3",
-    "com.typesafe.akka"     %% "akka-slf4j"           % akkaVersion,
-    "com.typesafe.akka"     %% "akka-testkit"         % akkaVersion,
-    "com.typesafe.akka"     %% "akka-http-spray-json" % "10.5.1",
-    "io.circe"              %% "circe-parser"         % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs"   % "1.4.3",
-    "org.mockito"           %% "mockito-scala"        % "1.17.22",
-    "org.scalatest"         %% "scalatest"            % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                  % "2.20.138"
+    "com.github.sbt"     % "junit-interface"      % "0.13.3",
+    "com.typesafe.akka" %% "akka-slf4j"           % akkaVersion,
+    "com.typesafe.akka" %% "akka-testkit"         % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.1",
+    "io.circe"          %% "circe-parser"         % circeVersion,
+    "org.testcontainers" % "localstack"           % "1.19.0",
+    // ("org.elasticmq"        %% "elasticmq-rest-sqs"   % "1.4.3").cross(CrossVersion.for3Use2_13),
+    "org.mockito"            % "mockito-core" % "5.5.0",
+    "org.scalatest"         %% "scalatest"    % scalaTestVersion,
+    "software.amazon.awssdk" % "sqs"          % "2.20.138"
   )
 
   val testutilsOverrides: Seq[ModuleID] = Seq(

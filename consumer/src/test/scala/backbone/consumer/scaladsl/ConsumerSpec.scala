@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.sqs.model._
 
 import scala.concurrent.Future
 import scala.util.Success
+import org.mockito.Mockito
 
 class ConsumerSpec extends AnyWordSpec with BaseTest with ElasticMQ with TestActorSystem {
 
@@ -79,7 +80,7 @@ class ConsumerSpec extends AnyWordSpec with BaseTest with ElasticMQ with TestAct
       val consumer = Consumer(testJsonReader)
 
       val msg = JsonReader.SnsEnvelope("message")
-      val spy = mock[(String, MessageHeaders) => Future[ProcessingResult]]
+      val spy = Mockito.mock[(String, MessageHeaders) => Future[ProcessingResult]](classOf[(String, MessageHeaders) => Future[ProcessingResult]])
       val result = for {
         _ <- createQueue(queueName)
         _ <- sendMessage(msg.asJson.toString, queueUrl, "header" -> "value")
@@ -88,7 +89,7 @@ class ConsumerSpec extends AnyWordSpec with BaseTest with ElasticMQ with TestAct
       } yield r
 
       whenReady(result) { res =>
-        verify(spy).apply("message", MessageHeaders(Map("header" -> "value")))
+        Mockito.verify(spy).apply("message", MessageHeaders(Map("header" -> "value")))
       }
     }
 

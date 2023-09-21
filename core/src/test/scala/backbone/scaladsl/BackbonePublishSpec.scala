@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.duration._
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers
 
 class BackbonePublishSpec extends FixtureAnyWordSpec with BaseTest with TestActorSystem with DefaultMessageWriters {
 
@@ -94,10 +96,10 @@ class BackbonePublishSpec extends FixtureAnyWordSpec with BaseTest with TestActo
   case class FixtureParam(backbone: Backbone, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val sqsClient = mock[SqsAsyncClient]
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val sqsClient = mock[SqsAsyncClient](classOf[SqsAsyncClient])
+    implicit val snsClient = mock[SnsAsyncClient](classOf[SnsAsyncClient])
 
-    when(snsClient.publish(*[PublishRequest])).thenReturn {
+    when(snsClient.publish(ArgumentMatchers.any[PublishRequest])).thenReturn {
       val response = PublishResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

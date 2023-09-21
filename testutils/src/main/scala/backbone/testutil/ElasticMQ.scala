@@ -21,7 +21,6 @@
 
 package backbone.testutil
 
-import org.elasticmq.rest.sqs.{SQSRestServer, SQSRestServerBuilder}
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
@@ -30,28 +29,26 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, ListQueuesRequest, SendMessageRequest, _}
 
-import java.net.URI
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
+import org.testcontainers.utility.DockerImageName
+import org.testcontainers.containers.localstack.LocalStackContainer
 
 trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
   this: TestSuite with TestActorSystem with ScalaFutures =>
 
-  protected lazy val server: SQSRestServer = {
-    SQSRestServerBuilder.withDynamicPort().start()
-  }
+  private val dockerImage = DockerImageName.parse("localstack/localstack:0.11.3")
+  private val localStack = new LocalStackContainer(dockerImage)
+    .withServices(LocalStackContainer.Service.SQS)
 
-  protected lazy val elasticMqHost: String = {
-    val address = server.waitUntilStarted().localAddress
-    s"http://${address.getHostName}:${address.getPort}"
-  }
+  protected lazy val elasticMqHost: String = localStack.getEndpointOverride(LocalStackContainer.Service.SQS).toString()
 
   protected implicit lazy val sqsClient: SqsAsyncClient = SqsAsyncClient
     .builder()
     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("x", "x")))
     .region(Region.EU_CENTRAL_1)
-    .endpointOverride(URI.create(elasticMqHost))
+    .endpointOverride(localStack.getEndpointOverride(LocalStackContainer.Service.SQS))
     .httpClient(NettyNioAsyncHttpClient.create())
     .build()
 
@@ -97,9 +94,13 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
       .asScala
   }
 
+  abstract override protected def beforeAll(): Unit = {
+    try localStack.start()
+    finally super.beforeAll()
+  }
   abstract override protected def afterAll(): Unit = {
     try super.afterAll()
-    finally server.stopAndWait()
+    finally localStack.stop()
   }
 
   abstract override protected def beforeEach(): Unit = {

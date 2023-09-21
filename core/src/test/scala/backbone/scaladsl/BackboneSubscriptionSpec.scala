@@ -9,7 +9,6 @@ import backbone.testutil._
 import cats.syntax.all._
 import io.circe.syntax._
 import org.mockito.Mockito
-import org.mockito.captor.ArgCaptor
 import org.scalatest.Outcome
 import org.scalatest.wordspec.FixtureAnyWordSpec
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -20,7 +19,9 @@ import software.amazon.awssdk.services.sqs.model._
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-
+import Mockito._
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers
 class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with TestActorSystem {
 
   "Backbone.consume" should {
@@ -89,7 +90,7 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
     "request messages form the queue url returned when creating the queue" in { f =>
       val envelope = JsonReader.SnsEnvelope("message")
       val message  = Message.builder().body(envelope.asJson.toString()).build()
-      when(f.sqsClient.receiveMessage(any[ReceiveMessageRequest])).thenReturn {
+      when(f.sqsClient.receiveMessage(ArgumentMatchers.any[ReceiveMessageRequest])).thenReturn {
         val result = ReceiveMessageResponse.builder().messages(List(message).asJava).build()
         CompletableFuture.completedFuture(result)
       }
@@ -103,10 +104,10 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
 
       f.backbone.consume[String](settings)(_ => Consumed).futureValue
 
-      val captor = ArgCaptor[ReceiveMessageRequest]
+      val captor: ArgumentCaptor[ReceiveMessageRequest] = ArgumentCaptor.forClass(classOf[ReceiveMessageRequest])
 
-      verify(f.sqsClient, Mockito.atLeastOnce()).receiveMessage(captor)
-      val request = captor.value
+      verify(f.sqsClient, Mockito.atLeastOnce()).receiveMessage(captor.capture())
+      val request = captor.getValue()
 
       request.maxNumberOfMessages() mustBe 10
       request.waitTimeSeconds() mustBe 20
@@ -120,14 +121,14 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
   case class FixtureParam(backbone: Backbone, sqsClient: SqsAsyncClient, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val sqsClient = mock[SqsAsyncClient]
+    implicit val sqsClient = mock[SqsAsyncClient](classOf[SqsAsyncClient])
 
-    when(sqsClient.createQueue(*[CreateQueueRequest])).thenReturn {
+    when(sqsClient.createQueue(ArgumentMatchers.any[CreateQueueRequest])).thenReturn {
       val result = CreateQueueResponse.builder().queueUrl("queue-url").build()
       CompletableFuture.completedFuture(result)
     }
 
-    when(sqsClient.getQueueAttributes(any[GetQueueAttributesRequest])).thenReturn {
+    when(sqsClient.getQueueAttributes(ArgumentMatchers.any[GetQueueAttributesRequest])).thenReturn {
       val result = GetQueueAttributesResponse
         .builder()
         .attributes(Map(QueueAttributeName.QUEUE_ARN -> "queue-arn").asJava)
@@ -136,19 +137,19 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
       CompletableFuture.completedFuture(result)
     }
 
-    when(sqsClient.setQueueAttributes(any[SetQueueAttributesRequest])).thenReturn {
+    when(sqsClient.setQueueAttributes(ArgumentMatchers.any[SetQueueAttributesRequest])).thenReturn {
       val result = SetQueueAttributesResponse.builder().build()
       CompletableFuture.completedFuture(result)
     }
 
-    when(sqsClient.deleteMessage(any[DeleteMessageRequest])).thenReturn {
+    when(sqsClient.deleteMessage(ArgumentMatchers.any[DeleteMessageRequest])).thenReturn {
       val result = DeleteMessageResponse.builder().build()
       CompletableFuture.completedFuture(result)
     }
 
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val snsClient = mock[SnsAsyncClient](classOf[SnsAsyncClient])
 
-    when(snsClient.subscribe(*[SubscribeRequest])).thenReturn {
+    when(snsClient.subscribe(ArgumentMatchers.any[SubscribeRequest])).thenReturn {
       val response = SubscribeResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }
