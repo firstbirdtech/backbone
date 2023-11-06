@@ -38,7 +38,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val jsonPlay: Seq[ModuleID] = Seq(
-    "org.playframework" %% "play-json" % "3.0.0"
+    "org.playframework" %% "play-json" % "3.0.1"
   ) ++ testDependencies
 
   val jsonGson: Seq[ModuleID] = Seq(
