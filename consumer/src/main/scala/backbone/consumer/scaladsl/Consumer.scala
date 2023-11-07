@@ -160,6 +160,7 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
         val headers = MessageHeaders(message.messageAttributes.asScala.collect {
           case (k, v) if v.dataType == "String" => k -> v.stringValue()
         }.toMap)
+        message.attributes().forEach((k, v) => println("key: " + k + " value: " + v))
         parseMessage[A](message) match {
           case Left(a) =>
             Future.successful(a)
