@@ -30,7 +30,7 @@ import akka.stream.alpakka.sqs.{MessageAction, MessageAttributeName, SqsSourceSe
 import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink}
 import akka.stream.{RestartSettings, Supervision}
 import backbone.consumer.{JsonReader, MessageHeaders, Settings}
-import backbone._
+import backbone.{MessageReader, _}
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.Message
@@ -196,7 +196,7 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
       mr: MessageReader[A]): Future[Done] = {
     logger.info(s"Starting to consume messages off SQS queue. settings=$settings")
 
-    consumeWithHeadersAsync(settings)((a: A, _) => f(a))
+    consumeWithHeadersAsync(settings)((a, _) => f(a))
   }
 
   private[this] def resultToAction(r: ProcessingResult)(implicit message: Message): MessageAction = {
