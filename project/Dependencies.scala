@@ -52,7 +52,7 @@ object Dependencies {
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
     "io.circe"              %% "circe-parser"       % circeVersion,
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.5.2",
-    "org.mockito"           %% "mockito-scala"      % "1.17.29",
+    "org.mockito"           %% "mockito-scala"      % "1.17.30",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.21.29"
   )
