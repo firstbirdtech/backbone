@@ -4,7 +4,7 @@ import sbt.librarymanagement.ModuleID
 object Dependencies {
 
   private[this] val alpakkaVersion        = "4.0.0"
-  private[this] val akkaVersion           = "2.6.20"
+  private[this] val akkaVersion           = "2.6.21"
   private[this] val circeVersion          = "0.14.6"
   private[this] val logbackClassicVersion = "1.4.14"
   private[this] val scalaTestVersion      = "3.2.17"
