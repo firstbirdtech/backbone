@@ -1,11 +1,11 @@
 package backbone;
 
-import akka.Done;
-import akka.actor.ActorRef;
-import akka.stream.OverflowStrategy;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
-import akka.testkit.javadsl.TestKit;
+import org.apache.pekko.Done;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.stream.OverflowStrategy;
+import org.apache.pekko.stream.javadsl.Sink;
+import org.apache.pekko.stream.javadsl.Source;
+import org.apache.pekko.testkit.javadsl.TestKit;
 import backbone.consumer.ConsumerSettings;
 import backbone.consumer.CountLimitation;
 import backbone.publisher.PublisherSettings;

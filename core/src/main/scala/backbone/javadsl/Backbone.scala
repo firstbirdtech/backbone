@@ -21,10 +21,10 @@
 
 package backbone.javadsl
 
-import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.OverflowStrategy
-import akka.stream.javadsl.Sink
+import org.apache.pekko.Done
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.stream.OverflowStrategy
+import org.apache.pekko.stream.javadsl.Sink
 import backbone.consumer.ConsumerSettings
 import backbone.publisher.PublisherSettings
 import backbone.{MessageReader, scaladsl, _}

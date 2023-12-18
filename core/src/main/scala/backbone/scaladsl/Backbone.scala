@@ -21,10 +21,10 @@
 
 package backbone.scaladsl
 
-import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.Done
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.stream.OverflowStrategy
+import org.apache.pekko.stream.scaladsl.Sink
 import backbone.aws.{AmazonSnsOps, AmazonSqsOps, CreateQueueParams}
 import backbone.consumer.ConsumerSettings
 import backbone.consumer.scaladsl.Consumer

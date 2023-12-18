@@ -21,13 +21,13 @@
 
 package backbone.publisher.scaladsl
 
-import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.{Logging, LoggingAdapter}
-import akka.stream.ActorAttributes.supervisionStrategy
-import akka.stream.alpakka.sns.scaladsl.SnsPublisher
-import akka.stream.scaladsl.{Flow, Keep, RestartFlow, Sink, Source}
-import akka.stream.{OverflowStrategy, RestartSettings, Supervision}
+import org.apache.pekko.Done
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.event.{Logging, LoggingAdapter}
+import org.apache.pekko.stream.ActorAttributes.supervisionStrategy
+import org.apache.pekko.stream.connectors.sns.scaladsl.SnsPublisher
+import org.apache.pekko.stream.scaladsl.{Flow, Keep, RestartFlow, Sink, Source}
+import org.apache.pekko.stream.{OverflowStrategy, RestartSettings, Supervision}
 import backbone.MessageWriter
 import backbone.publisher.{MessageHeaders, Settings}
 import org.slf4j.LoggerFactory

@@ -1,6 +1,6 @@
 package backbone.scaladsl
 
-import akka.stream.alpakka.sqs.{MessageSystemAttributeName, SqsSourceSettings}
+import org.apache.pekko.stream.connectors.sqs.{MessageSystemAttributeName, SqsSourceSettings}
 import backbone.Consumed
 import backbone.consumer.{ConsumerSettings, CountLimitation, JsonReader}
 import backbone.scaladsl.Backbone

@@ -1,7 +1,7 @@
 package backbone.scaladsl
 
-import akka.Done
-import akka.stream.scaladsl.Source
+import org.apache.pekko.Done
+import org.apache.pekko.stream.scaladsl.Source
 import backbone.publisher.{DefaultMessageWriters, PublisherSettings}
 import backbone.scaladsl.Backbone
 import backbone.testutil.{BaseTest, TestActorSystem}

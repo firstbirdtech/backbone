@@ -21,7 +21,7 @@
 
 package backbone.consumer
 
-import akka.stream.alpakka.sqs.SqsSourceSettings
+import org.apache.pekko.stream.connectors.sqs.SqsSourceSettings
 
 import java.util.Optional
 import scala.jdk.OptionConverters._
