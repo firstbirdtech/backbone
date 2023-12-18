@@ -21,8 +21,8 @@
 
 package backbone.consumer.javadsl
 
-import akka.Done
-import akka.actor.ActorSystem
+import org.apache.pekko.Done
+import org.apache.pekko.actor.ActorSystem
 import backbone.consumer.{JsonReader, Settings, scaladsl}
 import backbone.{MessageReader, ProcessingResult}
 import software.amazon.awssdk.services.sqs.SqsAsyncClient

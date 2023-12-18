@@ -21,8 +21,8 @@
 
 package backbone.consumer
 
-import akka.NotUsed
-import akka.stream.scaladsl.Flow
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.Flow
 
 object CountLimitation {
 

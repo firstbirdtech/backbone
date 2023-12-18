@@ -21,8 +21,8 @@
 
 package backbone.scaladsl
 
-import akka.Done
-import akka.stream.scaladsl.Source
+import org.apache.pekko.Done
+import org.apache.pekko.stream.scaladsl.Source
 import backbone.publisher.{DefaultMessageWriters, PublisherSettings}
 import backbone.testutil.{BaseTest, TestActorSystem}
 import org.mockito.ArgumentMatchers._

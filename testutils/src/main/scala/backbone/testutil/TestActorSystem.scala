@@ -21,8 +21,8 @@
 
 package backbone.testutil
 
-import akka.actor.ActorSystem
-import akka.testkit.{TestKit, TestKitBase}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.{TestKit, TestKitBase}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 import scala.concurrent.ExecutionContext
