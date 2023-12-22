@@ -3,7 +3,7 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val pekkoVersion          = "1.0.2"
+  private[this] val pekkoVersion           = "1.0.2"
   private[this] val pekkoConnectorsVersion = "1.0.0"
   private[this] val circeVersion          = "0.14.14"
   private[this] val logbackClassicVersion = "1.5.18"
@@ -64,8 +64,8 @@ object Dependencies {
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
-    "org.apache.pekko"    %% "pekko-slf4j"         % pekkoVersion,
-    "ch.qos.logback"     % "logback-classic" % logbackClassicVersion
+    "org.apache.pekko" %% "pekko-slf4j"     % pekkoVersion,
+    "ch.qos.logback"    % "logback-classic" % logbackClassicVersion
   )
 
   val dependencyOverrides = Seq(
