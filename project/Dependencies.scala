@@ -22,19 +22,19 @@ object Dependencies {
   ) ++ testDependencies
 
   val consumer: Seq[ModuleID] = Seq(
-    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
-    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
+    "org.slf4j"          % "slf4j-api"   % slf4jVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     // Transitive awssdk version is too old
-    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion exclude ("software.amazon.awssdk", "sqs"),
-    "software.amazon.awssdk" % "sqs" % awsSdkVersion
+    "com.lightbend.akka"    %% "akka-stream-alpakka-sqs" % alpakkaVersion exclude ("software.amazon.awssdk", "sqs"),
+    "software.amazon.awssdk" % "sqs"                     % awsSdkVersion
   ) ++ testDependencies
 
   val publisher: Seq[ModuleID] = Seq(
-    "org.slf4j"           % "slf4j-api"               % slf4jVersion,
-    "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
+    "org.slf4j"          % "slf4j-api"   % slf4jVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     // Transitive awssdk version is too old
-    "com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion exclude ("software.amazon.awssdk", "sns"),
-    "software.amazon.awssdk" % "sns" % awsSdkVersion
+    "com.lightbend.akka"    %% "akka-stream-alpakka-sns" % alpakkaVersion exclude ("software.amazon.awssdk", "sns"),
+    "software.amazon.awssdk" % "sns"                     % awsSdkVersion
   ) ++ testDependencies
 
   val jsonCirce: Seq[ModuleID] = Seq(
