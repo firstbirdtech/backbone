@@ -9,6 +9,7 @@ object Dependencies {
   private[this] val logbackClassicVersion = "1.4.14"
   private[this] val scalaTestVersion      = "3.2.17"
   private[this] val slf4jVersion          = "2.0.11"
+  private[this] val awsSdkVersion         = "2.23.13"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
@@ -23,13 +24,17 @@ object Dependencies {
   val consumer: Seq[ModuleID] = Seq(
     "org.slf4j"           % "slf4j-api"               % slf4jVersion,
     "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion
+    // Transitive awssdk version is too old
+    "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % alpakkaVersion exclude ("software.amazon.awssdk", "sqs"),
+    "software.amazon.awssdk" % "sqs" % awsSdkVersion
   ) ++ testDependencies
 
   val publisher: Seq[ModuleID] = Seq(
     "org.slf4j"           % "slf4j-api"               % slf4jVersion,
     "com.typesafe.akka"  %% "akka-stream"             % akkaVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion
+    // Transitive awssdk version is too old
+    "com.lightbend.akka" %% "akka-stream-alpakka-sns" % alpakkaVersion exclude ("software.amazon.awssdk", "sns"),
+    "software.amazon.awssdk" % "sns" % awsSdkVersion
   ) ++ testDependencies
 
   val jsonCirce: Seq[ModuleID] = Seq(
@@ -46,7 +51,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
-    "com.github.matsluni"   %% "aws-spi-akka-http"  % "0.0.11",
+    "com.github.matsluni"   %% "aws-spi-akka-http"  % "1.0.0",
     "com.github.sbt"         % "junit-interface"    % "0.13.3",
     "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
