@@ -13,6 +13,7 @@ import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsAsyncClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
@@ -53,6 +54,7 @@ public abstract class TestContext {
             .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("x", "x")))
             .endpointOverride(URI.create("http://" + address.getHostName() + ":" + address.getPort()))
             .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
+            .region(Region.EU_CENTRAL_1)
             .build();
         backbone = Backbone.create(sqs, sns, system);
     }
