@@ -24,7 +24,7 @@ There are three different main modules available:
 
 * backbone-consumer: Standalone consumer for streaming messages from SQS
 * backbone-publisher: Standalone publisher for publishing messages to SNS
-* backbone-core: Consumer and publisher for streaming messages (SQS) and publishing messages (SNS), including automatic SQS queue creation and SNS subscription 
+* backbone-core: Consumer and publisher for streaming messages (SQS) and publishing messages (SNS), including automatic SQS queue creation and SNS subscription
 
 ## backbone-consumer
 
@@ -185,7 +185,7 @@ To allow publishing of messages via Backbone the AWS user needs permissions to p
 
 ## backbone-core
 
-This is a legacy module and shouldn't be used anymore for new projects as it won't be maintained anymore and 
+This is a legacy module and shouldn't be used anymore for new projects as it won't be maintained anymore and
 removed in the near future. Use `backbone-consumer` and `backbone-publisher` instead which allow to have full
 control over the used AWS resources.
 
@@ -335,7 +335,7 @@ the queue to the configured SNS topics.
             "Resource": [
                 "*"
             ]
-        },      
+        },
         {
             "Sid": "Stmt1474985033000",
             "Effect": "Allow",
