@@ -51,7 +51,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
-    "com.github.matsluni"   %% "aws-spi-akka-http"  % "1.0.0",
+    "com.github.matsluni"   %% "aws-spi-akka-http"  % "1.0.1",
     "com.github.sbt"         % "junit-interface"    % "0.13.3",
     "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
