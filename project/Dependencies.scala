@@ -9,7 +9,7 @@ object Dependencies {
   private[this] val logbackClassicVersion = "1.5.3"
   private[this] val scalaTestVersion      = "3.2.18"
   private[this] val slf4jVersion          = "2.0.12"
-  private[this] val awsSdkVersion         = "2.25.21"
+  private[this] val awsSdkVersion         = "2.25.36"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
@@ -59,7 +59,7 @@ object Dependencies {
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.5.7",
     "org.mockito"           %% "mockito-scala"      % "1.17.31",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.25.21"
+    "software.amazon.awssdk" % "sqs"                % "2.25.36"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
