@@ -11,6 +11,8 @@ Backbone is a durable publish-subscribe platform built on top of Amazon AWS SQS 
 Akka to stream messages. This library currently is under active development, changes to the public API are still subject
 to change.
 
+**Attention: This library uses the commercial version of Akka. License fees may be incurred by usage of this library!**
+
 Backbone provides nice high-level API for consuming messages:
 
 ```scala
