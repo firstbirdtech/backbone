@@ -8,7 +8,7 @@ object Dependencies {
   private[this] val circeVersion          = "0.14.7"
   private[this] val logbackClassicVersion = "1.5.6"
   private[this] val scalaTestVersion      = "3.2.18"
-  private[this] val slf4jVersion          = "2.0.12"
+  private[this] val slf4jVersion          = "2.0.13"
   private[this] val awsSdkVersion         = "2.25.40"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
