@@ -1,6 +1,8 @@
 addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
 addCommandAlias("codeVerify", ";scalafmtCheckAll;scalafmtSbtCheck;scalafixAll --check;headerCheck")
 
+ThisBuild / resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+
 lazy val commonSettings = Seq(
   organization        := "com.firstbird",
   organizationName    := "Firstbird GmbH",

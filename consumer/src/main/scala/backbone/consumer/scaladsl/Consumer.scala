@@ -39,6 +39,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Left, Right, Success}
+
 object Consumer {
 
   /**
