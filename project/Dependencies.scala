@@ -5,11 +5,11 @@ object Dependencies {
 
   private[this] val alpakkaVersion        = "7.0.2"
   private[this] val akkaVersion           = "2.9.2"
-  private[this] val circeVersion          = "0.14.6"
-  private[this] val logbackClassicVersion = "1.5.3"
+  private[this] val circeVersion          = "0.14.7"
+  private[this] val logbackClassicVersion = "1.5.6"
   private[this] val scalaTestVersion      = "3.2.18"
-  private[this] val slf4jVersion          = "2.0.12"
-  private[this] val awsSdkVersion         = "2.25.42"
+  private[this] val slf4jVersion          = "2.0.13"
+  private[this] val awsSdkVersion         = "2.25.45"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
@@ -56,10 +56,10 @@ object Dependencies {
     "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
     "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
     "io.circe"              %% "circe-parser"       % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.5.7",
+    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.5.8",
     "org.mockito"           %% "mockito-scala"      % "1.17.31",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
-    "software.amazon.awssdk" % "sqs"                % "2.25.21"
+    "software.amazon.awssdk" % "sqs"                % "2.25.40"
   )
 
   val integrationtest: Seq[ModuleID] = Seq(
