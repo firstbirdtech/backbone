@@ -1,8 +1,0 @@
-template: |
-  ## What's changed
-  
-  $CHANGES
-
-  ## Contributors
-  
-  $CONTRIBUTORS
