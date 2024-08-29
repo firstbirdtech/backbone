@@ -1,12 +1,14 @@
 package backbone.scaladsl
 
+import backbone.consumer.DefaultMessageReaders.stringFormat
 import backbone.consumer.{ConsumerSettings, CountLimitation, JsonReader}
-import backbone.scaladsl.Backbone
 import backbone.testutil.Helpers._
 import backbone.testutil.{BaseTest, ElasticMQ, TestActorSystem}
 import backbone.{Consumed, MessageReader, Rejected}
 import cats.syntax.all._
 import io.circe.syntax._
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.scalatest.Outcome
 import org.scalatest.wordspec.FixtureAnyWordSpec
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -123,9 +125,9 @@ class BackboneConsumeSpec extends FixtureAnyWordSpec with BaseTest with ElasticM
   case class FixtureParam(backbone: Backbone)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val snsClient = mock(classOf[SnsAsyncClient])
 
-    when(snsClient.subscribe(*[SubscribeRequest])).thenReturn {
+    when(snsClient.subscribe(any(classOf[SubscribeRequest]))).thenReturn {
       val response = SubscribeResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

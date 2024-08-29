@@ -127,7 +127,7 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   def consumeAsync[T](
       settings: ConsumerSettings
   )(f: T => Future[ProcessingResult])(implicit fo: MessageReader[T]): Future[Done] = {
-    consumeWithHeadersAsync(settings)((t, _) => f(t))
+    consumeWithHeadersAsync(settings)((t: T, _) => f(t))
   }
 
   /**

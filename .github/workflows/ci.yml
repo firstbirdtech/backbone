@@ -14,21 +14,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        java: [11, 17]
+        java: [11, 17, 21]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-        
+
       - name: Setup Scala
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-          cache: 'sbt'     
-          
+          cache: 'sbt'
+
       - name: Build project
         run: sbt codeVerify coverage +test coverageReport coverageAggregate
 
@@ -48,13 +48,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Scala
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 11
-          cache: 'sbt'               
+          cache: 'sbt'
 
       - name: Publish artifacts
         env:

@@ -23,6 +23,7 @@ package backbone.publisher.scaladsl
 
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.LogSource.fromString
 import akka.event.{Logging, LoggingAdapter}
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.alpakka.sns.scaladsl.SnsPublisher
@@ -64,7 +65,7 @@ object Publisher {
 class Publisher(implicit system: ActorSystem, sns: SnsAsyncClient) {
 
   private[this] val logger                       = LoggerFactory.getLogger(getClass)
-  private[this] implicit val log: LoggingAdapter = Logging(system, getClass)
+  private[this] implicit val log: LoggingAdapter = Logging(system, getClass.getSimpleName)
 
   /**
    * Publish messages of type A to an AWS SNS topic.

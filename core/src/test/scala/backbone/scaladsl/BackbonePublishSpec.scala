@@ -3,8 +3,9 @@ package backbone.scaladsl
 import akka.Done
 import akka.stream.scaladsl.Source
 import backbone.publisher.{DefaultMessageWriters, PublisherSettings}
-import backbone.scaladsl.Backbone
 import backbone.testutil.{BaseTest, TestActorSystem}
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.scalatest.Outcome
 import org.scalatest.wordspec.FixtureAnyWordSpec
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -94,10 +95,10 @@ class BackbonePublishSpec extends FixtureAnyWordSpec with BaseTest with TestActo
   case class FixtureParam(backbone: Backbone, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val sqsClient = mock[SqsAsyncClient]
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val sqsClient = mock(classOf[SqsAsyncClient])
+    implicit val snsClient = mock(classOf[SnsAsyncClient])
 
-    when(snsClient.publish(*[PublishRequest])).thenReturn {
+    when(snsClient.publish(any(classOf[PublishRequest]))).thenReturn {
       val response = PublishResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

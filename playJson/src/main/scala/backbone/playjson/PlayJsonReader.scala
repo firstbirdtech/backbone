@@ -32,7 +32,7 @@ class PlayJsonReader extends JsonReader {
 
   private[this] implicit val snsEnvelopeReads: json.Reads[JsonReader.SnsEnvelope] = (__ \ "Message")
     .read[String]
-    .map(JsonReader.SnsEnvelope)
+    .map(JsonReader.SnsEnvelope.apply)
 
   override def readSnsEnvelope(s: String): Option[JsonReader.SnsEnvelope] = {
     Json.fromJson[JsonReader.SnsEnvelope](Json.parse(s)) match {

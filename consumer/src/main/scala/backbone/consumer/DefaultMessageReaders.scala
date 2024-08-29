@@ -76,3 +76,5 @@ trait DefaultMessageReaders {
   implicit val charFormat: MessageReader[Array[Char]] = MandatoryMessageReader(s => Success(s.toCharArray))
 
 }
+
+object DefaultMessageReaders extends DefaultMessageReaders

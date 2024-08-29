@@ -3,13 +3,13 @@ package backbone.scaladsl
 import akka.stream.alpakka.sqs.{MessageSystemAttributeName, SqsSourceSettings}
 import backbone.Consumed
 import backbone.consumer.{ConsumerSettings, CountLimitation, JsonReader}
-import backbone.scaladsl.Backbone
 import backbone.testutil.Helpers._
 import backbone.testutil._
 import cats.syntax.all._
 import io.circe.syntax._
-import org.mockito.Mockito
-import org.mockito.captor.ArgCaptor
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
+import org.mockito.{ArgumentCaptor, Mockito}
 import org.scalatest.Outcome
 import org.scalatest.wordspec.FixtureAnyWordSpec
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -18,9 +18,11 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
 
 import java.util.concurrent.CompletableFuture
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 
+@nowarn
 class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with TestActorSystem {
 
   "Backbone.consume" should {
@@ -89,7 +91,7 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
     "request messages form the queue url returned when creating the queue" in { f =>
       val envelope = JsonReader.SnsEnvelope("message")
       val message  = Message.builder().body(envelope.asJson.toString()).build()
-      when(f.sqsClient.receiveMessage(any[ReceiveMessageRequest])).thenReturn {
+      when(f.sqsClient.receiveMessage(any(classOf[ReceiveMessageRequest]))).thenReturn {
         val result = ReceiveMessageResponse.builder().messages(List(message).asJava).build()
         CompletableFuture.completedFuture(result)
       }
@@ -103,10 +105,10 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
 
       f.backbone.consume[String](settings)(_ => Consumed).futureValue
 
-      val captor = ArgCaptor[ReceiveMessageRequest]
+      val captor = ArgumentCaptor.forClass(classOf[ReceiveMessageRequest])
 
-      verify(f.sqsClient, Mockito.atLeastOnce()).receiveMessage(captor)
-      val request = captor.value
+      verify(f.sqsClient, Mockito.atLeastOnce()).receiveMessage(captor.capture())
+      val request = captor.getValue()
 
       request.maxNumberOfMessages() mustBe 10
       request.waitTimeSeconds() mustBe 20
@@ -120,9 +122,9 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
   case class FixtureParam(backbone: Backbone, sqsClient: SqsAsyncClient, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val sqsClient = mock[SqsAsyncClient]
+    implicit val sqsClient = mock(classOf[SqsAsyncClient])
 
-    when(sqsClient.createQueue(*[CreateQueueRequest])).thenReturn {
+    when(sqsClient.createQueue(any(classOf[CreateQueueRequest]))).thenReturn {
       val result = CreateQueueResponse.builder().queueUrl("queue-url").build()
       CompletableFuture.completedFuture(result)
     }
@@ -146,9 +148,9 @@ class BackboneSubscriptionSpec extends FixtureAnyWordSpec with BaseTest with Tes
       CompletableFuture.completedFuture(result)
     }
 
-    implicit val snsClient = mock[SnsAsyncClient]
+    implicit val snsClient = mock(classOf[SnsAsyncClient])
 
-    when(snsClient.subscribe(*[SubscribeRequest])).thenReturn {
+    when(snsClient.subscribe(any(classOf[SubscribeRequest]))).thenReturn {
       val response = SubscribeResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }
