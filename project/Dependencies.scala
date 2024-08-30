@@ -51,12 +51,14 @@ object Dependencies {
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
-    "com.github.matsluni"   %% "aws-spi-akka-http"  % "1.0.1" exclude ("org.scala-lang", "scala3-library"),
-    "com.github.sbt"         % "junit-interface"    % "0.13.3",
-    "com.typesafe.akka"     %% "akka-slf4j"         % akkaVersion,
-    "com.typesafe.akka"     %% "akka-testkit"       % akkaVersion,
-    "io.circe"              %% "circe-parser"       % circeVersion,
-    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.6.0",
+    "com.github.matsluni" %% "aws-spi-akka-http" % "1.0.1",
+    "com.github.sbt"       % "junit-interface"   % "0.13.3",
+    "com.typesafe.akka"   %% "akka-slf4j"        % akkaVersion,
+    "com.typesafe.akka"   %% "akka-testkit"      % akkaVersion,
+    "io.circe"            %% "circe-parser"      % circeVersion,
+    // elasticmq-rest-sqs updates scala-library version patch releases...
+    // So anything after 1.6.0 requires at least scala 3.4.x...
+    "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.6.0", // scala-steward:off
     "org.mockito"            % "mockito-core"       % "5.13.0",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.25.40"

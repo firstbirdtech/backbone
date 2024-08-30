@@ -125,8 +125,7 @@ lazy val testutils = project
   .settings(
     name := "backbone-testutils",
     libraryDependencies ++= Dependencies.testutils,
-    dependencyOverrides += "org.scala-lang" %% "scala3-library" % "3.3.3",
-    publish / skip                          := true
+    publish / skip := true
   )
 
 lazy val integrationtest = project
