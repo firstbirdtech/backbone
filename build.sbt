@@ -19,20 +19,34 @@ lazy val commonSettings = Seq(
     url("https://github.com/firstbirdtech/backbone/graphs/contributors")
   ),
   scalaVersion       := "2.13.14",
-  crossScalaVersions := Seq(scalaVersion.value),
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding",
-    "utf-8",
-    "-explaintypes",
-    "-feature",
-    "-language:higherKinds",
-    "-unchecked",
-    "-Xcheckinit",
-    "-Xfatal-warnings",
-    "-Wdead-code",
-    "-Wunused:imports"
-  ),
+  crossScalaVersions := Seq("2.13.14", "3.3.3"),
+  scalacOptions ++= {
+    Seq(
+      "-deprecation",
+      "-encoding",
+      "utf-8",
+      "-explaintypes",
+      "-feature",
+      "-language:higherKinds",
+      "-unchecked",
+      "-Xfatal-warnings",
+      "-Wunused:imports"
+    ) ++
+      (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          Seq(
+            "unchecked",
+            "-source:3.0-migration",
+            "-explain"
+          )
+        case _ =>
+          Seq(
+            "-Xsource:3",
+            "-Wdead-code",
+            "-Xcheckinit"
+          )
+      })
+  },
   javacOptions ++= Seq(
     "-Xlint:unchecked",
     "-Xlint:deprecation"

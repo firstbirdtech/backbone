@@ -74,3 +74,5 @@ trait DefaultMessageWriters {
   implicit val charWrite: MessageWriter[Array[Char]] = MessageWriter[Array[Char]](new String(_))
 
 }
+
+object DefaultMessageWriters extends DefaultMessageWriters

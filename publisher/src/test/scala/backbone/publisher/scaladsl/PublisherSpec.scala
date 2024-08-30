@@ -5,7 +5,9 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import backbone.publisher.{DefaultMessageWriters, MessageHeaders, Settings}
 import backbone.testutil.{BaseTest, TestActorSystem}
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
+import org.mockito.Mockito._
 import org.scalatest.Outcome
 import org.scalatest.wordspec.FixtureAnyWordSpec
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -138,9 +140,9 @@ class PublisherSpec extends FixtureAnyWordSpec with BaseTest with TestActorSyste
   case class FixtureParam(publisher: Publisher, snsClient: SnsAsyncClient)
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    implicit val snsClient: SnsAsyncClient = mock[SnsAsyncClient]
+    implicit val snsClient: SnsAsyncClient = mock(classOf[SnsAsyncClient])
 
-    when(snsClient.publish(*[PublishRequest])).thenReturn {
+    when(snsClient.publish(any(classOf[PublishRequest]))).thenReturn {
       val response = PublishResponse.builder().build()
       CompletableFuture.completedFuture(response)
     }

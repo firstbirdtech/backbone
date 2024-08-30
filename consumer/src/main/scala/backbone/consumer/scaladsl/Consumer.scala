@@ -23,6 +23,7 @@ package backbone.consumer.scaladsl
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.event.LogSource.fromString
 import akka.event.{Logging, LoggingAdapter}
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.alpakka.sqs.scaladsl.{SqsAckFlow, SqsSource}
@@ -89,7 +90,7 @@ object Consumer {
 class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsyncClient) {
 
   private[this] val logger                       = LoggerFactory.getLogger(getClass)
-  private[this] implicit val log: LoggingAdapter = Logging(system, getClass)
+  private[this] implicit val log: LoggingAdapter = Logging(system, getClass.getSimpleName)
 
   private[this] implicit val ec: ExecutionContextExecutor = system.dispatcher
   private[this] val restartingDecider: Supervision.Decider = { t =>

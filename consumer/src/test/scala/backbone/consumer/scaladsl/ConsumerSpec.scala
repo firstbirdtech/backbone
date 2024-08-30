@@ -5,6 +5,7 @@ import backbone.testutil.Helpers._
 import backbone.testutil.{BaseTest, ElasticMQ, TestActorSystem}
 import backbone.{Consumed, MessageReader, ProcessingResult, Rejected}
 import io.circe.syntax._
+import org.mockito.Mockito._
 import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.awssdk.services.sqs.model._
 
@@ -79,7 +80,7 @@ class ConsumerSpec extends AnyWordSpec with BaseTest with ElasticMQ with TestAct
       val consumer = Consumer(testJsonReader)
 
       val msg = JsonReader.SnsEnvelope("message")
-      val spy = mock[(String, MessageHeaders) => Future[ProcessingResult]]
+      val spy = mock(classOf[(String, MessageHeaders) => Future[ProcessingResult]])
       val result = for {
         _ <- createQueue(queueName)
         _ <- sendMessage(msg.asJson.toString, queueUrl, "header" -> "value")

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 
 object CirceJsonReader {
   implicit val decodeSnsEnvelope: Decoder[JsonReader.SnsEnvelope] =
-    Decoder.forProduct1("Message")(JsonReader.SnsEnvelope)
+    Decoder.forProduct1("Message")(JsonReader.SnsEnvelope.apply)
 }
 
 class CirceJsonReader extends JsonReader {

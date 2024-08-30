@@ -7,7 +7,7 @@ import io.circe.parser.parse
 class TestJsonReader extends JsonReader {
 
   private[this] implicit val snsEnvelopeDecoder: Decoder[JsonReader.SnsEnvelope] =
-    Decoder.forProduct1("Message")(JsonReader.SnsEnvelope)
+    Decoder.forProduct1("Message")(JsonReader.SnsEnvelope.apply)
 
   override def readSnsEnvelope(s: String): Option[JsonReader.SnsEnvelope] = {
     for {

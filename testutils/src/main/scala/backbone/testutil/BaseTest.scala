@@ -21,13 +21,12 @@
 
 package backbone.testutil
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.TryValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.time.{Seconds, Span}
 
-trait BaseTest extends ScalaFutures with TryValues with Matchers with MockitoSugar with ArgumentMatchersSugar {
+trait BaseTest extends ScalaFutures with TryValues with Matchers {
 
   override implicit def patienceConfig: PatienceConfig = super.patienceConfig.copy(timeout = Span(10, Seconds))
 
