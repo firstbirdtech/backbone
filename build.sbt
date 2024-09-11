@@ -9,6 +9,7 @@ lazy val commonSettings = Seq(
   sonatypeProfileName := "com.firstbird",
   homepage            := Some(url("https://github.com/firstbirdtech/backbone")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+  startYear := Some(2016),
   scmInfo := Some(
     ScmInfo(homepage.value.get, "scm:git:https://github.com/firstbirdtech/backbone.git")
   ),
@@ -54,7 +55,7 @@ lazy val commonSettings = Seq(
   // show full stack traces and test case durations
   Test / testOptions += Tests.Argument("-oDF"),
   Test / parallelExecution := false,
-  headerLicense            := Some(HeaderLicense.MIT("2021", "Backbone contributors")),
+  headerLicense            := Some(HeaderLicense.MIT("2024", "Backbone contributors")),
   semanticdbEnabled        := true,
   semanticdbVersion        := scalafixSemanticdb.revision
 )
