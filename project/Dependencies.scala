@@ -59,7 +59,7 @@ object Dependencies {
     // elasticmq-rest-sqs updates scala-library version patch releases...
     // So anything after 1.6.0 requires at least scala 3.4.x...
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.6.0", // scala-steward:off
-    "org.mockito"            % "mockito-core"       % "5.14.0",
+    "org.mockito"            % "mockito-core"       % "5.14.1",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.25.70"
   )
