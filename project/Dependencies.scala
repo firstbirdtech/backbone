@@ -52,7 +52,6 @@ object Dependencies {
 
   val testutils: Seq[ModuleID] = Seq(
     "com.github.matsluni" %% "aws-spi-akka-http" % "1.0.1",
-    "com.typesafe.akka"   %% "akka-pki"          % akkaVersion, // Override version pulled in by aws-spi-akka-http
     "com.github.sbt"       % "junit-interface"   % "0.13.3",
     "com.typesafe.akka"   %% "akka-slf4j"        % akkaVersion,
     "com.typesafe.akka"   %% "akka-testkit"      % akkaVersion,
@@ -68,5 +67,9 @@ object Dependencies {
   val integrationtest: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
     "ch.qos.logback"     % "logback-classic" % logbackClassicVersion
+  )
+
+  val dependencyOverrides = Seq(
+    "com.typesafe.akka" %% "akka-pki" % akkaVersion
   )
 }
