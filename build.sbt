@@ -71,7 +71,8 @@ lazy val core = project
   .settings(commonSettings)
   .settings(
     name := "backbone-core",
-    libraryDependencies ++= Dependencies.core
+    libraryDependencies ++= Dependencies.core,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(consumer, publisher, testutils % Test)
 
@@ -80,7 +81,8 @@ lazy val consumer = project
   .settings(commonSettings)
   .settings(
     name := "backbone-consumer",
-    libraryDependencies ++= Dependencies.consumer
+    libraryDependencies ++= Dependencies.consumer,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(testutils % Test)
 
@@ -89,7 +91,8 @@ lazy val publisher = project
   .settings(commonSettings)
   .settings(
     name := "backbone-publisher",
-    libraryDependencies ++= Dependencies.publisher
+    libraryDependencies ++= Dependencies.publisher,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(testutils % Test)
 
@@ -98,7 +101,8 @@ lazy val playJson = project
   .settings(commonSettings)
   .settings(
     name := "backbone-play-json",
-    libraryDependencies ++= Dependencies.jsonPlay
+    libraryDependencies ++= Dependencies.jsonPlay,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(consumer)
 
@@ -107,7 +111,8 @@ lazy val circe = project
   .settings(commonSettings)
   .settings(
     name := "backbone-circe",
-    libraryDependencies ++= Dependencies.jsonCirce
+    libraryDependencies ++= Dependencies.jsonCirce,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(consumer)
 
@@ -116,7 +121,8 @@ lazy val gson = project
   .settings(commonSettings)
   .settings(
     name := "backbone-gson",
-    libraryDependencies ++= Dependencies.jsonGson
+    libraryDependencies ++= Dependencies.jsonGson,
+    dependencyOverrides ++= Dependencies.dependencyOverrides
   )
   .dependsOn(consumer)
 
@@ -126,6 +132,7 @@ lazy val testutils = project
   .settings(
     name := "backbone-testutils",
     libraryDependencies ++= Dependencies.testutils,
+    dependencyOverrides ++= Dependencies.dependencyOverrides,
     publish / skip := true
   )
 
@@ -135,6 +142,7 @@ lazy val integrationtest = project
   .settings(
     name := "backbone-integration-test",
     libraryDependencies ++= Dependencies.integrationtest,
+    dependencyOverrides ++= Dependencies.dependencyOverrides,
     run / fork     := true,
     publish / skip := true
   )
