@@ -4,7 +4,7 @@ import sbt.librarymanagement.ModuleID
 object Dependencies {
 
   private[this] val alpakkaVersion        = "8.0.0"
-  private[this] val akkaVersion           = "2.9.3"
+  private[this] val akkaVersion           = "2.9.7"
   private[this] val circeVersion          = "0.14.10"
   private[this] val logbackClassicVersion = "1.5.12"
   private[this] val scalaTestVersion      = "3.2.19"
@@ -52,6 +52,7 @@ object Dependencies {
 
   val testutils: Seq[ModuleID] = Seq(
     "com.github.matsluni" %% "aws-spi-akka-http" % "1.0.1",
+    "com.typesafe.akka"   %% "akka-pki"          % akkaVersion, // Override version pulled in by aws-spi-akka-http
     "com.github.sbt"       % "junit-interface"   % "0.13.3",
     "com.typesafe.akka"   %% "akka-slf4j"        % akkaVersion,
     "com.typesafe.akka"   %% "akka-testkit"      % akkaVersion,
@@ -68,5 +69,4 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
     "ch.qos.logback"     % "logback-classic" % logbackClassicVersion
   )
-
 }
