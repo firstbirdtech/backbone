@@ -58,6 +58,8 @@ jobs:
           java-version: 11
           cache: 'sbt'
 
+      - uses: sbt/setup-sbt@v1
+
       - name: Publish artifacts
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
