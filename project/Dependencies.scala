@@ -6,10 +6,10 @@ object Dependencies {
   private[this] val alpakkaVersion        = "8.0.0"
   private[this] val akkaVersion           = "2.9.5"
   private[this] val circeVersion          = "0.14.10"
-  private[this] val logbackClassicVersion = "1.5.16"
+  private[this] val logbackClassicVersion = "1.5.18"
   private[this] val scalaTestVersion      = "3.2.19"
-  private[this] val slf4jVersion          = "2.0.16"
-  private[this] val awsSdkVersion         = "2.30.13"
+  private[this] val slf4jVersion          = "2.0.17"
+  private[this] val awsSdkVersion         = "2.31.42"
 
   private[this] val testDependencies: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % logbackClassicVersion % Test,
@@ -47,7 +47,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val jsonGson: Seq[ModuleID] = Seq(
-    "com.google.code.gson" % "gson" % "2.12.1"
+    "com.google.code.gson" % "gson" % "2.13.1"
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
@@ -59,7 +59,7 @@ object Dependencies {
     // elasticmq-rest-sqs updates scala-library version patch releases...
     // So anything after 1.6.0 requires at least scala 3.4.x...
     "org.elasticmq"         %% "elasticmq-rest-sqs" % "1.6.0", // scala-steward:off
-    "org.mockito"            % "mockito-core"       % "5.15.2",
+    "org.mockito"            % "mockito-core"       % "5.17.0",
     "org.scalatest"         %% "scalatest"          % scalaTestVersion,
     "software.amazon.awssdk" % "sqs"                % "2.25.70"
   )
