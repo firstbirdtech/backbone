@@ -312,7 +312,7 @@ class Backbone(implicit val sqs: SqsAsyncClient, val sns: SnsAsyncClient, system
   ): Future[Unit] = {
     topics match {
       case Nil => Future.successful(())
-      case ts =>
+      case ts  =>
         val policy = createPolicy(queue.arn, ts)
         logger.debug(s"Saving new policy for queue. queueArn=${queue.arn}, policy=$policy")
         savePolicy(queue.url, policy)

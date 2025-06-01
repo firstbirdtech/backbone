@@ -72,7 +72,7 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
 
   protected def sendMessage(message: String, queueUrl: String, headers: (String, String)*): Future[Unit] = {
     val sqsMessage = Message.builder().body(message).build()
-    val request = SendMessageRequest
+    val request    = SendMessageRequest
       .builder()
       .queueUrl(queueUrl)
       .messageAttributes(
@@ -107,7 +107,7 @@ trait ElasticMQ extends BeforeAndAfterEach with BeforeAndAfterAll {
     finally {
       val result = for {
         listResponse <- sqsClient.listQueues(ListQueuesRequest.builder().build()).asScala
-        _ <- Future.sequence(
+        _            <- Future.sequence(
           listResponse.queueUrls().asScala.map(url => sqsClient.deleteQueue(_.queueUrl(url)).asScala)
         )
       } yield ()
