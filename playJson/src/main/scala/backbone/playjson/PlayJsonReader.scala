@@ -37,7 +37,7 @@ class PlayJsonReader extends JsonReader {
   override def readSnsEnvelope(s: String): Option[JsonReader.SnsEnvelope] = {
     Json.fromJson[JsonReader.SnsEnvelope](Json.parse(s)) match {
       case JsSuccess(value, _) => Some(value)
-      case JsError(errors) =>
+      case JsError(errors)     =>
         logger.error(s"Unable to decode to SnsEnvelope. message=$s, errors=$errors")
         None
     }

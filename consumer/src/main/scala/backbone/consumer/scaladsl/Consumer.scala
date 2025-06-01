@@ -92,7 +92,7 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
   private[this] val logger                       = LoggerFactory.getLogger(getClass)
   private[this] implicit val log: LoggingAdapter = Logging(system, getClass.getSimpleName)
 
-  private[this] implicit val ec: ExecutionContextExecutor = system.dispatcher
+  private[this] implicit val ec: ExecutionContextExecutor  = system.dispatcher
   private[this] val restartingDecider: Supervision.Decider = { t =>
     logger.error("Error on Consumer stream.", t)
     Supervision.Restart
@@ -211,7 +211,7 @@ class Consumer(jsonReader: JsonReader)(implicit system: ActorSystem, sqs: SqsAsy
   private[this] def parseMessage[A](message: Message)(implicit mr: MessageReader[A]): Either[MessageAction, A] = {
     for {
       sns <- jsonReader.readSnsEnvelope(message.body).toRight(MessageAction.Ignore(message))
-      t <- mr.read(sns.message) match {
+      t   <- mr.read(sns.message) match {
         case Failure(t) =>
           logger.error(s"Unable to read message. message=${message.body}", t)
           Left[MessageAction, A](MessageAction.Ignore(message))

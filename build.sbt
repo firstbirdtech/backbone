@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
   homepage            := Some(url("https://github.com/firstbirdtech/backbone")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   startYear := Some(2016),
-  scmInfo := Some(
+  scmInfo   := Some(
     ScmInfo(homepage.value.get, "scm:git:https://github.com/firstbirdtech/backbone.git")
   ),
   developers += Developer(

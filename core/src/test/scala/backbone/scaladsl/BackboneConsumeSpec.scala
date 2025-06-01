@@ -58,7 +58,7 @@ class BackboneConsumeSpec extends FixtureAnyWordSpec with BaseTest with ElasticM
 
     "create an encrypted queue with the configured name and kms key alias" in { f =>
       val queueName = "queue-name-2"
-      val settings = ConsumerSettings(
+      val settings  = ConsumerSettings(
         Nil,
         queueName,
         "arn:aws:kms:eu-central-1:123456789012:alias/TestAlias".some,

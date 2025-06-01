@@ -100,8 +100,8 @@ class ConsumerSpec extends AnyWordSpec with BaseTest with ElasticMQ with TestAct
       val settings = Settings(queueUrl, limitation = Some(CountLimitation(1)))
       val consumer = Consumer(testJsonReader)
 
-      val msg = JsonReader.SnsEnvelope("message")
-      val spy = mock(classOf[(String, MessageHeaders) => Future[ProcessingResult]])
+      val msg    = JsonReader.SnsEnvelope("message")
+      val spy    = mock(classOf[(String, MessageHeaders) => Future[ProcessingResult]])
       val result = for {
         _ <- createQueue(queueName)
         _ <- sendMessage(msg.asJson.toString, queueUrl, "header" -> "value")
