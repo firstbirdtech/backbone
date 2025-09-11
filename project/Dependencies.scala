@@ -47,7 +47,7 @@ object Dependencies {
   ) ++ testDependencies
 
   val jsonGson: Seq[ModuleID] = Seq(
-    "com.google.code.gson" % "gson" % "2.13.1"
+    "com.google.code.gson" % "gson" % "2.13.2"
   ) ++ testDependencies
 
   val testutils: Seq[ModuleID] = Seq(
