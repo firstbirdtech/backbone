@@ -7,7 +7,7 @@ object Dependencies {
   private[this] val akkaVersion           = "2.9.5"
   private[this] val circeVersion          = "0.14.14"
   private[this] val logbackClassicVersion = "1.5.18"
-  private[this] val scalaTestVersion      = "3.2.19"
+  private[this] val scalaTestVersion      = "3.2.20"
   private[this] val slf4jVersion          = "2.0.17"
   private[this] val awsSdkVersion         = "2.34.5"
 
