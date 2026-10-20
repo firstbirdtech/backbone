@@ -1,5 +1,5 @@
-addSbtPlugin("ch.epfl.scala"  % "sbt-scalafix"   % "0.14.3")
+addSbtPlugin("ch.epfl.scala"  % "sbt-scalafix"   % "0.14.9")
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3")
 addSbtPlugin("com.github.sbt" % "sbt-header"     % "5.11.0")
-addSbtPlugin("org.scalameta"  % "sbt-scalafmt"   % "2.5.5")
-addSbtPlugin("org.scoverage"  % "sbt-scoverage"  % "2.3.0")
+addSbtPlugin("org.scalameta"  % "sbt-scalafmt"   % "2.6.2")
+addSbtPlugin("org.scoverage"  % "sbt-scoverage"  % "2.4.4")

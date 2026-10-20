@@ -3,8 +3,8 @@ import sbt.librarymanagement.ModuleID
 
 object Dependencies {
 
-  private[this] val pekkoVersion           = "1.0.2"
-  private[this] val pekkoConnectorsVersion = "1.0.0"
+  private[this] val pekkoVersion           = "1.0.3"
+  private[this] val pekkoConnectorsVersion = "1.0.2"
   private[this] val circeVersion          = "0.14.14"
   private[this] val logbackClassicVersion = "1.5.18"
   private[this] val scalaTestVersion      = "3.2.19"
@@ -68,7 +68,5 @@ object Dependencies {
     "ch.qos.logback"    % "logback-classic" % logbackClassicVersion
   )
 
-  val dependencyOverrides = Seq(
-    "com.typesafe.akka" %% "akka-pki" % akkaVersion
-  )
+  val dependencyOverrides = Seq.empty
 }
