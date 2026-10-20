@@ -1,5 +1,10 @@
 # Integration Test
 
+The plain `integrationtest` project uses Akka. The `integrationtest-pekko` project uses Pekko;
+its sources and configuration are in the sibling `integration-test-pekko` directory.
+Choose one demo family and adjust the source files in that directory.
+Running these demos accesses real AWS resources and may incur charges; compilation alone does not require AWS credentials.
+
 ## Step 1: Create CFN Stack
 
 Create a new stack in your AWS account using the template: `cfn-templates/backbone-demo.yml`
@@ -29,7 +34,20 @@ values you got from the stack outputs.
 ## Step 4: Run Demo App(s)
 
 To run the demo which uses the `backbone-core` module run the following in your terminal:
-`sbt integrationtest/runMain backbone.it.BackboneCoreDemoApp`
+`sbt 'integrationtest/runMain backbone.it.BackboneCoreDemoApp'`
 
 To run the demo which uses the `backbone-consumer` and `backbone-publisher` modules run the following in your terminal:
-`sbt integrationtest/runMain backbone.it.BackboneConsumerPublisherDemoApp`
+`sbt 'integrationtest/runMain backbone.it.BackboneConsumerPublisherDemoApp'`
+
+For the corresponding Pekko demos, run:
+
+```shell
+sbt 'integrationtest-pekko/runMain backbone.it.BackboneCoreDemoApp'
+sbt 'integrationtest-pekko/runMain backbone.it.BackboneConsumerPublisherDemoApp'
+```
+
+To compile without running either demo:
+
+```shell
+sbt 'integrationtest/compile' 'integrationtest-pekko/compile'
+```

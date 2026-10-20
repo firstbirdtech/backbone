@@ -21,8 +21,8 @@
 
 package backbone.consumer
 
-import org.apache.pekko.NotUsed
-import org.apache.pekko.stream.{FlowShape, Graph}
+import akka.NotUsed
+import akka.stream.{FlowShape, Graph}
 
 /**
  * Defines an interface for limiting the consumption of elements of type T

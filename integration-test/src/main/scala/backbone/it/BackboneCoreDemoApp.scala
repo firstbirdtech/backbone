@@ -21,12 +21,12 @@
 
 package backbone.it
 
-import org.apache.pekko.actor.ActorSystem
+import akka.actor.ActorSystem
 import backbone._
 import backbone.consumer.{ConsumerSettings, CountLimitation}
 import backbone.publisher.PublisherSettings
 import backbone.scaladsl.Backbone
-import com.github.pjfanning.pekkohttpspi.PekkoHttpClient
+import com.github.matsluni.akkahttpspi.AkkaHttpClient
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
@@ -45,13 +45,13 @@ object BackboneCoreDemoApp {
   private[this] implicit val sqs: SqsAsyncClient = SqsAsyncClient
     .builder()
     .credentialsProvider(ProfileCredentialsProvider.create("backbone-demo"))
-    .httpClient(PekkoHttpClient.builder().withActorSystem(system).build())
+    .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
     .build()
 
   private[this] implicit val sns: SnsAsyncClient = SnsAsyncClient
     .builder()
     .credentialsProvider(ProfileCredentialsProvider.create("backbone-demo"))
-    .httpClient(PekkoHttpClient.builder().withActorSystem(system).build())
+    .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
     .build()
 
   def main(args: Array[String]): Unit = {

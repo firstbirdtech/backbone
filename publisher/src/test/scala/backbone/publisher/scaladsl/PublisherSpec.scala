@@ -21,9 +21,9 @@
 
 package backbone.publisher.scaladsl
 
-import org.apache.pekko.Done
-import org.apache.pekko.stream.OverflowStrategy
-import org.apache.pekko.stream.scaladsl.Source
+import akka.Done
+import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.Source
 import backbone.publisher.{DefaultMessageWriters, MessageHeaders, Settings}
 import backbone.testutil.{BaseTest, TestActorSystem}
 import org.mockito.ArgumentMatchers._

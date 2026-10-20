@@ -1,9 +1,31 @@
 addCommandAlias("codeFmt", ";headerCreate;scalafmtAll;scalafmtSbt;scalafixAll")
 addCommandAlias("codeVerify", ";scalafmtCheckAll;scalafmtSbtCheck;scalafixAll --check;headerCheck")
 
-ThisBuild / resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+ThisBuild / resolvers += "Sonatype Nexus Maven Group" at "https://nexus.firstbird.io/repository/maven-group/"
+
+lazy val runtimeFamily         = settingKey[String]("Expected runtime: akka, pekko, or neutral")
+lazy val checkRuntimeIsolation = taskKey[Unit]("Reject dependencies from the opposite runtime")
 
 lazy val commonSettings = Seq(
+  runtimeFamily         := "neutral",
+  checkRuntimeIsolation := {
+    val family         = runtimeFamily.value
+    val configurations = if (family == "neutral") Set("compile", "runtime", "test") else Set("compile", "runtime")
+    val unexpected     = update.value.configurations
+      .filter(report => configurations(report.configuration.name))
+      .flatMap(_.modules.filterNot(_.evicted).map(_.module))
+      .filter { dependency =>
+        val akka = dependency.organization == "com.typesafe.akka" ||
+          dependency.organization.startsWith("com.lightbend.akka") ||
+          dependency.name.startsWith("aws-spi-akka-http")
+        val pekko = dependency.organization == "org.apache.pekko" ||
+          dependency.name.startsWith("aws-spi-pekko-http")
+        (family != "akka" && akka) || (family != "pekko" && pekko)
+      }
+      .distinct
+    if (unexpected.nonEmpty) sys.error(s"${name.value}: unexpected runtime dependencies: ${unexpected.mkString(", ")}")
+    streams.value.log.info(s"${name.value}: $family runtime isolation verified")
+  },
   organization        := "com.firstbird",
   organizationName    := "Firstbird GmbH",
   sonatypeProfileName := "com.firstbird",
@@ -64,13 +86,37 @@ lazy val backbone = project
   .in(file("."))
   .settings(commonSettings)
   .settings(publish / skip := true)
-  .aggregate(core, consumer, publisher, playJson, circe, gson, testutils, integrationtest)
+  .aggregate(
+    consumerApi,
+    core,
+    consumer,
+    publisher,
+    playJson,
+    circe,
+    gson,
+    testutils,
+    integrationtest,
+    corePekko,
+    consumerPekko,
+    publisherPekko,
+    testutilsPekko,
+    integrationtestPekko
+  )
+
+lazy val consumerApi = Project("consumer-api", file("consumer-api"))
+  .settings(commonSettings)
+  .settings(
+    name := "backbone-consumer-api",
+    libraryDependencies ++= Dependencies.consumerApi,
+    Test / unmanagedSources += baseDirectory.value.getParentFile / "testutils" / "src" / "main" / "scala" / "backbone" / "testutil" / "BaseTest.scala"
+  )
 
 lazy val core = project
   .in(file("core"))
   .settings(commonSettings)
   .settings(
-    name := "backbone-core",
+    name          := "backbone-core",
+    runtimeFamily := "akka",
     libraryDependencies ++= Dependencies.core,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
@@ -80,17 +126,19 @@ lazy val consumer = project
   .in(file("consumer"))
   .settings(commonSettings)
   .settings(
-    name := "backbone-consumer",
+    name          := "backbone-consumer",
+    runtimeFamily := "akka",
     libraryDependencies ++= Dependencies.consumer,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
-  .dependsOn(testutils % Test)
+  .dependsOn(consumerApi, testutils % Test)
 
 lazy val publisher = project
   .in(file("publisher"))
   .settings(commonSettings)
   .settings(
-    name := "backbone-publisher",
+    name          := "backbone-publisher",
+    runtimeFamily := "akka",
     libraryDependencies ++= Dependencies.publisher,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
@@ -104,7 +152,7 @@ lazy val playJson = project
     libraryDependencies ++= Dependencies.jsonPlay,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
-  .dependsOn(consumer)
+  .dependsOn(consumerApi)
 
 lazy val circe = project
   .in(file("circe"))
@@ -114,7 +162,7 @@ lazy val circe = project
     libraryDependencies ++= Dependencies.jsonCirce,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
-  .dependsOn(consumer)
+  .dependsOn(consumerApi)
 
 lazy val gson = project
   .in(file("gson"))
@@ -124,13 +172,17 @@ lazy val gson = project
     libraryDependencies ++= Dependencies.jsonGson,
     dependencyOverrides ++= Dependencies.dependencyOverrides
   )
-  .dependsOn(consumer)
+  .dependsOn(consumerApi)
 
 lazy val testutils = project
   .in(file("testutils"))
   .settings(commonSettings)
   .settings(
-    name := "backbone-testutils",
+    name                  := "backbone-testutils",
+    runtimeFamily         := "akka",
+    checkRuntimeIsolation := streams.value.log.info(
+      s"${name.value}: ${runtimeFamily.value} fixtures allow the embedded Pekko-based ElasticMQ server"
+    ),
     libraryDependencies ++= Dependencies.testutils,
     dependencyOverrides ++= Dependencies.dependencyOverrides,
     publish / skip := true
@@ -140,10 +192,58 @@ lazy val integrationtest = project
   .in(file("integration-test"))
   .settings(commonSettings)
   .settings(
-    name := "backbone-integration-test",
+    name          := "backbone-integration-test",
+    runtimeFamily := "akka",
     libraryDependencies ++= Dependencies.integrationtest,
     dependencyOverrides ++= Dependencies.dependencyOverrides,
     run / fork     := true,
     publish / skip := true
   )
   .dependsOn(core, circe, consumer, publisher)
+
+lazy val consumerPekko = Project("consumer-pekko", file("consumer-pekko"))
+  .settings(commonSettings)
+  .settings(
+    name          := "backbone-consumer-pekko",
+    runtimeFamily := "pekko",
+    libraryDependencies ++= Dependencies.consumerPekko
+  )
+  .dependsOn(consumerApi, testutilsPekko % Test)
+
+lazy val publisherPekko = Project("publisher-pekko", file("publisher-pekko"))
+  .settings(commonSettings)
+  .settings(
+    name          := "backbone-publisher-pekko",
+    runtimeFamily := "pekko",
+    libraryDependencies ++= Dependencies.publisherPekko
+  )
+  .dependsOn(testutilsPekko % Test)
+
+lazy val corePekko = Project("core-pekko", file("core-pekko"))
+  .settings(commonSettings)
+  .settings(
+    name          := "backbone-core-pekko",
+    runtimeFamily := "pekko",
+    libraryDependencies ++= Dependencies.core
+  )
+  .dependsOn(consumerPekko, publisherPekko, testutilsPekko % Test)
+
+lazy val testutilsPekko = Project("testutils-pekko", file("testutils-pekko"))
+  .settings(commonSettings)
+  .settings(
+    name          := "backbone-testutils-pekko",
+    runtimeFamily := "pekko",
+    libraryDependencies ++= Dependencies.testutilsPekko,
+    publish / skip := true
+  )
+
+lazy val integrationtestPekko = Project("integrationtest-pekko", file("integration-test-pekko"))
+  .settings(commonSettings)
+  .settings(
+    name          := "backbone-integration-test-pekko",
+    runtimeFamily := "pekko",
+    libraryDependencies ++= Dependencies.integrationtestPekko,
+    run / fork     := true,
+    publish / skip := true
+  )
+  .dependsOn(corePekko, circe, consumerPekko, publisherPekko)

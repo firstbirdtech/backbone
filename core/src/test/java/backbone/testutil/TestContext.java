@@ -21,9 +21,9 @@
 
 package backbone.testutil;
 
-import org.apache.pekko.actor.ActorSystem;
+import akka.actor.ActorSystem;
 import backbone.javadsl.Backbone;
-import com.github.pjfanning.pekkohttpspi.PekkoHttpClient;
+import com.github.matsluni.akkahttpspi.AkkaHttpClient;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.AfterClass;
@@ -74,7 +74,7 @@ public abstract class TestContext {
             .builder()
             .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("x", "x")))
             .endpointOverride(URI.create("http://" + address.getHostName() + ":" + address.getPort()))
-            .httpClient(PekkoHttpClient.builder().withActorSystem(system).build())
+            .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
             .region(Region.EU_CENTRAL_1)
             .build();
         backbone = Backbone.create(sqs, sns, system);

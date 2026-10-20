@@ -8,10 +8,10 @@
 
 
 Backbone is a durable publish-subscribe platform built on top of Amazon AWS SQS and Amazon AWS SNS utilizing
-Akka to stream messages. This library currently is under active development, changes to the public API are still subject
+Akka or Apache Pekko to stream messages. This library currently is under active development, changes to the public API are still subject
 to change.
 
-**Attention: This library uses the commercial version of Akka. License fees may be incurred by usage of this library!**
+**Attention: The Akka variants use the commercial version of Akka. License fees may be incurred by their usage. The Pekko variants do not depend on Akka.**
 
 Backbone provides nice high-level API for consuming messages:
 
@@ -27,6 +27,59 @@ There are three different main modules available:
 * backbone-consumer: Standalone consumer for streaming messages from SQS
 * backbone-publisher: Standalone publisher for publishing messages to SNS
 * backbone-core: Consumer and publisher for streaming messages (SQS) and publishing messages (SNS), including automatic SQS queue creation and SNS subscription
+
+## Choosing a Runtime
+
+Choose one runtime for your application. Do not combine Akka and Pekko variants on the same classpath.
+Both families retain the same `backbone.*` packages and are built for Scala 2.13 and Scala 3.
+
+| Module | Akka artifact | Pekko artifact |
+| --- | --- | --- |
+| Consumer | `backbone-consumer` | `backbone-consumer-pekko` |
+| Publisher | `backbone-publisher` | `backbone-publisher-pekko` |
+| Core | `backbone-core` | `backbone-core-pekko` |
+
+The JSON adapters (`backbone-circe`, `backbone-play-json`, and `backbone-gson`) are shared by both runtimes.
+They depend only on the new `backbone-consumer-api` module, not on an Akka or Pekko consumer implementation.
+The API module is supplied transitively and retains existing package names for readers, processing results, and consumer headers.
+Applications that previously relied on a JSON adapter to supply the consumer must now declare the chosen consumer explicitly.
+Manually assembled, shaded, or OSGi deployments must account for these API classes moving into a separate JAR.
+
+For Pekko, use matching suffixed artifacts and an unchanged JSON adapter:
+
+```scala
+libraryDependencies ++= Seq(
+    "com.firstbird" %% "backbone-consumer-pekko" % "X.Y.Z",
+    "com.firstbird" %% "backbone-publisher-pekko" % "X.Y.Z",
+    "com.firstbird" %% "backbone-circe" % "X.Y.Z"
+)
+```
+
+For example, using the AWS SDK's default asynchronous HTTP client, region, and credentials configuration:
+
+```scala
+import backbone.Consumed
+import backbone.circe.CirceJsonReader
+import backbone.consumer._
+import backbone.consumer.scaladsl.Consumer
+import org.apache.pekko.actor.ActorSystem
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+
+implicit val system: ActorSystem = ActorSystem("backbone")
+implicit val sqs: SqsAsyncClient = SqsAsyncClient.create()
+implicit val jsonReader: JsonReader = new CirceJsonReader()
+
+val completion = Consumer().consume[String](Settings("<queue-url>", parallelism = 5)) { message =>
+    println(message)
+    Consumed
+}
+```
+
+Close the AWS client and terminate the actor system when the application shuts down.
+When adapting the Akka examples below, use `org.apache.pekko` instead of `akka` imports.
+If you explicitly supply an actor-based AWS HTTP client, use a matching Pekko HTTP SPI client rather than the Akka one.
+The Akka build retains Akka 2.9.5 and Alpakka 8.0.0 and requires authorized access to `https://repo.akka.io/maven`.
+Configure repository credentials locally or in CI; never commit them.
 
 ## backbone-consumer
 
