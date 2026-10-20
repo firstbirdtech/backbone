@@ -35,7 +35,7 @@ jobs:
         run: sbt codeVerify coverage +test coverageReport coverageAggregate
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: false
 
